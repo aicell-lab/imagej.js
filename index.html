@@ -20,6 +20,7 @@
 
 <body>
 <script type="module">
+const baseUrl = location.pathname === "/" ? "/" : location.pathname.replace(/\/$/, "");
 async function applyPatches(){
 
     class CustomXMLHttpRequest extends XMLHttpRequest {
@@ -75,7 +76,7 @@ await cheerpjInit({
     clipboardMode: "java", // "permission" | "system" | "java"
     javaProperties: [
       "user.dir=/files",
-      "plugins.dir=/app/lib/ImageJ/plugins"
+      `plugins.dir=/app${baseUrl}/lib/ImageJ/plugins`
     ],
     fetch(){
         debugger
@@ -84,7 +85,7 @@ await cheerpjInit({
 });
 await applyPatches();
 cheerpjCreateDisplay(-1, -1, document.getElementById("container"));
-await cheerpjRunJar("/app/lib/ImageJ/ij.jar");
+await cheerpjRunJar(`/app${baseUrl}/lib/ImageJ/ij.jar`);
 </script>
 <div id="container"></div>
 </body>
