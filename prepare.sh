@@ -1,3 +1,4 @@
+# Download ImageJ
 rm -rf lib/ImageJ
 wget https://wsr.imagej.net/distros/cross-platform/ij153.zip
 # extract the zip file and save it to the lib folder
@@ -5,10 +6,21 @@ unzip ij153.zip -d lib
 # remove the zip file
 rm ij153.zip
 
+
+# # Download ImageJ2
+# rm -rf lib/*
+# curl -OL https://github.com/imjoy-team/imagej2-cheerpj/releases/download/v0.0.2/imagej2.zip
+# unzip imagej2.zip -d lib
+# rm imagej2.zip
+# rm -r lib/{imagej2-*.js,index.html,*.sh,__MACOSX}
+# # mv imagej2 to ImageJ
+# mv lib/imagej2-* lib/ImageJ/
+
 # Download plugins
 # Read the plugins_manifest.txt file line by line
 while IFS=: read -r filename url; do
   # Download and place the file under plugins
+  echo "Downloading $filename from $url"
   curl -L "$url" -o "lib/ImageJ/plugins/$filename"
 done < plugins_manifest.txt
 
