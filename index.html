@@ -86,6 +86,8 @@ await cheerpjInit({
 await applyPatches();
 cheerpjCreateDisplay(-1, -1, document.getElementById("container"));
 await cheerpjRunJar(`/app${baseUrl}lib/ImageJ/ij.jar`);
+// await cheerpjRunMain("net.imagej.Main", `/app${baseUrl}lib/ImageJ/imagej2-cheerpj-0-SNAPSHOT-all.jar`);
+ 
 </script>
 <div id="container"></div>
 </body>
