@@ -1,10 +1,10 @@
 # Download ImageJ
 rm -rf lib/ImageJ
-wget https://wsr.imagej.net/distros/cross-platform/ij153.zip
+wget https://wsr.imagej.net/distros/cross-platform/ij154.zip
 # extract the zip file and save it to the lib folder
-unzip ij153.zip -d lib
+unzip ij154.zip -d lib
 # remove the zip file
-rm ij153.zip
+rm ij154.zip
 
 
 # # Download ImageJ2
