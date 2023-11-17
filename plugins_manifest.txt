@@ -3,3 +3,4 @@ Thunder_STORM.jar:https://github.com/zitmen/thunderstorm/releases/download/v1.3/
 DeepImageJ_JS_-2.0.1-SNAPSHOT.jar:https://github.com/deepimagej/deepimagej.js/releases/download/v2.0.1/DeepImageJ_JS_-2.0.1-SNAPSHOT.jar
 action_bar20210614214121.jar:https://sites.imagej.net/Mutterer/plugins/action_bar.jar-20210614214121
 bioformats_package.jar:https://downloads.openmicroscopy.org/bio-formats/7.0.1/artifacts/bioformats_package.jar
+nifti_io.jar:https://imagej.net/ij/plugins/download/jars/nifti_io.jar
