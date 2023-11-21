@@ -19,76 +19,8 @@
 </head>
 
 <body>
-<script type="module">
-const baseUrl = location.pathname === "/" ? "/" : location.pathname;
-async function applyPatches(){
-
-    class CustomXMLHttpRequest extends XMLHttpRequest {
-        send() {
-            const path = this._url.startsWith("http") ? new URL(this._url).pathname.toLowerCase() : this._url.toLowerCase();
-            if (path.startsWith(`${baseUrl}lib/imagej`) && (path.includes("cz.cuni.lf1.lge.thunderstorm") || path.endsWith('.jar.js') || path.endsWith('.class'))) {
-                console.log("skipping", path)
-                // Emulate a 404 error
-                setTimeout(() => {
-                    this.onload({
-                        target: {
-                            status: 404,
-                            statusText: 'Not Found',
-                            responseType: this.responseType,
-                            response: null,
-                            downloader: this.downloader, // Ensure downloader is set
-                            responseURL: this._url
-                        }
-                    });
-                }, 0);
-            } else {
-                // Call the original send method
-                super.send();
-            }
-        }
-    
-        open(method, url) {
-            this._url = url;  // Save the URL to check it in the send method
-            super.open(method, url);
-        }
-    }
-    
-
-    function ddlSend()
-    {
-        if(this.url.startsWith(`${baseUrl}lib/ImageJ/samples/`)){
-            this.url = this.url.replace(`${baseUrl}lib/ImageJ/samples/`, 'https://imagej.net/images/');
-        }
-        var xhr = new CustomXMLHttpRequest();
-        xhr.downloader = this;
-        xhr.open(this.method, this.url);
-        xhr.responseType = this.responseType;
-        xhr.onload = ddlOnLoad;
-        xhr.onerror = ddlOnError;
-        xhr.send();
-    }
-
-
-    DirectDownloader.prototype.send = ddlSend;
-}
-
-await cheerpjInit({
-    clipboardMode: "java", // "permission" | "system" | "java"
-    javaProperties: [
-      "user.dir=/files",
-      `plugins.dir=/app${baseUrl}lib/ImageJ/plugins`
-    ],
-    fetch(){
-        debugger
-        return fetch(...arguments);
-    }
-});
-await applyPatches();
-cheerpjCreateDisplay(-1, -1, document.getElementById("container"));
-await cheerpjRunJar(`/app${baseUrl}lib/ImageJ/ij.jar`);
-// await cheerpjRunMain("net.imagej.Main", `/app${baseUrl}lib/ImageJ/imagej2-cheerpj-0-SNAPSHOT-all.jar`);
- 
-</script>
+<script type="module" src="./index.js"></script>
+<button onclick="openFolder()">Load Folder</button>
 <div id="container"></div>
 </body>
 </html>
