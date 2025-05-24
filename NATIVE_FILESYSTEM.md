@@ -149,26 +149,22 @@ For unsupported browsers, the application gracefully falls back to the original 
 
 ### Successful Folder Mounting:
 ```
+Native directory loaded: screenshots
 Global nativeDirectoryHandle set: FileSystemDirectoryHandle {kind: 'directory', name: 'screenshots'}
 ```
 
-### File Listing:
+### File Operations (Clean Output):
 ```
-patchedIdbListAsync called with path: 
-Listing native directory for path:  -> nativePath: 
-Native directory entries for  : ['image1.png', 'image2.jpg', 'document.pdf']
+Created file for writing: hello.tif
 ```
 
-### File Opening:
+### Error Handling (Only when needed):
 ```
-patchedIdbMakeFileData called with path: /image1.png mode: r
-Creating native file data for path: /image1.png -> nativePath: image1.png mode: r
-Reading native file: image1.png
-Native file data created, size: 205317 chunks: 1
-nativeFileReadAsync called, offset: 0, len: 8192, fileSize: 205317
-Reading from direct data
-Read 8192 bytes from native file
+Failed to create file handle: invalid-file.tif
+Error creating file handle: invalid-file.tif Permission denied
 ```
+
+**Note**: Excessive debugging logs have been removed for a cleaner console experience. Only essential file operation messages and errors are now displayed.
 
 ## Security Considerations
 
