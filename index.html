@@ -3,6 +3,7 @@
 <head>
 <title>ImageJ.JS</title>
 <script src="https://cjrtnc.leaningtech.com/4.0/loader.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <style>
@@ -19,34 +20,539 @@
 </head>
 
 <body>
+<!-- Native File System Button -->
+<div class="fixed bottom-4 left-4 z-50">
+  <button id="loadFolderBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg shadow-lg transition-colors duration-200 flex items-center space-x-2">
+    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-5l-2-2H5a2 2 0 00-2 2z"></path>
+    </svg>
+    <span>Load Folder</span>
+  </button>
+</div>
+
+<!-- Status indicator -->
+<div id="folderStatus" class="fixed bottom-4 left-4 z-40 bg-green-600 text-white px-3 py-1 rounded-md shadow-lg hidden">
+  <span id="folderName"></span> loaded
+</div>
+
 <script type="module">
 const baseUrl = location.pathname === "/" ? "/" : location.pathname;
-async function applyPatches(){
 
-    function ddlSend()
-{
-	var downloader = this;
-	var headers = {};
-	var method = "GET";
-	if(downloader.rangeHeader)
-		headers["Range"] = downloader.rangeHeader;
-	else if(downloader.metaDataOnly)
-		headers["Range"] = "bytes=0-0";
-  if(this.url.startsWith(`${baseUrl}lib/ImageJ/samples/`)){
-      this.url = this.url.replace(`${baseUrl}lib/ImageJ/samples/`, 'https://imagej.net/images/');
+// Global variable to store the directory handle
+let nativeDirectoryHandle = null;
+
+// Native File System Integration
+class NativeFileSystemHandler {
+  constructor() {
+    this.directoryHandle = null;
+    this.fileCache = new Map();
   }
-	fetch(downloader.url, {"method": method, "mode": "cors", "headers" : headers})
-		.then(function(response){
-			ddlOnLoad(response, downloader);
-		})
-		.catch(function(err){
-			ddlOnError(downloader, err);
-		});
+
+  async loadDirectory() {
+    try {
+      if ('showDirectoryPicker' in window) {
+        this.directoryHandle = await window.showDirectoryPicker();
+        nativeDirectoryHandle = this.directoryHandle;
+        
+        // Update global window reference
+        window.nativeDirectoryHandle = this.directoryHandle;
+        window.nativeFS = this;
+        
+        // Update UI
+        const statusEl = document.getElementById('folderStatus');
+        const folderNameEl = document.getElementById('folderName');
+        const loadBtnEl = document.getElementById('loadFolderBtn');
+        
+        folderNameEl.textContent = this.directoryHandle.name;
+        statusEl.classList.remove('hidden');
+        loadBtnEl.style.display = 'none';
+        
+        console.log('Native directory loaded:', this.directoryHandle.name);
+        console.log('Global nativeDirectoryHandle set:', window.nativeDirectoryHandle);
+        return true;
+      } else {
+        alert('File System Access API is not supported in this browser. Please use Chrome 86+ or Edge 86+.');
+        return false;
+      }
+    } catch (err) {
+      if (err.name !== 'AbortError') {
+        console.error('Error loading directory:', err);
+        alert('Error loading directory: ' + err.message);
+      }
+      return false;
+    }
+  }
+
+  async getFileHandle(path) {
+    if (!this.directoryHandle) return null;
+    
+    try {
+      const pathParts = path.split('/').filter(part => part.length > 0);
+      let currentHandle = this.directoryHandle;
+      
+      for (let i = 0; i < pathParts.length - 1; i++) {
+        currentHandle = await currentHandle.getDirectoryHandle(pathParts[i]);
+      }
+      
+      const fileName = pathParts[pathParts.length - 1];
+      return await currentHandle.getFileHandle(fileName);
+    } catch (err) {
+      console.log('File not found:', path, err);
+      return null;
+    }
+  }
+
+  async createFileHandle(path) {
+    if (!this.directoryHandle) return null;
+    
+    try {
+      const pathParts = path.split('/').filter(part => part.length > 0);
+      let currentHandle = this.directoryHandle;
+      
+      // Create directories if they don't exist
+      for (let i = 0; i < pathParts.length - 1; i++) {
+        try {
+          currentHandle = await currentHandle.getDirectoryHandle(pathParts[i]);
+        } catch {
+          currentHandle = await currentHandle.getDirectoryHandle(pathParts[i], { create: true });
+        }
+      }
+      
+      const fileName = pathParts[pathParts.length - 1];
+      return await currentHandle.getFileHandle(fileName, { create: true });
+    } catch (err) {
+      console.error('Error creating file:', path, err);
+      return null;
+    }
+  }
+
+  async listDirectory(path) {
+    if (!this.directoryHandle) return [];
+    
+    try {
+      const pathParts = path.split('/').filter(part => part.length > 0);
+      let currentHandle = this.directoryHandle;
+      
+      for (const part of pathParts) {
+        currentHandle = await currentHandle.getDirectoryHandle(part);
+      }
+      
+      const entries = [];
+      for await (const [name, handle] of currentHandle.entries()) {
+        entries.push(name);
+      }
+      return entries;
+    } catch (err) {
+      console.log('Directory not found:', path, err);
+      return [];
+    }
+  }
 }
 
+const nativeFS = new NativeFileSystemHandler();
 
+async function applyPatches(){
+    // Original DirectDownloader patch
+    function ddlSend()
+    {
+        var downloader = this;
+        var headers = {};
+        var method = "GET";
+        if(downloader.rangeHeader)
+            headers["Range"] = downloader.rangeHeader;
+        else if(downloader.metaDataOnly)
+            headers["Range"] = "bytes=0-0";
+        if(this.url.startsWith(`${baseUrl}lib/ImageJ/samples/`)){
+            this.url = this.url.replace(`${baseUrl}lib/ImageJ/samples/`, 'https://imagej.net/images/');
+        }
+        fetch(downloader.url, {"method": method, "mode": "cors", "headers" : headers})
+            .then(function(response){
+                ddlOnLoad(response, downloader);
+            })
+            .catch(function(err){
+                ddlOnError(downloader, err);
+            });
+    }
+
+    // Patch IndexedDB folder operations to use native file system
+    function patchedIdbStatAsync(mp, path, fileRef, cb) {
+        console.log('patchedIdbStatAsync called with path:', path, 'nativeDirectoryHandle:', !!window.nativeDirectoryHandle);
+        
+        if (window.nativeDirectoryHandle && (path.startsWith('/') || path === '')) {
+            // Map paths to the root of the mounted directory
+            let nativePath;
+            if (path === '' || path === '/' || path === '/files' || path === '/files/') {
+                nativePath = '';  // Root of mounted directory
+            } else if (path.startsWith('/files/')) {
+                nativePath = path.substring('/files/'.length);  // Remove /files/ prefix
+            } else if (path.startsWith('/') && !path.startsWith('/.') && !path.includes('C:\\')) {
+                // Handle other root-level paths that might be user files
+                nativePath = path.substring(1);  // Remove leading slash
+            } else {
+                // For system paths like /.java or Windows paths, fall back to original implementation
+                console.log('System/Windows path, falling back to original IdbStatAsync for path:', path);
+                return originalIdbStatAsync.call(this, mp, path, fileRef, cb);
+            }
+            
+            console.log('Using native file system for path:', path, '-> nativePath:', nativePath);
+            
+            // Handle root directory case (mounted folder root)
+            if (nativePath === '') {
+                fileRef.inodeId = Math.floor(Math.random() * 1000000);
+                fileRef.uid = 0;
+                fileRef.gid = 0;
+                fileRef.permType = CheerpJFileData.S_IFDIR | 0o777;
+                fileRef.lastModified = Math.floor(Date.now() / 1000);
+                console.log('Native root directory accessed for path:', path);
+                return cb();
+            }
+            
+            nativeFS.getFileHandle(nativePath).then(async (handle) => {
+                if (handle) {
+                    console.log('Found native file:', nativePath);
+                    const file = await handle.getFile();
+                    fileRef.inodeId = Math.floor(Math.random() * 1000000);
+                    fileRef.uid = 0;
+                    fileRef.gid = 0;
+                    fileRef.permType = CheerpJFileData.S_IFREG | 0o666;
+                    fileRef.fileLength = file.size;
+                    fileRef.lastModified = Math.floor(file.lastModified / 1000);
+                } else {
+                    // Try as directory
+                    try {
+                        const entries = await nativeFS.listDirectory(nativePath);
+                        if (entries.length >= 0) {
+                            console.log('Found native directory:', nativePath, 'with', entries.length, 'entries');
+                            fileRef.inodeId = Math.floor(Math.random() * 1000000);
+                            fileRef.uid = 0;
+                            fileRef.gid = 0;
+                            fileRef.permType = CheerpJFileData.S_IFDIR | 0o777;
+                            fileRef.lastModified = Math.floor(Date.now() / 1000);
+                        } else {
+                            fileRef.permType = 0;
+                        }
+                    } catch (err) {
+                        console.log('Native directory not accessible:', nativePath, err.message);
+                        fileRef.permType = 0;
+                    }
+                }
+                cb();
+            }).catch((err) => {
+                console.log('Native file/directory not found:', nativePath, 'error:', err.message);
+                fileRef.permType = 0;
+                cb();
+            });
+            return;
+        }
+        
+        // Fall back to original implementation
+        console.log('Falling back to original IdbStatAsync for path:', path);
+        return originalIdbStatAsync.call(this, mp, path, fileRef, cb);
+    }
+
+    function patchedIdbListAsync(mp, path, fileRef, cb) {
+        console.log('patchedIdbListAsync called with path:', path);
+        
+        if (window.nativeDirectoryHandle && (path.startsWith('/') || path === '')) {
+            // Map paths to the root of the mounted directory
+            let nativePath;
+            if (path === '' || path === '/' || path === '/files' || path === '/files/') {
+                nativePath = '';  // Root of mounted directory
+            } else if (path.startsWith('/files/')) {
+                nativePath = path.substring('/files/'.length);  // Remove /files/ prefix
+            } else if (path.startsWith('/') && !path.startsWith('/.') && !path.includes('C:\\')) {
+                // Handle other root-level paths that might be user files
+                nativePath = path.substring(1);  // Remove leading slash
+            } else {
+                // For system paths like /.java or Windows paths, fall back to original implementation
+                console.log('System/Windows path, falling back to original IdbListAsync for path:', path);
+                return originalIdbListAsync.call(this, mp, path, fileRef, cb);
+            }
+            
+            console.log('Listing native directory for path:', path, '-> nativePath:', nativePath);
+            
+            nativeFS.listDirectory(nativePath).then((entries) => {
+                console.log('Native directory entries for', path, ':', entries);
+                for (const entry of entries) {
+                    fileRef.push(entry);
+                }
+                cb();
+            }).catch((err) => {
+                console.log('Failed to list native directory:', nativePath, err.message);
+                cb();
+            });
+            return;
+        }
+        
+        // Fall back to original implementation
+        console.log('Falling back to original IdbListAsync for path:', path);
+        return originalIdbListAsync.call(this, mp, path, fileRef, cb);
+    }
+
+    function patchedIdbMakeFileData(mp, path, mode, uid, gid, cb) {
+        console.log('patchedIdbMakeFileData called with path:', path, 'mode:', mode);
+        
+        if (window.nativeDirectoryHandle && (path.startsWith('/') || path === '')) {
+            // Map paths to the root of the mounted directory
+            let nativePath;
+            if (path === '' || path === '/' || path === '/files' || path === '/files/') {
+                nativePath = '';  // Root of mounted directory
+            } else if (path.startsWith('/files/')) {
+                nativePath = path.substring('/files/'.length);  // Remove /files/ prefix
+            } else if (path.startsWith('/') && !path.startsWith('/.') && !path.includes('C:\\')) {
+                // Handle other root-level paths that might be user files
+                nativePath = path.substring(1);  // Remove leading slash
+            } else {
+                // For system paths like /.java or Windows paths, fall back to original implementation
+                console.log('System/Windows path, falling back to original IdbMakeFileData for path:', path);
+                return originalIdbMakeFileData.call(this, mp, path, mode, uid, gid, cb);
+            }
+            
+            console.log('Creating native file data for path:', path, '-> nativePath:', nativePath, 'mode:', mode);
+            
+            // Handle root directory case (mounted folder root)
+            if (nativePath === '') {
+                const fileData = new CheerpJFileData(
+                    mp, 
+                    path, 
+                    0, 
+                    Math.floor(Math.random() * 1000000), 
+                    CheerpJFileData.S_IFDIR | 0o777, 
+                    Math.floor(Date.now() / 1000), 
+                    uid, 
+                    gid
+                );
+                fileData.mount = mp.inodeOps;
+                console.log('Native root directory file data created for path:', path);
+                return cb(fileData);
+            }
+            
+            if (mode === "r") {
+                nativeFS.getFileHandle(nativePath).then(async (handle) => {
+                    if (handle) {
+                        console.log('Reading native file:', nativePath);
+                        const file = await handle.getFile();
+                        const arrayBuffer = await file.arrayBuffer();
+                        const data = new Uint8Array(arrayBuffer);
+                        
+                        const fileData = new CheerpJFileData(
+                            mp, 
+                            path, 
+                            data.length, 
+                            Math.floor(Math.random() * 1000000), 
+                            CheerpJFileData.S_IFREG | 0o666, 
+                            Math.floor(file.lastModified / 1000), 
+                            uid, 
+                            gid
+                        );
+                        fileData.mount = mp.inodeOps;
+                        
+                        // Set up the file data properly for ImageJ
+                        fileData.data = data;
+                        
+                        // Also set up chunks for compatibility with CheerpJ's chunked reading
+                        const chunkSize = 1024 * 1024; // 1MB chunks
+                        const chunks = [];
+                        let offset = 0;
+                        
+                        while (offset < data.length) {
+                            const chunkLength = Math.min(chunkSize, data.length - offset);
+                            const chunk = new Uint8Array(chunkSize);
+                            chunk.set(data.subarray(offset, offset + chunkLength));
+                            chunks.push(chunk);
+                            offset += chunkLength;
+                        }
+                        
+                        fileData.chunks = chunks;
+                        
+                        console.log('Native file data created, size:', data.length, 'chunks:', chunks.length);
+                        
+                        // Create custom inode operations for native files
+                        fileData.mount = {
+                            readAsync: nativeFileReadAsync,
+                            writeAsync: mp.inodeOps.writeAsync,
+                            close: mp.inodeOps.close
+                        };
+                        
+                        cb(fileData);
+                    } else {
+                        console.log('Native file not found:', nativePath);
+                        cb(null);
+                    }
+                }).catch((err) => {
+                    console.log('Error reading native file:', nativePath, err.message);
+                    cb(null);
+                });
+                return;
+            } else if (mode === "w" || mode === "r+") {
+                // Create or open for writing
+                nativeFS.createFileHandle(nativePath).then(async (handle) => {
+                    if (handle) {
+                        console.log('Created native file handle for writing:', nativePath);
+                        const fileData = new CheerpJFileData(
+                            mp, 
+                            path, 
+                            0, 
+                            Math.floor(Math.random() * 1000000), 
+                            CheerpJFileData.S_IFREG | 0o666, 
+                            Math.floor(Date.now() / 1000), 
+                            uid, 
+                            gid
+                        );
+                        fileData.mount = mp.inodeOps;
+                        fileData.dirty = 1;
+                        fileData.chunks = [];
+                        fileData.nativeHandle = handle;
+                        cb(fileData);
+                    } else {
+                        console.log('Failed to create native file handle:', nativePath);
+                        cb(null);
+                    }
+                }).catch((err) => {
+                    console.log('Error creating native file handle:', nativePath, err.message);
+                    cb(null);
+                });
+                return;
+            }
+        }
+        
+        // Fall back to original implementation
+        console.log('Falling back to original IdbMakeFileData for path:', path);
+        return originalIdbMakeFileData.call(this, mp, path, mode, uid, gid, cb);
+    }
+
+    function patchedIdbCommitFileData(fileData, cb) {
+        if (fileData.nativeHandle && fileData.dirty) {
+            // Write to native file system
+            const writeToNativeFile = async () => {
+                try {
+                    const writable = await fileData.nativeHandle.createWritable();
+                    
+                    // Reconstruct file content from chunks
+                    const contents = new Uint8Array(fileData.length);
+                    const chunkSize = 1024 * 1024;
+                    let offset = 0;
+                    
+                    for (let i = 0; i < fileData.chunks.length; i++) {
+                        const chunk = fileData.chunks[i];
+                        if (chunk) {
+                            const chunkData = chunk.subarray(0, Math.min(chunk.length, fileData.length - offset));
+                            contents.set(chunkData, offset);
+                            offset += chunkData.length;
+                        }
+                    }
+                    
+                    await writable.write(contents);
+                    await writable.close();
+                    
+                    fileData.dirty = 0;
+                    cb();
+                } catch (err) {
+                    console.error('Error writing to native file:', err);
+                    cb();
+                }
+            };
+            
+            writeToNativeFile();
+            return;
+        }
+        
+        // Fall back to original implementation
+        return originalIdbCommitFileData.call(this, fileData, cb);
+    }
+
+    // Custom read function for native files
+    function nativeFileReadAsync(fileData, fileOffset, buf, off, len, flags, cb) {
+        console.log('nativeFileReadAsync called, offset:', fileOffset, 'len:', len, 'fileSize:', fileData.length);
+        
+        if (fileOffset >= fileData.length) {
+            console.log('EOF reached');
+            return cb(0);
+        }
+        
+        if (fileOffset + len > fileData.length) {
+            len = fileData.length - fileOffset;
+        }
+        
+        if (len <= 0) {
+            return cb(0);
+        }
+        
+        // Use the direct data if available
+        if (fileData.data) {
+            console.log('Reading from direct data');
+            for (let i = 0; i < len; i++) {
+                buf[off + i] = fileData.data[fileOffset + i];
+            }
+            return cb(len);
+        }
+        
+        // Fall back to chunk-based reading
+        console.log('Reading from chunks');
+        const chunkSize = 1024 * 1024;
+        let bytesRead = 0;
+        
+        while (bytesRead < len) {
+            const currentOffset = fileOffset + bytesRead;
+            const chunkIndex = Math.floor(currentOffset / chunkSize);
+            const chunkOffset = currentOffset % chunkSize;
+            
+            if (chunkIndex >= fileData.chunks.length) {
+                break;
+            }
+            
+            const chunk = fileData.chunks[chunkIndex];
+            if (!chunk) {
+                break;
+            }
+            
+            const bytesToRead = Math.min(len - bytesRead, chunkSize - chunkOffset);
+            for (let i = 0; i < bytesToRead; i++) {
+                buf[off + bytesRead + i] = chunk[chunkOffset + i];
+            }
+            
+            bytesRead += bytesToRead;
+        }
+        
+        console.log('Read', bytesRead, 'bytes from native file');
+        return cb(bytesRead);
+    }
+
+    // Store original functions
+    const originalIdbStatAsync = IdbOps.statAsync;
+    const originalIdbListAsync = IdbOps.listAsync;
+    const originalIdbMakeFileData = IdbOps.makeFileData;
+    const originalIdbCommitFileData = IdbInodeOps.close;
+
+    // Apply patches
     DirectDownloader.prototype.send = ddlSend;
+    IdbOps.statAsync = patchedIdbStatAsync;
+    IdbOps.listAsync = patchedIdbListAsync;
+    IdbOps.makeFileData = patchedIdbMakeFileData;
+    IdbInodeOps.close = patchedIdbCommitFileData;
+
+    // Expose to global window object for CheerpJ runtime access
+    window.IdbOps = IdbOps;
+    window.IdbInodeOps = IdbInodeOps;
+    window.DirectDownloader = DirectDownloader;
+    window.nativeDirectoryHandle = nativeDirectoryHandle;
+    window.nativeFS = nativeFS;
+    window.CheerpJFileData = CheerpJFileData;
+    
+    // Also expose the patched functions directly
+    window.patchedIdbStatAsync = patchedIdbStatAsync;
+    window.patchedIdbListAsync = patchedIdbListAsync;
+    window.patchedIdbMakeFileData = patchedIdbMakeFileData;
+    window.patchedIdbCommitFileData = patchedIdbCommitFileData;
 }
+
+// Event listener for the load folder button
+document.addEventListener('DOMContentLoaded', () => {
+    const loadFolderBtn = document.getElementById('loadFolderBtn');
+    loadFolderBtn.addEventListener('click', () => {
+        nativeFS.loadDirectory();
+    });
+});
 
 await cheerpjInit({
     clipboardMode: "java", // "permission" | "system" | "java"
@@ -55,15 +561,10 @@ await cheerpjInit({
       `plugins.dir=/app${baseUrl}lib/ImageJ/plugins`,
       "useJFileChooser=true"
     ],
-    // fetch(){
-    //     debugger
-    //     return fetch(...arguments);
-    // }
 });
 await applyPatches();
 cheerpjCreateDisplay(-1, -1, document.getElementById("container"));
 await cheerpjRunJar(`/app${baseUrl}lib/ImageJ/ij.jar`);
-// await cheerpjRunMain("net.imagej.Main", `/app${baseUrl}lib/ImageJ/imagej2-cheerpj-0-SNAPSHOT-all.jar`);
  
 </script>
 <div id="container"></div>
