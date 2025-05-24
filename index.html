@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <title>ImageJ.JS</title>
-<script src="https://cjrtnc.leaningtech.com/20201217_2/loader.js"></script>
+<script src="https://cjrtnc.leaningtech.com/4.0/loader.js"></script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <style>
@@ -23,50 +23,26 @@
 const baseUrl = location.pathname === "/" ? "/" : location.pathname;
 async function applyPatches(){
 
-    class CustomXMLHttpRequest extends XMLHttpRequest {
-        send() {
-            const path = this._url.startsWith("http") ? new URL(this._url).pathname.toLowerCase() : this._url.toLowerCase();
-            if (path.startsWith(`${baseUrl}lib/imagej`) && (path.includes("cz.cuni.lf1.lge.thunderstorm") || path.endsWith('.jar.js') || path.endsWith('.class'))) {
-                console.log("skipping", path)
-                // Emulate a 404 error
-                setTimeout(() => {
-                    this.onload({
-                        target: {
-                            status: 404,
-                            statusText: 'Not Found',
-                            responseType: this.responseType,
-                            response: null,
-                            downloader: this.downloader, // Ensure downloader is set
-                            responseURL: this._url
-                        }
-                    });
-                }, 0);
-            } else {
-                // Call the original send method
-                super.send();
-            }
-        }
-    
-        open(method, url) {
-            this._url = url;  // Save the URL to check it in the send method
-            super.open(method, url);
-        }
-    }
-    
-
     function ddlSend()
-    {
-        if(this.url.startsWith(`${baseUrl}lib/ImageJ/samples/`)){
-            this.url = this.url.replace(`${baseUrl}lib/ImageJ/samples/`, 'https://imagej.net/images/');
-        }
-        var xhr = new CustomXMLHttpRequest();
-        xhr.downloader = this;
-        xhr.open(this.method, this.url);
-        xhr.responseType = this.responseType;
-        xhr.onload = ddlOnLoad;
-        xhr.onerror = ddlOnError;
-        xhr.send();
-    }
+{
+	var downloader = this;
+	var headers = {};
+	var method = "GET";
+	if(downloader.rangeHeader)
+		headers["Range"] = downloader.rangeHeader;
+	else if(downloader.metaDataOnly)
+		headers["Range"] = "bytes=0-0";
+  if(this.url.startsWith(`${baseUrl}lib/ImageJ/samples/`)){
+      this.url = this.url.replace(`${baseUrl}lib/ImageJ/samples/`, 'https://imagej.net/images/');
+  }
+	fetch(downloader.url, {"method": method, "mode": "cors", "headers" : headers})
+		.then(function(response){
+			ddlOnLoad(response, downloader);
+		})
+		.catch(function(err){
+			ddlOnError(downloader, err);
+		});
+}
 
 
     DirectDownloader.prototype.send = ddlSend;
@@ -76,12 +52,13 @@ await cheerpjInit({
     clipboardMode: "java", // "permission" | "system" | "java"
     javaProperties: [
       "user.dir=/files",
-      `plugins.dir=/app${baseUrl}lib/ImageJ/plugins`
+      `plugins.dir=/app${baseUrl}lib/ImageJ/plugins`,
+      "useJFileChooser=true"
     ],
-    fetch(){
-        debugger
-        return fetch(...arguments);
-    }
+    // fetch(){
+    //     debugger
+    //     return fetch(...arguments);
+    // }
 });
 await applyPatches();
 cheerpjCreateDisplay(-1, -1, document.getElementById("container"));
