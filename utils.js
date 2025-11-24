@@ -391,36 +391,64 @@ function createNativeFileSystemPatches() {
             const writeToNativeFile = async () => {
                 try {
                     const writable = await fileData.nativeHandle.createWritable();
-                    
+
                     // Reconstruct file content from chunks
-                    const contents = new Uint8Array(fileData.length);
                     const chunkSize = 1024 * 1024;
-                    let offset = 0;
-                    
+
+                    // Calculate actual file size based on chunks
+                    let totalSize = 0;
+                    for (let i = 0; i < fileData.chunks.length; i++) {
+                        if (fileData.chunks[i]) {
+                            totalSize += chunkSize;
+                        }
+                    }
+
+                    // Use either the calculated size or fileData.length, whichever is larger
+                    const fileSize = Math.max(totalSize, fileData.length);
+
+                    if (fileSize === 0 && fileData.chunks.length === 0) {
+                        // Empty file, just close it
+                        await writable.write(new Uint8Array(0));
+                        await writable.close();
+                        console.log('Wrote empty file to native file system');
+                        fileData.dirty = 0;
+                        cb();
+                        return;
+                    }
+
+                    // Write chunks directly
                     for (let i = 0; i < fileData.chunks.length; i++) {
                         const chunk = fileData.chunks[i];
                         if (chunk) {
-                            const chunkData = chunk.subarray(0, Math.min(chunk.length, fileData.length - offset));
-                            contents.set(chunkData, offset);
-                            offset += chunkData.length;
+                            // For the last chunk, only write the actual data length
+                            if (i === fileData.chunks.length - 1 && fileData.length > 0) {
+                                const lastChunkSize = fileData.length - (i * chunkSize);
+                                if (lastChunkSize > 0 && lastChunkSize < chunkSize) {
+                                    await writable.write(chunk.subarray(0, lastChunkSize));
+                                } else {
+                                    await writable.write(chunk);
+                                }
+                            } else {
+                                await writable.write(chunk);
+                            }
                         }
                     }
-                    
-                    await writable.write(contents);
+
                     await writable.close();
-                    
+                    console.log('Successfully wrote file to native file system:', fileData.path, 'size:', fileData.length);
+
                     fileData.dirty = 0;
                     cb();
                 } catch (err) {
-                    console.error('Error writing to native file:', err);
+                    console.error('Error writing to native file:', fileData.path, err);
                     cb();
                 }
             };
-            
+
             writeToNativeFile();
             return;
         }
-        
+
         // Fall back to original implementation
         return originalIdbCommitFileData.call(this, fileData, cb);
     }

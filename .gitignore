@@ -1,4 +1,22 @@
-// add common git ignore
+# Dependencies
+node_modules/
+package-lock.json
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
 .DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+
+# Project specific
 *.zip
 lib/ImageJ

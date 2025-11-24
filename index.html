@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <title>ImageJ.JS</title>
-<script src="https://cjrtnc.leaningtech.com/4.0/loader.js"></script>
+<script src="https://cjrtnc.leaningtech.com/4.2/loader.js"></script>
 <script src="https://cdn.tailwindcss.com"></script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -39,7 +39,10 @@
 <script src="utils.js"></script>
 
 <script type="module">
-const baseUrl = location.pathname === "/" ? "/" : location.pathname;
+// Get the directory path, ensuring it ends with /
+const baseUrl = location.pathname.endsWith('/')
+  ? location.pathname
+  : location.pathname.substring(0, location.pathname.lastIndexOf('/') + 1);
 function patchDownloader(){
   // Original DirectDownloader patch
   function ddlSend()
@@ -51,9 +54,10 @@ function patchDownloader(){
           headers["Range"] = downloader.rangeHeader;
       else if(downloader.metaDataOnly)
           headers["Range"] = "bytes=0-0";
-      if(this.url.startsWith(`${baseUrl}lib/ImageJ/samples/`)){
-          this.url = this.url.replace(`${baseUrl}lib/ImageJ/samples/`, 'https://imagej.net/images/');
-      }
+      // Disabled redirect to imagej.net because their server doesn't support Range headers in CheerpJ 4.2
+      // if(this.url.startsWith(`${baseUrl}lib/ImageJ/samples/`)){
+      //     this.url = this.url.replace(`${baseUrl}lib/ImageJ/samples/`, 'https://imagej.net/images/');
+      // }
       fetch(downloader.url, {"method": method, "mode": "cors", "headers" : headers})
           .then(function(response){
               ddlOnLoad(response, downloader);
