@@ -88,7 +88,7 @@ The `NativeFileSystemHandler` class provides **complete functionality**:
 
 ### UI Components
 
-- **Load Folder Button** ✅ - Styled with Tailwind CSS, positioned in bottom-left
+- **Mount Local Folder Button** ✅ - Styled with Tailwind CSS, positioned in bottom-left
 - **Status Indicator** ✅ - Shows mounted folder name with green background
 - **Responsive Design** ✅ - Works on different screen sizes
 - **Visual Feedback** ✅ - Button disappears when folder is loaded
@@ -106,7 +106,7 @@ For unsupported browsers, the application gracefully falls back to the original 
 
 ### 1. **Load a Folder** ✅
 ```
-✅ Click the "Load Folder" button in the bottom-left corner
+✅ Click the "Mount Local Folder" button in the bottom-left corner
 ✅ Select a directory containing your images or data files
 ✅ Green status indicator appears showing folder name
 ✅ Console shows: "Global nativeDirectoryHandle set"

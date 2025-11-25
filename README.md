@@ -238,7 +238,7 @@ Then open http://localhost:8000 in your browser.
 2. ImageJ will load automatically with the default interface
 
 ### Loading Local Files
-1. Click the "Load Folder" button in the bottom-left corner
+1. Click the "Mount Local Folder" button in the bottom-left corner
 2. Select a folder containing your images
 3. The folder will be mounted and accessible from within ImageJ
 4. Use ImageJ's File menu to open images from the mounted folder
@@ -365,7 +365,7 @@ console.log({
 - Solution: Make sure you're using `npm run dev`, not Python's HTTP server
 
 **"File not found" when accessing mounted folder**
-- Check that folder was mounted via "Load Folder" button
+- Check that folder was mounted via "Mount Local Folder" button
 - Verify browser supports File System Access API
 - Check browser console for permission errors
 

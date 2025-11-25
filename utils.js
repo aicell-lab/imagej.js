@@ -4,6 +4,123 @@
 // Global variable to store the directory handle
 let nativeDirectoryHandle = null;
 
+// Local File System Handler for drag-and-drop files
+class LocalFileSystemHandler {
+  constructor() {
+    this.files = new Map(); // Map of path -> File object
+    this.directories = new Set(); // Set of directory paths
+  }
+
+  clear() {
+    this.files.clear();
+    this.directories.clear();
+    console.log('Cleared all local files');
+  }
+
+  async addFile(file, path = null) {
+    // Use provided path or construct from file name
+    const filePath = path || file.name;
+    this.files.set(filePath, file);
+
+    // Add parent directories
+    const parts = filePath.split('/');
+    let currentPath = '';
+    for (let i = 0; i < parts.length - 1; i++) {
+      currentPath += (currentPath ? '/' : '') + parts[i];
+      this.directories.add(currentPath);
+    }
+
+    console.log('Added file to local FS:', filePath);
+  }
+
+  async addFiles(files, basePath = '') {
+    for (const file of files) {
+      const path = basePath ? `${basePath}/${file.name}` : file.name;
+      await this.addFile(file, path);
+    }
+  }
+
+  async addFileTree(entries, basePath = '') {
+    for (const entry of entries) {
+      if (entry.kind === 'file') {
+        const file = await entry.getAsFile();
+        if (file) {
+          const path = basePath ? `${basePath}/${file.name}` : file.name;
+          await this.addFile(file, path);
+        }
+      } else if (entry.kind === 'directory') {
+        const dirReader = entry.createReader();
+        const childEntries = await new Promise((resolve, reject) => {
+          dirReader.readEntries(resolve, reject);
+        });
+
+        const dirPath = basePath ? `${basePath}/${entry.name}` : entry.name;
+        this.directories.add(dirPath);
+
+        await this.addFileTree(childEntries, dirPath);
+      }
+    }
+  }
+
+  getFile(path) {
+    return this.files.get(path);
+  }
+
+  isDirectory(path) {
+    return this.directories.has(path);
+  }
+
+  listDirectory(path) {
+    const entries = [];
+    const prefix = path ? `${path}/` : '';
+    const prefixLength = prefix.length;
+
+    // List files
+    for (const filePath of this.files.keys()) {
+      if (filePath.startsWith(prefix)) {
+        const remainder = filePath.substring(prefixLength);
+        const slashIndex = remainder.indexOf('/');
+        if (slashIndex === -1) {
+          // Direct child file
+          entries.push(remainder);
+        } else {
+          // Child directory
+          const dirName = remainder.substring(0, slashIndex);
+          if (!entries.includes(dirName)) {
+            entries.push(dirName);
+          }
+        }
+      }
+    }
+
+    // List directories
+    for (const dirPath of this.directories) {
+      if (dirPath.startsWith(prefix) && dirPath !== path) {
+        const remainder = dirPath.substring(prefixLength);
+        const slashIndex = remainder.indexOf('/');
+        if (slashIndex === -1) {
+          // Direct child directory
+          if (!entries.includes(remainder)) {
+            entries.push(remainder);
+          }
+        } else {
+          // Nested directory
+          const dirName = remainder.substring(0, slashIndex);
+          if (!entries.includes(dirName)) {
+            entries.push(dirName);
+          }
+        }
+      }
+    }
+
+    return entries;
+  }
+
+  isEmpty() {
+    return this.files.size === 0 && this.directories.size === 0;
+  }
+}
+
 // Native File System Integration
 class NativeFileSystemHandler {
   constructor() {
@@ -110,20 +227,20 @@ class NativeFileSystemHandler {
   }
 }
 
-// Custom read function for native files
+// Custom read function for native files (also used for local FS)
 function nativeFileReadAsync(fileData, fileOffset, buf, off, len, flags, cb) {
     if (fileOffset >= fileData.length) {
         return cb(0);
     }
-    
+
     if (fileOffset + len > fileData.length) {
         len = fileData.length - fileOffset;
     }
-    
+
     if (len <= 0) {
         return cb(0);
     }
-    
+
     // Use the direct data if available
     if (fileData.data) {
         for (let i = 0; i < len; i++) {
@@ -131,34 +248,71 @@ function nativeFileReadAsync(fileData, fileOffset, buf, off, len, flags, cb) {
         }
         return cb(len);
     }
-    
+
     // Fall back to chunk-based reading
     const chunkSize = 1024 * 1024;
     let bytesRead = 0;
-    
+
     while (bytesRead < len) {
         const currentOffset = fileOffset + bytesRead;
         const chunkIndex = Math.floor(currentOffset / chunkSize);
         const chunkOffset = currentOffset % chunkSize;
-        
+
         if (chunkIndex >= fileData.chunks.length) {
             break;
         }
-        
+
         const chunk = fileData.chunks[chunkIndex];
         if (!chunk) {
             break;
         }
-        
+
         const bytesToRead = Math.min(len - bytesRead, chunkSize - chunkOffset);
         for (let i = 0; i < bytesToRead; i++) {
             buf[off + bytesRead + i] = chunk[chunkOffset + i];
         }
-        
+
         bytesRead += bytesToRead;
     }
-    
+
     return cb(bytesRead);
+}
+
+// Streaming read function for local files (drag-and-drop)
+// This reads from the File object on-demand without loading entire file into memory
+function localFileReadAsync(fileData, fileOffset, buf, off, len, flags, cb) {
+    if (fileOffset >= fileData.length) {
+        return cb(0);
+    }
+
+    if (fileOffset + len > fileData.length) {
+        len = fileData.length - fileOffset;
+    }
+
+    if (len <= 0) {
+        return cb(0);
+    }
+
+    // Read the requested slice from the File object
+    const file = fileData.localFile;
+    if (!file) {
+        console.error('No localFile reference in fileData');
+        return cb(0);
+    }
+
+    // Use File.slice() to read only the requested portion
+    const blob = file.slice(fileOffset, fileOffset + len);
+
+    blob.arrayBuffer().then(arrayBuffer => {
+        const data = new Uint8Array(arrayBuffer);
+        for (let i = 0; i < data.length; i++) {
+            buf[off + i] = data[i];
+        }
+        cb(data.length);
+    }).catch(err => {
+        console.error('Error reading file slice:', err);
+        cb(0);
+    });
 }
 
 // Create and apply all patches to CheerpOS
@@ -474,14 +628,213 @@ function createNativeFileSystemPatches() {
     window.patchedIdbCommitFileData = patchedIdbCommitFileData;
 }
 
-// Initialize the native file system handler
+// Local file system operations - Define these first before CheerpJLocalFolder
+function localStatAsync(mp, path, fileRef, cb) {
+    // Remove the mount point prefix to get the local path
+    const localPath = path === '' || path === '/' ? '' : path.substring(1);
+
+    // Handle root directory
+    if (localPath === '') {
+        fileRef.inodeId = Math.floor(Math.random() * 1000000);
+        fileRef.uid = 0;
+        fileRef.gid = 0;
+        fileRef.permType = CheerpJFileData.S_IFDIR | 0o777;
+        fileRef.lastModified = Math.floor(Date.now() / 1000);
+        return cb();
+    }
+
+    // Check if it's a file
+    const file = window.localFS.getFile(localPath);
+    if (file) {
+        fileRef.inodeId = Math.floor(Math.random() * 1000000);
+        fileRef.uid = 0;
+        fileRef.gid = 0;
+        fileRef.permType = CheerpJFileData.S_IFREG | 0o666;
+        fileRef.fileLength = file.size;
+        fileRef.lastModified = Math.floor(file.lastModified / 1000);
+        return cb();
+    }
+
+    // Check if it's a directory
+    if (window.localFS.isDirectory(localPath)) {
+        fileRef.inodeId = Math.floor(Math.random() * 1000000);
+        fileRef.uid = 0;
+        fileRef.gid = 0;
+        fileRef.permType = CheerpJFileData.S_IFDIR | 0o777;
+        fileRef.lastModified = Math.floor(Date.now() / 1000);
+        return cb();
+    }
+
+    // File/directory doesn't exist
+    fileRef.permType = 0;
+    return cb();
+}
+
+function localListAsync(mp, path, fileRef, cb) {
+    const localPath = path === '' || path === '/' ? '' : path.substring(1);
+
+    try {
+        const entries = window.localFS.listDirectory(localPath);
+        for (const entry of entries) {
+            fileRef.push(entry);
+        }
+        return cb();
+    } catch (err) {
+        console.error('Error listing local directory:', localPath, err);
+        return cb();
+    }
+}
+
+function localMakeFileData(mp, path, mode, uid, gid, cb) {
+    const localPath = path === '' || path === '/' ? '' : path.substring(1);
+
+    // Handle root directory
+    if (localPath === '') {
+        const fileData = new CheerpJFileData(
+            mp,
+            path,
+            0,
+            Math.floor(Math.random() * 1000000),
+            CheerpJFileData.S_IFDIR | 0o777,
+            Math.floor(Date.now() / 1000),
+            uid,
+            gid
+        );
+        fileData.mount = mp.inodeOps;
+        return cb(fileData);
+    }
+
+    if (mode === "r") {
+        // Read mode - get file from local FS
+        const file = window.localFS.getFile(localPath);
+        if (!file) {
+            return cb(null);
+        }
+
+        // Create file data WITHOUT loading the entire file into memory
+        // We'll use streaming reads via localFileReadAsync
+        const fileData = new CheerpJFileData(
+            mp,
+            path,
+            file.size,  // Just store the size, not the data
+            Math.floor(Math.random() * 1000000),
+            CheerpJFileData.S_IFREG | 0o666,
+            Math.floor(file.lastModified / 1000),
+            uid,
+            gid
+        );
+
+        // Store reference to the File object for streaming reads
+        fileData.localFile = file;
+
+        // Use streaming read function that reads chunks on-demand
+        fileData.mount = mp.inodeOps;
+
+        return cb(fileData);
+    } else if (mode === "w" || mode === "r+") {
+        // Write mode not supported for local FS (read-only)
+        console.warn('Write mode not supported for /local (drag-and-drop files are read-only)');
+        return cb(null);
+    }
+
+    return cb(null);
+}
+
+// Local file system operations
+var LocalOps = {
+    statAsync: localStatAsync,
+    listAsync: localListAsync,
+    makeFileData: localMakeFileData,
+    createDirAsync: null,
+    renameAsync: null,
+    linkAsync: null,
+    unlinkAsync: null
+};
+
+var LocalInodeOps = {
+    readAsync: localFileReadAsync,
+    writeAsync: null,
+    close: null
+};
+
+// Custom CheerpJFolder for local file system (drag-and-drop)
+// We create a folder object that matches the CheerpJFolder structure
+function CheerpJLocalFolder(mp) {
+    this.mountPoint = mp;
+    this.isSplit = false;
+    this.mountOps = LocalOps;
+    this.inodeOps = LocalInodeOps;
+    this.devId = 100; // Arbitrary device ID
+    this.fileCache = {};
+    this.cacheThreads = {};
+    this.inodeCache = [];
+}
+
+// Add the cache methods that CheerpJFolder has
+CheerpJLocalFolder.prototype.getCached = function(fileName) {
+    var c = this.fileCache;
+    if(!c.hasOwnProperty(fileName))
+        return null;
+    var inodeId = c[fileName];
+    var ret = this.inodeCache[inodeId];
+    return ret;
+};
+
+CheerpJLocalFolder.prototype.setCached = function(fileName, fileData) {
+    var c = this.fileCache;
+    var inodeId = fileData.inodeId;
+    c[fileName] = inodeId;
+    this.inodeCache[inodeId] = fileData;
+};
+
+CheerpJLocalFolder.prototype.clearCached = function(fileName) {
+    var c = this.fileCache;
+    if(c.hasOwnProperty(fileName)) {
+        delete c[fileName];
+    }
+};
+
+CheerpJLocalFolder.prototype.decRefCached = function(fileName, fileData) {
+    // No-op for local FS
+};
+
+// Create and apply patches for local file system (drag-and-drop)
+// This registers /local as a proper mount point
+function createLocalFileSystemPatches() {
+    // Add /local mount to the global cheerpjFSMounts array
+    // Insert before the root folder (which is always last)
+    const localFolder = new CheerpJLocalFolder("/local/");
+
+    // Find the index of the root folder
+    const rootIndex = cheerpjFSMounts.findIndex(m => m.mountPoint === "/");
+
+    if (rootIndex !== -1) {
+        // Insert before root
+        cheerpjFSMounts.splice(rootIndex, 0, localFolder);
+    } else {
+        // Root not found, just push (shouldn't happen)
+        cheerpjFSMounts.push(localFolder);
+    }
+
+    console.log('Local file system mount registered at /local/');
+}
+
+// Initialize the handlers
 const nativeFS = new NativeFileSystemHandler();
+const localFS = new LocalFileSystemHandler();
+
+// Expose globally for access from other scripts
+window.nativeFS = nativeFS;
+window.localFS = localFS;
 
 // Export for use in other files
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
         NativeFileSystemHandler,
+        LocalFileSystemHandler,
         createNativeFileSystemPatches,
-        nativeFS
+        createLocalFileSystemPatches,
+        nativeFS,
+        localFS
     };
 } 

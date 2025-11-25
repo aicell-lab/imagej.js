@@ -11,10 +11,44 @@
     body {
       margin: 0;
     }
-  
+
     #container {
       width: 100vw;
       height: 100svh;
+    }
+
+    /* Bring the main ImageJ window to top when hovering */
+    #cheerpjDisplay > .cjWindow.cjBordered:first-of-type:hover {
+      z-index: 999 !important;
+    }
+
+    /* Drag and drop overlay */
+    #dropOverlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(59, 130, 246, 0.9);
+      z-index: 10000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+    }
+
+    #dropOverlay.active {
+      display: flex;
+    }
+
+    .drop-message {
+      color: white;
+      font-size: 2rem;
+      font-weight: bold;
+      text-align: center;
+      padding: 2rem;
+      border: 4px dashed white;
+      border-radius: 1rem;
     }
   </style>
 </head>
@@ -26,13 +60,33 @@
     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-5l-2-2H5a2 2 0 00-2 2z"></path>
     </svg>
-    <span>Load Folder</span>
+    <span>Mount Local Folder</span>
   </button>
 </div>
 
 <!-- Status indicator -->
 <div id="folderStatus" class="fixed bottom-4 left-4 z-40 bg-green-600 text-white px-3 py-1 rounded-md shadow-lg hidden">
   <span id="folderName"></span> loaded
+</div>
+
+<!-- Drag and drop overlay -->
+<div id="dropOverlay">
+  <div class="drop-message">
+    📁 Drop files or folders here
+  </div>
+</div>
+
+<!-- Local files status -->
+<div id="localFilesStatus" class="fixed top-4 right-4 z-50 bg-purple-600 text-white px-3 py-2 rounded-md shadow-lg hidden">
+  <div class="text-sm font-bold">Local Files (/local)</div>
+  <div id="localFilesList" class="text-xs mt-1"></div>
+</div>
+
+<!-- Test Java-JS Interop Button -->
+<div class="fixed bottom-4 right-4 z-50">
+  <button id="testJavaBtn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg shadow-lg transition-colors duration-200">
+    Run Macro: Open Image
+  </button>
 </div>
 
 <!-- Load utilities -->
@@ -75,14 +129,199 @@ async function applyPatches(){
     patchDownloader();
     // Apply native file system patches from utils.js
     createNativeFileSystemPatches();
+    // Apply local file system patches for drag-and-drop
+    createLocalFileSystemPatches();
 }
 
-// Event listener for the load folder button
+// Drag and drop handler
+function setupDragAndDrop() {
+    const dropOverlay = document.getElementById('dropOverlay');
+    const localFilesStatus = document.getElementById('localFilesStatus');
+    const localFilesList = document.getElementById('localFilesList');
+
+    let dragCounter = 0;
+
+    // Prevent default drag behaviors
+    document.addEventListener('dragenter', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        dragCounter++;
+        if (dragCounter === 1) {
+            dropOverlay.classList.add('active');
+        }
+    });
+
+    document.addEventListener('dragleave', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        dragCounter--;
+        if (dragCounter === 0) {
+            dropOverlay.classList.remove('active');
+        }
+    });
+
+    document.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+    });
+
+    document.addEventListener('drop', async (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        dragCounter = 0;
+        dropOverlay.classList.remove('active');
+
+        console.log('Files dropped!');
+
+        const items = Array.from(e.dataTransfer.items);
+        const files = Array.from(e.dataTransfer.files);
+
+        // Check if localFS is available
+        if (!window.localFS) {
+            console.error('localFS not initialized yet');
+            alert('File system not ready. Please wait a moment and try again.');
+            return;
+        }
+
+        // Clear previous files
+        window.localFS.clear();
+
+        // Process dropped items
+        if (items.length > 0 && items[0].webkitGetAsEntry) {
+            // Use webkitGetAsEntry for better folder support
+            const entries = items.map(item => item.webkitGetAsEntry()).filter(entry => entry !== null);
+
+            for (const entry of entries) {
+                if (entry.isFile) {
+                    const file = await new Promise((resolve) => entry.file(resolve));
+                    await window.localFS.addFile(file, entry.name);
+                } else if (entry.isDirectory) {
+                    await processDirectoryEntry(entry);
+                }
+            }
+        } else {
+            // Fallback to files array
+            await window.localFS.addFiles(files);
+        }
+
+        // Update UI
+        updateLocalFilesUI();
+
+        console.log(`Loaded ${window.localFS.files.size} files to /local`);
+
+        // Auto-open the dropped files in ImageJ if it's running
+        if (IJClass && window.localFS.files.size > 0) {
+            try {
+                console.log('Opening dropped files in ImageJ...');
+
+                // Get all file paths
+                const filePaths = Array.from(window.localFS.files.keys());
+
+                // Open each file
+                for (const filePath of filePaths) {
+                    const fullPath = `/local/${filePath}`;
+                    console.log('Opening:', fullPath);
+
+                    // Use ImageJ macro to open the file
+                    const macro = `open("${fullPath}");`;
+                    await IJClass.runMacro(macro);
+                }
+
+                console.log(`Successfully opened ${filePaths.length} file(s)`);
+            } catch (err) {
+                console.error('Error opening dropped files:', err);
+            }
+        } else if (!IJClass) {
+            console.log('ImageJ not ready yet - files added to /local but not opened automatically');
+        }
+    });
+
+    async function processDirectoryEntry(dirEntry, basePath = '') {
+        const path = basePath ? `${basePath}/${dirEntry.name}` : dirEntry.name;
+        window.localFS.directories.add(path);
+
+        const reader = dirEntry.createReader();
+        const entries = await new Promise((resolve, reject) => {
+            reader.readEntries(resolve, reject);
+        });
+
+        for (const entry of entries) {
+            if (entry.isFile) {
+                const file = await new Promise((resolve) => entry.file(resolve));
+                await window.localFS.addFile(file, `${path}/${file.name}`);
+            } else if (entry.isDirectory) {
+                await processDirectoryEntry(entry, path);
+            }
+        }
+    }
+
+    let localFilesStatusTimeout = null;
+
+    function updateLocalFilesUI() {
+        if (window.localFS.isEmpty()) {
+            localFilesStatus.classList.add('hidden');
+        } else {
+            localFilesStatus.classList.remove('hidden');
+            const fileCount = window.localFS.files.size;
+            const dirCount = window.localFS.directories.size;
+            localFilesList.textContent = `${fileCount} file(s), ${dirCount} folder(s)`;
+
+            // Clear any existing timeout
+            if (localFilesStatusTimeout) {
+                clearTimeout(localFilesStatusTimeout);
+            }
+
+            // Auto-hide after 5 seconds
+            localFilesStatusTimeout = setTimeout(() => {
+                localFilesStatus.classList.add('hidden');
+            }, 5000);
+        }
+    }
+}
+
+// Global variables to store library and class references
+let lib = null;
+let IJClass = null;
+
+// Event listener for buttons
 document.addEventListener('DOMContentLoaded', () => {
+    // Setup drag and drop after DOM is ready
+    setupDragAndDrop();
+
     const loadFolderBtn = document.getElementById('loadFolderBtn');
     loadFolderBtn.addEventListener('click', () => {
         // Use the nativeFS instance from utils.js
         window.nativeFS.loadDirectory();
+    });
+
+    const testJavaBtn = document.getElementById('testJavaBtn');
+    testJavaBtn.addEventListener('click', async () => {
+        try {
+            if (!IJClass) {
+                alert('IJ class not loaded yet. Please wait for ImageJ to start.');
+                return;
+            }
+
+            console.log('Running ImageJ macro from JavaScript...');
+
+            // Run a macro to open a sample image
+            const macro = `      
+  run("Blobs (25K)");
+  run("Enhance Contrast", "saturated=0.35");
+            `;
+
+            // Call the static IJ.runMacro method
+            await IJClass.runMacro(macro);
+
+            console.log('Macro executed successfully!');
+
+            // Also log to ImageJ console
+            await IJClass.log('✓ Macro executed from JavaScript - Image opened and enhanced');
+
+        } catch (err) {
+            console.error('Error running macro:', err);
+            alert('Error: ' + (err.message || err.toString()));
+        }
     });
 });
 
@@ -94,9 +333,46 @@ await cheerpjInit({
       "useJFileChooser=true"
     ],
 });
+
 await applyPatches();
+
 cheerpjCreateDisplay(-1, -1, document.getElementById("container"));
-await cheerpjRunJar(`/app${baseUrl}lib/ImageJ/ij.jar`);
+
+// Load ImageJ as a library for JavaScript interop
+try {
+    console.log('Loading ImageJ as library...');
+    lib = await cheerpjRunLibrary(`/app${baseUrl}lib/ImageJ/ij.jar`);
+
+    console.log('Accessing ImageJ and IJ classes...');
+    // Access the ImageJ class (ij.ImageJ has the main method)
+    const ImageJClass = await lib.ij.ImageJ;
+
+    // Access the IJ class (ij.IJ has utility methods like runMacro, log, etc.)
+    IJClass = await lib.ij.IJ;
+
+    console.log('Classes loaded successfully!');
+
+    // Call ImageJ's main method with empty arguments
+    console.log('Starting ImageJ...');
+    await ImageJClass.main([]);
+
+    // Set ImageJ preferences directly via Prefs class AFTER starting
+    // Note: Directory properties (user.dir, plugins.dir) are set via cheerpjInit's javaProperties
+    // and read by ImageJ during initialization, so we don't set them here
+    console.log('Setting ImageJ preferences...');
+    const Prefs = await lib.ij.Prefs;
+
+    // Set useJFileChooser preference (public static field)
+    Prefs.useJFileChooser = true;
+
+    console.log('ImageJ preferences set!');
+
+    console.log('ImageJ started successfully!');
+    window.IJ = IJClass; // Expose IJ globally for debugging
+    window.lib = lib; // Expose library globally for debugging
+} catch (err) {
+    console.error('Failed to load ImageJ:', err);
+}
  
 </script>
 <div id="container"></div>
