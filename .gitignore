@@ -1,5 +1,5 @@
 # Dependencies
-ImageJ-*/
+ImageJ-1.*/
 node_modules/
 package-lock.json
 
@@ -21,3 +21,5 @@ npm-debug.log*
 # Project specific
 *.zip
 lib/ImageJ
+# ImageJ build directory
+ImageJ-build/

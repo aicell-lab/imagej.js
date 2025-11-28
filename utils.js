@@ -133,20 +133,32 @@ class NativeFileSystemHandler {
       if ('showDirectoryPicker' in window) {
         this.directoryHandle = await window.showDirectoryPicker();
         nativeDirectoryHandle = this.directoryHandle;
-        
+
         // Update global window reference
         window.nativeDirectoryHandle = this.directoryHandle;
         window.nativeFS = this;
-        
-        // Update UI
-        const statusEl = document.getElementById('folderStatus');
-        const folderNameEl = document.getElementById('folderName');
+
+        // Update button to show mounted folder
         const loadBtnEl = document.getElementById('loadFolderBtn');
-        
-        folderNameEl.textContent = this.directoryHandle.name;
-        statusEl.classList.remove('hidden');
-        loadBtnEl.style.display = 'none';
-        
+        const btnIcon = loadBtnEl.querySelector('svg');
+        const btnText = loadBtnEl.querySelector('span');
+        const tooltip = document.getElementById('loadFolderTooltip');
+
+        // Change button appearance to show it's mounted
+        loadBtnEl.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+        loadBtnEl.classList.add('bg-green-600', 'hover:bg-green-700');
+
+        // Add checkmark indicator
+        btnIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>';
+
+        // Update text to show folder name
+        btnText.textContent = `📁 ${this.directoryHandle.name}`;
+
+        // Update tooltip message for mounted state
+        if (tooltip) {
+          tooltip.innerHTML = `Folder mounted under <strong>/files/</strong><br>Use <strong>File → Open</strong> in ImageJ to load files<br><em style="opacity: 0.7; font-size: 0.85em;">Click to change folder</em>`;
+        }
+
         console.log('Native directory loaded:', this.directoryHandle.name);
         console.log('Global nativeDirectoryHandle set:', window.nativeDirectoryHandle);
         return true;
