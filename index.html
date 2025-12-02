@@ -335,8 +335,8 @@
 
 <!-- Test Button -->
 <div class="fixed bottom-4 right-4 z-50">
-  <button id="testJavaBtn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg shadow-lg transition-colors duration-200">
-    <span id="testBtnText">Test Macro Error</span>
+  <button id="testRoiBtn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg shadow-lg transition-colors duration-200">
+    <span id="testBtnText">Test ROI→GeoJSON</span>
   </button>
 </div>
 
@@ -615,132 +615,131 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    const testJavaBtn = document.getElementById('testJavaBtn');
-    testJavaBtn.addEventListener('click', async () => {
+    const testRoiBtn = document.getElementById('testRoiBtn');
+    testRoiBtn.addEventListener('click', async () => {
         try {
             if (!IJClass) {
                 alert('IJ class not loaded yet. Please wait for ImageJ to start.');
                 return;
             }
 
-            // Check if GitHub repo is mounted
-            if (window.githubFS && window.githubFS.repos.size > 0) {
-                console.log('🧪 Testing GitHub file system access...');
+            console.log('🧪 Testing ROI to GeoJSON conversion...');
 
-                await IJClass.log('========================================');
-                await IJClass.log('🧪 TEST: GitHub File System Access');
-                await IJClass.log('========================================');
+            await IJClass.log('========================================');
+            await IJClass.log('🧪 TEST: ROI → GeoJSON Conversion');
+            await IJClass.log('========================================');
 
-                // Get the first mounted repo
-                const mountPath = Array.from(window.githubFS.repos.keys())[0];
-                const [owner, repo] = mountPath.split('/');
+            // Get current ROI from active image
+            let hasCurrentRoi = false;
+            try {
+                const imp = await IJClass.getImage();
+                if (imp) {
+                    const currentRoi = await imp.getRoi();
+                    if (currentRoi) {
+                        hasCurrentRoi = true;
+                        await IJClass.log('✓ Found current ROI on active image');
 
-                await IJClass.log(`Mounted repo: ${owner}/${repo}`);
-                await IJClass.log(`Path: /github/${mountPath}`);
-                await IJClass.log('');
-
-                // List files in the root of the mounted repo
-                try {
-                    await IJClass.log('Listing files in repo root...');
-                    const entries = await window.githubFS.listDirectory(mountPath);
-                    await IJClass.log(`Found ${entries.length} entries:`);
-                    for (let i = 0; i < Math.min(entries.length, 10); i++) {
-                        await IJClass.log(`  - ${entries[i]}`);
-                    }
-                    if (entries.length > 10) {
-                        await IJClass.log(`  ... and ${entries.length - 10} more`);
-                    }
-                    await IJClass.log('');
-
-                    // Try to find a README file to open
-                    const readmeFiles = entries.filter(name =>
-                        name.toLowerCase().startsWith('readme')
-                    );
-
-                    if (readmeFiles.length > 0) {
-                        const readmeFile = readmeFiles[0];
-                        const filePath = `/github/${mountPath}/${readmeFile}`;
-                        await IJClass.log(`Attempting to open: ${filePath}`);
-
-                        // Use ImageJ macro to open the file
-                        const macro = `open("${filePath}");`;
-                        await IJClass.runMacro(macro);
-
-                        await IJClass.log('✓ File opened successfully!');
+                        // Get ROI type and name
+                        const roiType = await currentRoi.getTypeAsString();
+                        const roiName = await currentRoi.getName();
+                        await IJClass.log(`  Type: ${roiType}`);
+                        await IJClass.log(`  Name: ${roiName || 'Unnamed'}`);
                     } else {
-                        await IJClass.log('No README file found in repo root');
-                    }
-                } catch (listErr) {
-                    await IJClass.log('✗ Error listing files: ' + listErr.message);
-                }
-
-                await IJClass.log('========================================');
-            } else {
-                console.log('🧪 Testing macro error handling with Interpreter.runMacroSilent()...');
-
-                // Test macro with intentional syntax error
-                const errorMacro = `
-// This macro has an intentional syntax error
-bitDepth <=> bitDepth();
-print("This line should not execute");
-                `;
-
-                await IJClass.log('========================================');
-                await IJClass.log('🧪 TEST: Macro Error Handling');
-                await IJClass.log('========================================');
-                await IJClass.log('Running macro with intentional error...');
-                await IJClass.log('');
-
-                // Test via Hypha service if connected
-                if (window.hyphaService) {
-                    console.log('Testing via Hypha service...');
-                    await IJClass.log('Method: Hypha service (with runMacroSilent)');
-
-                    const result = await window.hyphaService.runMacro({
-                        macro: errorMacro,
-                        returnLog: false
-                    });
-
-                    console.log('Result:', result);
-
-                    if (result.success) {
-                        await IJClass.log('✓ Status: Success');
-                        await IJClass.log('Result: ' + result.result);
-                    } else {
-                        await IJClass.log('✗ Status: Error (captured, no dialog shown!)');
-                        await IJClass.log('Error: ' + result.error);
+                        await IJClass.log('No ROI selected on active image');
                     }
                 } else {
-                    // Test with direct runMacroSilent call
-                    console.log('Testing with Interpreter.runMacroSilent()...');
-                    await IJClass.log('Method: Direct Interpreter.runMacroSilent() call');
+                    await IJClass.log('No active image');
+                }
+            } catch (e) {
+                await IJClass.log('No active image with ROI');
+            }
 
-                    const Interpreter = await window.lib.ij.macro.Interpreter;
-                    const resultArray = await Interpreter.runMacroSilent(errorMacro);
+            // Check ROI Manager
+            let roiManagerCount = 0;
+            try {
+                const RoiManager = await window.lib.ij.plugin.frame.RoiManager;
+                const rm = await RoiManager.getInstance();
 
-                    // resultArray[0] = "success" or "error"
-                    // resultArray[1] = result or error message
-                    const status = await resultArray[0];
-                    const message = await resultArray[1];
+                if (rm) {
+                    roiManagerCount = await rm.getCount();
+                    await IJClass.log(`✓ ROI Manager open with ${roiManagerCount} ROI(s)`);
+                } else {
+                    await IJClass.log('ROI Manager not open');
+                }
+            } catch (e) {
+                await IJClass.log('ROI Manager not available');
+            }
 
-                    console.log('Status:', status, 'Message:', message);
+            // Import the conversion function from hypha-imagej-service.js
+            const { roiToGeoJson } = await import('./hypha-imagej-service.js');
 
-                    if (status === 'error') {
-                        await IJClass.log('✗ Status: Error (captured, no dialog shown!)');
-                        await IJClass.log('Error: ' + message);
-                    } else {
-                        await IJClass.log('✓ Status: Success');
-                        await IJClass.log('Result: ' + (message || '(null)'));
+            if (hasCurrentRoi || roiManagerCount > 0) {
+                await IJClass.log('');
+                await IJClass.log('Converting ROIs to GeoJSON...');
+
+                // Get GeoJSON
+                const features = [];
+
+                // Convert current ROI
+                if (hasCurrentRoi) {
+                    const imp = await IJClass.getImage();
+                    const currentRoi = await imp.getRoi();
+                    const feature = await roiToGeoJson(currentRoi, 'Current Selection', true);
+                    if (feature) {
+                        features.push(feature);
+                        await IJClass.log('✓ Converted current ROI');
                     }
                 }
 
+                // Convert ROI Manager ROIs
+                if (roiManagerCount > 0) {
+                    const RoiManager = await window.lib.ij.plugin.frame.RoiManager;
+                    const rm = await RoiManager.getInstance();
+
+                    for (let i = 0; i < roiManagerCount; i++) {
+                        const roi = await rm.getRoi(i);
+                        const roiName = await roi.getName() || `ROI ${i + 1}`;
+                        const feature = await roiToGeoJson(roi, roiName, true);
+                        if (feature) {
+                            feature.properties.index = i;
+                            feature.properties.source = 'ROI Manager';
+                            features.push(feature);
+                        }
+                    }
+                    await IJClass.log(`✓ Converted ${roiManagerCount} ROI(s) from ROI Manager`);
+                }
+
+                // Create GeoJSON FeatureCollection
+                const geojson = {
+                    type: "FeatureCollection",
+                    features: features
+                };
+
+                // Log to console
+                console.log('GeoJSON Result:');
+                console.log(JSON.stringify(geojson, null, 2));
+
                 await IJClass.log('');
-                await IJClass.log('Note: No error dialog should have appeared!');
-                await IJClass.log('========================================');
+                await IJClass.log(`✓ Total: ${features.length} ROI(s) converted`);
+                await IJClass.log('📋 GeoJSON printed to browser console');
+                await IJClass.log('');
+                await IJClass.log('Open browser DevTools (F12) to see the full GeoJSON output');
+            } else {
+                await IJClass.log('');
+                await IJClass.log('⚠️  No ROIs found!');
+                await IJClass.log('');
+                await IJClass.log('To test:');
+                await IJClass.log('1. Open an image in ImageJ');
+                await IJClass.log('2. Draw an ROI using selection tools');
+                await IJClass.log('3. Or add ROIs to ROI Manager');
+                await IJClass.log('4. Click this button again');
             }
+
+            await IJClass.log('========================================');
 
         } catch (err) {
             console.error('Test error:', err);
+            await IJClass.log('✗ Error: ' + err.message);
             alert('Error: ' + (err.message || err.toString()));
         }
     });
