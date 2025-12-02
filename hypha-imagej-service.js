@@ -652,6 +652,49 @@ COMMON PATTERNS FOR JAVASCRIPT-JAVA INTERACTION:
                 path: { type: "string" }
             }
         }
+    },
+
+    getRoisAsGeoJson: {
+        name: "getRoisAsGeoJson",
+        description: "Get ROIs (Regions of Interest) in GeoJSON format. Returns the current ROI from the active image, or all ROIs from the ROI Manager if it's open.",
+        parameters: {
+            type: "object",
+            properties: {
+                source: {
+                    type: "string",
+                    enum: ["current", "manager", "both"],
+                    description: "Source of ROIs: 'current' for active image ROI, 'manager' for all ROIs in ROI Manager, 'both' for both sources",
+                    default: "both"
+                },
+                includeProperties: {
+                    type: "boolean",
+                    description: "Include ROI properties (name, type, measurements) in GeoJSON properties",
+                    default: true
+                }
+            },
+            required: []
+        },
+        returns: {
+            type: "object",
+            properties: {
+                success: {
+                    type: "boolean",
+                    description: "Whether ROIs were retrieved successfully"
+                },
+                geojson: {
+                    type: "object",
+                    description: "GeoJSON FeatureCollection containing all ROIs"
+                },
+                count: {
+                    type: "integer",
+                    description: "Number of ROIs retrieved"
+                },
+                error: {
+                    type: "string",
+                    description: "Error message if retrieval failed"
+                }
+            }
+        }
     }
 };
 
@@ -819,6 +862,270 @@ function arrayBufferToBase64(buffer) {
         binary += String.fromCharCode(bytes[i]);
     }
     return btoa(binary);
+}
+
+// Helper function to convert ImageJ ROI to GeoJSON geometry
+// Based on QuPath's IJTools.java conversion patterns
+async function roiToGeoJson(roi, roiName = null, includeProperties = true) {
+    try {
+        if (!roi) return null;
+
+        const Roi = await window.lib.ij.gui.Roi;
+        const PointRoi = await window.lib.ij.gui.PointRoi;
+        const Line = await window.lib.ij.gui.Line;
+        const PolygonRoi = await window.lib.ij.gui.PolygonRoi;
+        const ShapeRoi = await window.lib.ij.gui.ShapeRoi;
+        const OvalRoi = await window.lib.ij.gui.OvalRoi;
+
+        // Get ROI type constants
+        const RECTANGLE = 0;
+        const OVAL = 1;
+        const POLYGON = 2;
+        const FREEROI = 3;
+        const TRACED_ROI = 4;
+        const LINE = 5;
+        const POLYLINE = 6;
+        const FREELINE = 7;
+        const ANGLE = 8;
+        const POINT = 10;
+
+        const roiType = await roi.getType();
+        const roiTypeName = await roi.getTypeAsString();
+
+        // Get ROI name
+        if (!roiName) {
+            roiName = await roi.getName();
+        }
+
+        // Initialize properties
+        const properties = {};
+        if (includeProperties) {
+            properties.name = roiName || 'Unnamed';
+            properties.type = roiTypeName || 'Unknown';
+        }
+
+        let geometry = null;
+
+        // Handle Point ROI
+        if (roi instanceof PointRoi || roiType === POINT) {
+            const pointRoi = roi;
+
+            // Use FloatPolygon to get all points
+            const floatPoly = await pointRoi.getFloatPolygon();
+            const nPoints = await floatPoly.npoints;
+
+            if (nPoints === 1) {
+                // Single point
+                const xPoints = await floatPoly.xpoints;
+                const yPoints = await floatPoly.ypoints;
+                const x = await xPoints[0];
+                const y = await yPoints[0];
+                geometry = {
+                    type: "Point",
+                    coordinates: [x, y]
+                };
+            } else {
+                // Multiple points - use MultiPoint
+                const xPoints = await floatPoly.xpoints;
+                const yPoints = await floatPoly.ypoints;
+
+                const coordinates = [];
+                for (let i = 0; i < nPoints; i++) {
+                    const x = await xPoints[i];
+                    const y = await yPoints[i];
+                    coordinates.push([x, y]);
+                }
+                geometry = {
+                    type: "MultiPoint",
+                    coordinates: coordinates
+                };
+            }
+        }
+        // Handle Line ROI
+        else if (roi instanceof Line || roiType === LINE || roiType === ANGLE) {
+            const lineRoi = roi;
+            const x1 = await lineRoi.x1d || await lineRoi.x1;
+            const y1 = await lineRoi.y1d || await lineRoi.y1;
+            const x2 = await lineRoi.x2d || await lineRoi.x2;
+            const y2 = await lineRoi.y2d || await lineRoi.y2;
+
+            geometry = {
+                type: "LineString",
+                coordinates: [[x1, y1], [x2, y2]]
+            };
+        }
+        // Handle Rectangle ROI (with no corner diameter = not rounded)
+        else if (roiType === RECTANGLE) {
+            const cornerDiameter = await roi.getCornerDiameter();
+            if (cornerDiameter === 0) {
+                const bounds = await roi.getBounds();
+                const x = await bounds.x;
+                const y = await bounds.y;
+                const w = await bounds.width;
+                const h = await bounds.height;
+
+                // Rectangle as Polygon (closed ring)
+                geometry = {
+                    type: "Polygon",
+                    coordinates: [[
+                        [x, y],
+                        [x + w, y],
+                        [x + w, y + h],
+                        [x, y + h],
+                        [x, y]  // Close the ring
+                    ]]
+                };
+            } else {
+                // Rounded rectangle - convert to polygon using float polygon
+                const floatPoly = await roi.getFloatPolygon();
+                geometry = await floatPolygonToGeoJson(floatPoly);
+            }
+        }
+        // Handle Oval/Ellipse ROI
+        else if (roiType === OVAL || roi instanceof OvalRoi) {
+            // Convert ellipse to polygon approximation
+            const floatPoly = await roi.getFloatPolygon();
+            geometry = await floatPolygonToGeoJson(floatPoly);
+            if (includeProperties) {
+                properties.shape = 'ellipse';
+            }
+        }
+        // Handle Polygon ROI (includes POLYGON, FREEROI, TRACED_ROI, POLYLINE, FREELINE)
+        else if (roi instanceof PolygonRoi || roiType === POLYGON || roiType === FREEROI ||
+                 roiType === TRACED_ROI || roiType === POLYLINE || roiType === FREELINE) {
+            const polygonRoi = roi;
+
+            // Get polygon coordinates
+            const floatPoly = await polygonRoi.getFloatPolygon();
+
+            // Check if it's a polyline or polygon
+            const isLine = roiType === POLYLINE || roiType === FREELINE;
+
+            if (isLine) {
+                geometry = await floatPolygonToGeoJson(floatPoly, false);  // Don't close
+            } else {
+                geometry = await floatPolygonToGeoJson(floatPoly, true);   // Close polygon
+            }
+        }
+        // Handle ShapeRoi (complex shapes)
+        else if (roi instanceof ShapeRoi) {
+            const shapeRoi = roi;
+            const rois = await shapeRoi.getRois();
+
+            if (rois && (await rois.length) > 0) {
+                // Multiple sub-ROIs - use GeometryCollection or MultiPolygon
+                const geometries = [];
+                const roiCount = await rois.length;
+
+                for (let i = 0; i < roiCount; i++) {
+                    const subRoi = await rois[i];
+                    const subGeom = await roiToGeoJson(subRoi, null, false);
+                    if (subGeom && subGeom.geometry) {
+                        geometries.push(subGeom.geometry);
+                    }
+                }
+
+                geometry = {
+                    type: "GeometryCollection",
+                    geometries: geometries
+                };
+            } else {
+                // Single shape - convert using float polygon
+                const floatPoly = await shapeRoi.getFloatPolygon();
+                geometry = await floatPolygonToGeoJson(floatPoly, true);
+            }
+        }
+        // Fallback: try to get float polygon
+        else {
+            try {
+                const floatPoly = await roi.getFloatPolygon();
+                if (floatPoly) {
+                    geometry = await floatPolygonToGeoJson(floatPoly, true);
+                }
+            } catch (e) {
+                console.warn('Could not convert ROI to polygon:', e);
+                // Last resort: use bounding box
+                const bounds = await roi.getBounds();
+                const x = await bounds.x;
+                const y = await bounds.y;
+                const w = await bounds.width;
+                const h = await bounds.height;
+
+                geometry = {
+                    type: "Polygon",
+                    coordinates: [[
+                        [x, y],
+                        [x + w, y],
+                        [x + w, y + h],
+                        [x, y + h],
+                        [x, y]
+                    ]]
+                };
+                if (includeProperties) {
+                    properties.warning = 'Converted to bounding box';
+                }
+            }
+        }
+
+        if (!geometry) {
+            console.warn('Failed to convert ROI to geometry');
+            return null;
+        }
+
+        return {
+            type: "Feature",
+            geometry: geometry,
+            properties: properties
+        };
+
+    } catch (error) {
+        console.error('Error converting ROI to GeoJSON:', error);
+        return null;
+    }
+}
+
+// Helper function to convert FloatPolygon to GeoJSON geometry
+async function floatPolygonToGeoJson(floatPolygon, closePolygon = true) {
+    if (!floatPolygon) return null;
+
+    try {
+        const xPoints = await floatPolygon.xpoints;
+        const yPoints = await floatPolygon.ypoints;
+        const nPoints = await floatPolygon.npoints;
+
+        const coordinates = [];
+        for (let i = 0; i < nPoints; i++) {
+            const x = await xPoints[i];
+            const y = await yPoints[i];
+            coordinates.push([x, y]);
+        }
+
+        if (closePolygon && nPoints > 0) {
+            // Close the polygon by adding first point at end
+            const firstX = await xPoints[0];
+            const firstY = await yPoints[0];
+            const lastX = await xPoints[nPoints - 1];
+            const lastY = await yPoints[nPoints - 1];
+
+            // Only close if not already closed
+            if (firstX !== lastX || firstY !== lastY) {
+                coordinates.push([firstX, firstY]);
+            }
+
+            return {
+                type: "Polygon",
+                coordinates: [coordinates]
+            };
+        } else {
+            return {
+                type: "LineString",
+                coordinates: coordinates
+            };
+        }
+    } catch (error) {
+        console.error('Error converting FloatPolygon:', error);
+        return null;
+    }
 }
 
 // Update UI status
@@ -1801,17 +2108,17 @@ async function connectToHypha() {
                         if (IJ) {
                             await IJ.log('🌐 Remote API Call: saveExample(path=' + path + ')');
                         }
-                        
+
                         // For now, we can't directly write files in browser environment
                         // Instead, provide download or localStorage option
                         // Return the content so user can save it manually
-                        
+
                         console.log('Note: Saving examples requires manual download in browser environment');
-                        
+
                         // Create a downloadable blob
                         const blob = new Blob([content], { type: 'text/markdown' });
                         const url = URL.createObjectURL(blob);
-                        
+
                         // Trigger download
                         const a = document.createElement('a');
                         a.href = url;
@@ -1820,23 +2127,119 @@ async function connectToHypha() {
                         a.click();
                         document.body.removeChild(a);
                         URL.revokeObjectURL(url);
-                        
+
                         console.log(`✓ Example download triggered: ${path}`);
                         return {
                             success: true,
                             path: path,
                             message: 'Example file downloaded. Please save it to imagej-examples/' + path
                         };
-                        
+
                     } catch (error) {
                         console.error('✗ Error saving example:', error);
-                        return { 
-                            success: false, 
-                            error: error.message 
+                        return {
+                            success: false,
+                            error: error.message
                         };
                     }
                 },
                 { __schema__: schemas.saveExample }
+            ),
+
+            // Get ROIs as GeoJSON
+            getRoisAsGeoJson: Object.assign(
+                async ({ source = 'current', includeProperties = true }, context = null) => {
+                    console.log('🌐 Remote call: getRoisAsGeoJson(source=' + source + ')');
+
+                    try {
+                        const IJ = window.IJClass || window.IJ;
+                        if (!IJ) throw new Error('ImageJ not initialized');
+
+                        await IJ.log('🌐 Remote API Call: getRoisAsGeoJson(source=' + source + ', includeProperties=' + includeProperties + ')');
+
+                        const features = [];
+
+                        // Get current ROI from active image
+                        if (source === 'current' || source === 'both') {
+                            try {
+                                const imp = await IJ.getImage();
+                                if (imp) {
+                                    const currentRoi = await imp.getRoi();
+                                    if (currentRoi) {
+                                        const feature = await roiToGeoJson(currentRoi, 'Current Selection', includeProperties);
+                                        if (feature) {
+                                            features.push(feature);
+                                        }
+                                    }
+                                }
+                            } catch (e) {
+                                console.log('No current ROI:', e.message);
+                            }
+                        }
+
+                        // Get ROIs from ROI Manager
+                        if (source === 'manager' || source === 'both') {
+                            try {
+                                const RoiManager = await window.lib.ij.plugin.frame.RoiManager;
+                                const rm = await RoiManager.getInstance();
+
+                                if (rm) {
+                                    const count = await rm.getCount();
+                                    console.log(`Found ${count} ROIs in ROI Manager`);
+
+                                    for (let i = 0; i < count; i++) {
+                                        const roi = await rm.getRoi(i);
+                                        if (roi) {
+                                            const roiName = await roi.getName() || `ROI ${i + 1}`;
+                                            const feature = await roiToGeoJson(roi, roiName, includeProperties);
+                                            if (feature) {
+                                                // Add index to properties
+                                                if (includeProperties) {
+                                                    feature.properties.index = i;
+                                                    feature.properties.source = 'ROI Manager';
+                                                }
+                                                features.push(feature);
+                                            }
+                                        }
+                                    }
+                                } else {
+                                    console.log('ROI Manager not open');
+                                }
+                            } catch (e) {
+                                console.log('No ROI Manager:', e.message);
+                            }
+                        }
+
+                        // Create GeoJSON FeatureCollection
+                        const geojson = {
+                            type: "FeatureCollection",
+                            features: features
+                        };
+
+                        console.log(`✓ Converted ${features.length} ROI(s) to GeoJSON`);
+                        await IJ.log(`✓ Exported ${features.length} ROI(s) to GeoJSON`);
+
+                        return {
+                            success: true,
+                            geojson: geojson,
+                            count: features.length
+                        };
+
+                    } catch (error) {
+                        console.error('✗ Error getting ROIs as GeoJSON:', error);
+                        const IJ = window.IJClass || window.IJ;
+                        if (IJ) {
+                            await IJ.log('✗ Error getting ROIs: ' + error.message);
+                        }
+                        return {
+                            success: false,
+                            error: error.message || error.toString(),
+                            geojson: { type: "FeatureCollection", features: [] },
+                            count: 0
+                        };
+                    }
+                },
+                { __schema__: schemas.getRoisAsGeoJson }
             )
         });
 
@@ -1916,4 +2319,4 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // Export for external use
-export { connectToHypha, disconnectFromHypha, hyphaServer, connectedService };
+export { connectToHypha, disconnectFromHypha, hyphaServer, connectedService, roiToGeoJson, floatPolygonToGeoJson };
