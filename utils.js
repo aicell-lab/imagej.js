@@ -845,7 +845,7 @@ function localStatAsync(mp, path, fileRef, cb) {
         return cb();
     }
 
-    // Check if it's a file
+    // Check if it's a drag-and-dropped file (read-only)
     const file = window.localFS.getFile(localPath);
     if (file) {
         fileRef.inodeId = Math.floor(Math.random() * 1000000);
@@ -867,7 +867,9 @@ function localStatAsync(mp, path, fileRef, cb) {
         return cb();
     }
 
-    // File/directory doesn't exist
+    // For all other files, report they don't exist
+    // This allows ImageJ to always create fresh files for writing/downloading
+    // Note: /local is a virtual write-only filesystem for downloads
     fileRef.permType = 0;
     return cb();
 }
@@ -934,9 +936,26 @@ function localMakeFileData(mp, path, mode, uid, gid, cb) {
 
         return cb(fileData);
     } else if (mode === "w" || mode === "r+") {
-        // Write mode not supported for local FS (read-only)
-        console.warn('Write mode not supported for /local (drag-and-drop files are read-only)');
-        return cb(null);
+        // Write mode - create in-memory file that will trigger download on close
+        console.log('Creating writable file for download:', localPath);
+
+        const fileData = new CheerpJFileData(
+            mp,
+            path,
+            0, // Start with 0 length
+            Math.floor(Math.random() * 1000000),
+            CheerpJFileData.S_IFREG | 0o666,
+            Math.floor(Date.now() / 1000),
+            uid,
+            gid
+        );
+
+        // Initialize for writing
+        fileData.chunks = [];
+        fileData.dirty = 0;
+        fileData.mount = mp.inodeOps; // Use LocalInodeOps which includes write and close
+
+        return cb(fileData);
     }
 
     return cb(null);
@@ -953,10 +972,111 @@ var LocalOps = {
     unlinkAsync: null
 };
 
+// Write function for local files - accumulates data in memory
+function localFileWriteAsync(fileData, fileOffset, buf, off, len, cb) {
+    // Check if callback is provided
+    if (typeof cb !== 'function') {
+        console.error('[localFileWriteAsync] ERROR: cb is not a function!', cb);
+        return 0; // Return 0 bytes written on error
+    }
+
+    // Initialize chunks array if not present
+    if (!fileData.chunks) {
+        fileData.chunks = [];
+    }
+
+    const chunkSize = 1024 * 1024; // 1MB chunks
+
+    // Write data to chunks
+    let bytesWritten = 0;
+    while (bytesWritten < len) {
+        const currentOffset = fileOffset + bytesWritten;
+        const chunkIndex = Math.floor(currentOffset / chunkSize);
+        const chunkOffset = currentOffset % chunkSize;
+
+        // Create chunk if it doesn't exist
+        if (!fileData.chunks[chunkIndex]) {
+            fileData.chunks[chunkIndex] = new Uint8Array(chunkSize);
+        }
+
+        const chunk = fileData.chunks[chunkIndex];
+        const bytesToWrite = Math.min(len - bytesWritten, chunkSize - chunkOffset);
+
+        // Copy data to chunk
+        for (let i = 0; i < bytesToWrite; i++) {
+            chunk[chunkOffset + i] = buf[off + bytesWritten + i];
+        }
+
+        bytesWritten += bytesToWrite;
+    }
+
+    // Update file length
+    const endOffset = fileOffset + len;
+    if (endOffset > fileData.length) {
+        fileData.length = endOffset;
+    }
+
+    fileData.dirty = 1; // Mark as modified
+
+    return cb(bytesWritten);
+}
+
+// Close function for local files - triggers download
+function localFileClose(fileData, cb) {
+    // Check if callback is provided
+    if (typeof cb !== 'function') {
+        console.error('[localFileClose] ERROR: cb is not a function!', cb);
+        return; // Just return without calling cb
+    }
+
+    // Only trigger download if the file was written to
+    if (fileData.dirty && fileData.chunks && fileData.chunks.length > 0) {
+
+        // Reconstruct file content from chunks
+        const chunkSize = 1024 * 1024;
+        const totalSize = fileData.length;
+        const fileContent = new Uint8Array(totalSize);
+
+        let offset = 0;
+        for (let i = 0; i < fileData.chunks.length && offset < totalSize; i++) {
+            const chunk = fileData.chunks[i];
+            if (chunk) {
+                const bytesToCopy = Math.min(chunkSize, totalSize - offset);
+                fileContent.set(chunk.subarray(0, bytesToCopy), offset);
+                offset += bytesToCopy;
+            }
+        }
+
+        // Trigger browser download
+        const blob = new Blob([fileContent]);
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+
+        // Extract filename from path (remove /local/ prefix)
+        const fileName = fileData.path.split('/').pop() || 'downloaded-file';
+        a.download = fileName;
+
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+
+        console.log(`✓ Downloaded file: ${fileName} (${totalSize} bytes)`);
+
+        // Clear the file data to free memory
+        fileData.chunks = null;
+        fileData.dirty = 0;
+        fileData.length = 0;
+    }
+
+    return cb();
+}
+
 var LocalInodeOps = {
     readAsync: localFileReadAsync,
-    writeAsync: null,
-    close: null
+    writeAsync: localFileWriteAsync,
+    close: localFileClose
 };
 
 // GitHub file system read function

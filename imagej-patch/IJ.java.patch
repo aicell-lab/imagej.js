@@ -1,0 +1,58 @@
+--- a/ij/IJ.java
++++ b/ij/IJ.java
+@@ -1,6 +1,9 @@
+ package ij;
+ import java.awt.*;
+
++// Import Interpreter to check suppressErrorDialogs flag
++import ij.macro.Interpreter;
++
+ /** This class consists of static utility methods. */
+ public class IJ {
+
+@@ -150,6 +153,11 @@ public class IJ {
+ 	/** Displays a message in a dialog box titled "ImageJ". */
+ 	public static void error(String msg) {
++		// Check if error dialogs are suppressed (for silent macro execution)
++		if (Interpreter.suppressErrorDialogs) {
++			log("Error (suppressed): " + msg);
++			return;
++		}
+ 		error(null, msg);
+ 	}
+
+@@ -157,6 +165,11 @@ public class IJ {
+ 	 *  @param title	the title of the dialog box
+ 	 */
+ 	public static void error(String title, String msg) {
++		// Check if error dialogs are suppressed (for silent macro execution)
++		if (Interpreter.suppressErrorDialogs) {
++			log("Error (suppressed): " + (title != null ? title + ": " : "") + msg);
++			return;
++		}
+ 		String title2 = title!=null?title:"ImageJ";
+ 		if (IJ.isMacintosh()) {
+ 			if (msg.length()>60)
+@@ -170,6 +183,11 @@ public class IJ {
+ 	 * @param title	the title of the dialog box
+ 	 */
+ 	public static void showMessage(String title, String msg) {
++		// Check if error dialogs are suppressed (for silent macro execution)
++		if (Interpreter.suppressErrorDialogs) {
++			log("Message (suppressed): " + (title != null ? title + ": " : "") + msg);
++			return;
++		}
+ 		if (redirectErrorMessages) {
+ 			IJ.log(title + ": " + msg);
+ 			return;
+@@ -179,6 +197,11 @@ public class IJ {
+
+ 	/** Displays a message in a dialog box with the specified title. */
+ 	public static void showMessage(String msg) {
++		// Check if error dialogs are suppressed (for silent macro execution)
++		if (Interpreter.suppressErrorDialogs) {
++			log("Message (suppressed): " + msg);
++			return;
++		}
+ 		showMessage("Message", msg);
+ 	}

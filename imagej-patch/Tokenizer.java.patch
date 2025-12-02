@@ -1,0 +1,24 @@
+--- a/ij/macro/Tokenizer.java
++++ b/ij/macro/Tokenizer.java
+@@ -1,5 +1,8 @@
+ package ij.macro;
+ import ij.*;
++
++// Import Interpreter to check suppressErrorDialogs flag
++
+ import java.io.*;
+ import java.util.*;
+
+@@ -200,6 +203,12 @@ public class Tokenizer implements MacroConstants {
+ 	}
+
+ 	void error(String message) {
++		// Check if error dialogs are suppressed (for silent macro execution)
++		if (Interpreter.suppressErrorDialogs) {
++			// Throw exception instead of showing dialog
++			throw new RuntimeException(message + " in line " + lineNumber);
++		}
++		// Original error handling (shows dialog)
+ 		String title = "Error";
+ 		if (done)
+ 			title = "Macro Error";

@@ -33,6 +33,16 @@ async function runMacroSilent(macro) {
     }
 }
 
+// Drop-in replacement for IJ.runMacro() that suppresses dialogs
+// Throws an error if the macro fails, so it behaves like IJ.runMacro()
+async function runMacroSilentOrThrow(macro) {
+    const result = await runMacroSilent(macro);
+    if (result.status === 'error') {
+        throw new Error(result.result);
+    }
+    return result.result;
+}
+
 // JSON Schema definitions for service methods
 const schemas = {
     runMacro: {
@@ -132,15 +142,13 @@ The 'ready' status indicates whether the Java-to-JavaScript conversion is comple
 
     takeScreenshot: {
         name: "takeScreenshot",
-        description: "Take a screenshot of the current ImageJ window or active image",
+        description: "Take a screenshot of an ImageJ image window, capturing the visual display including overlays, ROIs, and annotations",
         parameters: {
             type: "object",
             properties: {
-                target: {
+                windowTitle: {
                     type: "string",
-                    enum: ["active-image", "imagej-window"],
-                    description: "What to capture: 'active-image' for current image, 'imagej-window' for entire ImageJ window",
-                    default: "active-image"
+                    description: "Title of the image window to capture. If not specified, captures the active image window."
                 },
                 format: {
                     type: "string",
@@ -154,9 +162,19 @@ The 'ready' status indicates whether the Java-to-JavaScript conversion is comple
         returns: {
             type: "object",
             properties: {
-                image: {
+                type: {
                     type: "string",
-                    description: "Base64 encoded image data"
+                    description: "Content type, always 'image'",
+                    enum: ["image"]
+                },
+                mimeType: {
+                    type: "string",
+                    description: "MIME type of the image",
+                    enum: ["image/png", "image/jpeg"]
+                },
+                data: {
+                    type: "string",
+                    description: "Base64 encoded image data (without data URI prefix)"
                 },
                 width: {
                     type: "integer",
@@ -726,7 +744,6 @@ async function connectToHypha() {
                         // Optionally return log output
                         if (returnLog) {
                             try {
-                                const IJ = window.IJClass || window.IJ;
                                 result.log = await IJ.getLog() || '';
                             } catch (e) {
                                 result.log = '';
@@ -778,19 +795,22 @@ async function connectToHypha() {
                             await IJ.log('🌐 Remote API Call: getLogs(clear=' + clear + ')');
                         }
 
-                        // Get log content using IJ.getLog() directly
+                        // Get log content directly from IJ
                         let logs = '';
                         try {
-                            logs = await IJ.getLog();
+                            logs = await IJ.getLog() || '';
                         } catch (e) {
-                            // Fallback to macro approach if direct call fails
-                            console.log('Direct IJ.getLog() failed, trying macro approach');
-                            logs = await IJ.runMacro('getInfo("log");');
+                            console.error('Error getting logs:', e);
+                            logs = '';
                         }
 
                         // Clear log if requested
                         if (clear) {
-                            await IJ.runMacro('print("\\\\Clear");');
+                            try {
+                                await IJ.log('\\Clear');
+                            } catch (e) {
+                                console.error('Error clearing logs:', e);
+                            }
                         }
 
                         return { logs: logs || '' };
@@ -804,51 +824,120 @@ async function connectToHypha() {
 
             // Take screenshot
             takeScreenshot: Object.assign(
-                async ({ target = 'active-image', format = 'png' }, context = null) => {
-                    console.log('🌐 Remote call: takeScreenshot()');
+                async ({ windowTitle = null, format = 'png' }, context = null) => {
+                    console.log('🌐 Remote call: takeScreenshot(windowTitle=' + (windowTitle || 'active') + ')');
 
                     try {
                         const IJ = window.IJClass || window.IJ;
                         if (!IJ) throw new Error('ImageJ not initialized');
 
                         // Log to ImageJ
-                        await IJ.log('🌐 Remote API Call: takeScreenshot(target=' + target + ', format=' + format + ')');
+                        await IJ.log('🌐 Remote API Call: takeScreenshot(windowTitle=' + (windowTitle || 'active') + ', format=' + format + ')');
 
-                        let imageData, width, height;
-
-                        if (target === 'active-image') {
-                            // Capture active image
-                            const macro = `
-                                if (nImages == 0) exit("No image open");
-                                w = getWidth();
-                                h = getHeight();
-                                title = getTitle();
-                                // Save to temp location
-                                saveAs("PNG", "/files/temp_screenshot.png");
-                                return w + "," + h;
-                            `;
-                            const dims = await IJ.runMacro(macro);
-                            [width, height] = dims.split(',').map(Number);
-
-                            // Read the saved file from virtual file system
-                            try {
-                                console.log('Reading screenshot from virtual file system...');
-                                const fileBuffer = await readVirtualFile('/files/temp_screenshot.png');
-                                const base64Data = arrayBufferToBase64(fileBuffer);
-                                imageData = `data:image/png;base64,${base64Data}`;
-                                console.log(`✓ Screenshot captured: ${width}x${height}, ${base64Data.length} bytes base64`);
-                            } catch (readError) {
-                                console.error('Failed to read screenshot file:', readError);
-                                // Fallback to placeholder if reading fails
-                                throw new Error(`Failed to read screenshot file: ${readError.message}`);
+                        // Get the image to capture
+                        let imp;
+                        if (windowTitle) {
+                            // Get specific window by title
+                            const WindowManager = await window.lib.ij.WindowManager;
+                            imp = await WindowManager.getImage(windowTitle);
+                            if (!imp) {
+                                throw new Error('Image window not found: ' + windowTitle);
                             }
                         } else {
-                            // Capture ImageJ window using browser APIs
-                            // This would require additional implementation
-                            throw new Error('imagej-window capture not yet implemented');
+                            // Get active image
+                            imp = await IJ.getImage();
+                            if (!imp) {
+                                throw new Error('No image open');
+                            }
                         }
 
-                        return { image: imageData, width, height };
+                        console.log('Capturing visual display with flatten()...');
+
+                        // Create a flattened copy that includes overlays, ROIs, annotations, etc.
+                        // This is what the user sees in the window
+                        const flattenedImp = await imp.flatten();
+
+                        if (!flattenedImp) {
+                            // If flatten() returns null, the image has no overlays
+                            // Use a duplicate of the original image
+                            const duplicateImp = await imp.duplicate();
+                            const width = await duplicateImp.getWidth();
+                            const height = await duplicateImp.getHeight();
+
+                            // Get BufferedImage from the duplicate
+                            const bufferedImage = await duplicateImp.getBufferedImage();
+
+                            // Convert to PNG bytes
+                            const ByteArrayOutputStream = await window.lib.java.io.ByteArrayOutputStream;
+                            const ImageIO = await window.lib.javax.imageio.ImageIO;
+
+                            const baos = await new ByteArrayOutputStream();
+                            await ImageIO.write(bufferedImage, 'png', baos);
+                            const byteArray = await baos.toByteArray();
+
+                            // Convert Java byte array to JavaScript Uint8Array
+                            const length = await byteArray.length;
+                            const uint8Array = new Uint8Array(length);
+                            for (let i = 0; i < length; i++) {
+                                uint8Array[i] = await byteArray[i];
+                            }
+
+                            // Clean up
+                            await duplicateImp.close();
+
+                            // Convert to base64
+                            const base64Data = arrayBufferToBase64(uint8Array);
+
+                            console.log(`✓ Screenshot captured: ${width}x${height}, ${base64Data.length} bytes base64`);
+
+                            // Return in standard format
+                            return {
+                                type: "image",
+                                mimeType: "image/png",
+                                data: base64Data,
+                                width: width,
+                                height: height
+                            };
+                        } else {
+                            // Use the flattened image (includes all visual elements)
+                            const width = await flattenedImp.getWidth();
+                            const height = await flattenedImp.getHeight();
+
+                            // Get BufferedImage from the flattened ImagePlus
+                            const bufferedImage = await flattenedImp.getBufferedImage();
+
+                            // Convert to PNG bytes
+                            const ByteArrayOutputStream = await window.lib.java.io.ByteArrayOutputStream;
+                            const ImageIO = await window.lib.javax.imageio.ImageIO;
+
+                            const baos = await new ByteArrayOutputStream();
+                            await ImageIO.write(bufferedImage, 'png', baos);
+                            const byteArray = await baos.toByteArray();
+
+                            // Convert Java byte array to JavaScript Uint8Array
+                            const length = await byteArray.length;
+                            const uint8Array = new Uint8Array(length);
+                            for (let i = 0; i < length; i++) {
+                                uint8Array[i] = await byteArray[i];
+                            }
+
+                            // Clean up the flattened image
+                            await flattenedImp.close();
+
+                            // Convert to base64
+                            const base64Data = arrayBufferToBase64(uint8Array);
+
+                            console.log(`✓ Screenshot captured (flattened): ${width}x${height}, ${base64Data.length} bytes base64`);
+
+                            // Return in standard format
+                            return {
+                                type: "image",
+                                mimeType: "image/png",
+                                data: base64Data,
+                                width: width,
+                                height: height
+                            };
+                        }
                     } catch (error) {
                         console.error('✗ Error taking screenshot:', error);
                         return { error: error.message };
@@ -873,17 +962,28 @@ async function connectToHypha() {
                             await IJ.log('🌐 Remote API Call: openImage(url=' + url + ')');
                         }
 
-                        let macro;
+                        // Use IJ.openImage for direct access
                         if (path) {
-                            macro = `open("${path}"); getTitle();`;
+                            // Direct file open using IJ.openImage
+                            const imp = await IJ.openImage(path);
+                            if (!imp) {
+                                throw new Error('Failed to open image: ' + path);
+                            }
+                            await imp.show();
+                            const title = await imp.getTitle();
+                            return { success: true, title };
                         } else if (url) {
-                            macro = `run("URL...", "url=${url}"); getTitle();`;
+                            // Direct URL opening using IJ.openImage
+                            const imp = await IJ.openImage(url);
+                            if (!imp) {
+                                throw new Error('Failed to open image from URL: ' + url);
+                            }
+                            await imp.show();
+                            const title = await imp.getTitle();
+                            return { success: true, title };
                         } else {
                             throw new Error('Either path or url must be provided');
                         }
-
-                        const title = await IJ.runMacro(macro);
-                        return { success: true, title };
                     } catch (error) {
                         console.error('✗ Error opening image:', error);
                         return { success: false, error: error.message };
@@ -904,30 +1004,30 @@ async function connectToHypha() {
                         // Log to ImageJ
                         await IJ.log('🌐 Remote API Call: getImageInfo()');
 
-                        const macro = `
-                            if (nImages == 0) exit("No image open");
-                            title = getTitle();
-                            w = getWidth();
-                            h = getHeight();
-                            bitDepth = bitDepth();
-                            type = "";
-                            if (bitDepth == 8) type = "8-bit";
-                            else if (bitDepth == 16) type = "16-bit";
-                            else if (bitDepth == 24) type = "RGB";
-                            else if (bitDepth == 32) type = "32-bit";
-                            slices = nSlices;
-                            return title + "," + w + "," + h + "," + type + "," + slices;
-                        `;
+                        // Use JavaScript to access ImagePlus directly - no macro needed
+                        const imp = await IJ.getImage();
+                        if (!imp) {
+                            throw new Error('No image open');
+                        }
 
-                        const result = await IJ.runMacro(macro);
-                        const [title, width, height, type, slices] = result.split(',');
+                        const title = await imp.getTitle();
+                        const width = await imp.getWidth();
+                        const height = await imp.getHeight();
+                        const bitDepth = await imp.getBitDepth();
+                        const slices = await imp.getNSlices();
+
+                        let type = '';
+                        if (bitDepth === 8) type = '8-bit';
+                        else if (bitDepth === 16) type = '16-bit';
+                        else if (bitDepth === 24) type = 'RGB';
+                        else if (bitDepth === 32) type = '32-bit';
 
                         return {
                             title,
-                            width: parseInt(width),
-                            height: parseInt(height),
+                            width,
+                            height,
                             type,
-                            slices: parseInt(slices)
+                            slices
                         };
                     } catch (error) {
                         console.error('✗ Error getting image info:', error);
@@ -949,28 +1049,37 @@ async function connectToHypha() {
                         // Log to ImageJ
                         await IJ.log('🌐 Remote API Call: listImages()');
 
-                        const macro = `
-                            if (nImages == 0) exit("[]");
-                            ids = newArray(nImages);
-                            for (i = 0; i < nImages; i++) {
-                                selectImage(i + 1);
-                                ids[i] = getImageID() + ":" + getTitle() + ":" + getWidth() + ":" + getHeight();
+                        // Use JavaScript to access WindowManager directly - no macro needed
+                        const WindowManager = await window.lib.ij.WindowManager;
+                        const imageCount = await WindowManager.getImageCount();
+
+                        if (imageCount === 0) {
+                            return { images: [] };
+                        }
+
+                        const images = [];
+                        const imageIDs = await WindowManager.getIDList();
+
+                        if (!imageIDs) {
+                            return { images: [] };
+                        }
+
+                        for (let i = 0; i < imageCount; i++) {
+                            const id = await imageIDs[i];
+                            const imp = await WindowManager.getImage(id);
+                            if (imp) {
+                                const title = await imp.getTitle();
+                                const width = await imp.getWidth();
+                                const height = await imp.getHeight();
+
+                                images.push({
+                                    id: id,
+                                    title: title,
+                                    width: width,
+                                    height: height
+                                });
                             }
-                            return String.join(ids, "|");
-                        `;
-
-                        const result = await IJ.runMacro(macro);
-                        if (result === '[]') return { images: [] };
-
-                        const images = result.split('|').map(img => {
-                            const [id, title, width, height] = img.split(':');
-                            return {
-                                id: parseInt(id),
-                                title,
-                                width: parseInt(width),
-                                height: parseInt(height)
-                            };
-                        });
+                        }
 
                         return { images };
                     } catch (error) {
@@ -993,17 +1102,31 @@ async function connectToHypha() {
                         // Log to ImageJ
                         await IJ.log('🌐 Remote API Call: closeImage(title=' + title + ')');
 
-                        let macro;
+                        // Use WindowManager to close images - direct API only
+                        const WindowManager = await window.lib.ij.WindowManager;
+
                         if (title === 'all') {
-                            macro = 'run("Close All");';
+                            // Close all images using WindowManager
+                            const imageIDs = await WindowManager.getIDList();
+                            if (imageIDs) {
+                                const imageCount = await WindowManager.getImageCount();
+                                for (let i = 0; i < imageCount; i++) {
+                                    const id = await imageIDs[i];
+                                    const imp = await WindowManager.getImage(id);
+                                    if (imp) {
+                                        await imp.close();
+                                    }
+                                }
+                            }
                         } else {
-                            macro = `
-                                selectWindow("${title}");
-                                close();
-                            `;
+                            // Close specific image by title
+                            const imp = await WindowManager.getImage(title);
+                            if (!imp) {
+                                throw new Error('Image not found: ' + title);
+                            }
+                            await imp.close();
                         }
 
-                        await IJ.runMacro(macro);
                         return { success: true };
                     } catch (error) {
                         console.error('✗ Error closing image:', error);
@@ -1025,36 +1148,57 @@ async function connectToHypha() {
                         // Log to ImageJ
                         await IJ.log('🌐 Remote API Call: getTextFromTable(title=' + title + ')');
 
-                        // Use macro to get table contents
-                        const macro = `
-                            // Check if table exists
-                            if (!isOpen("${title}")) {
-                                exit("Table not found: ${title}");
+                        // Use direct API to access table - try ResultsTable first
+                        try {
+                            const ResultsTable = await window.lib.ij.measure.ResultsTable;
+
+                            // Check if this is the Results table
+                            if (title === 'Results') {
+                                const rt = await ResultsTable.getResultsTable();
+                                if (rt) {
+                                    const tableText = await rt.toString();
+                                    console.log('✓ Retrieved Results table:', tableText ? tableText.length + ' chars' : 'empty');
+                                    return {
+                                        success: true,
+                                        text: tableText || ''
+                                    };
+                                }
                             }
 
-                            // Select the table window
-                            selectWindow("${title}");
+                            // For other tables, try to get from WindowManager
+                            const WindowManager = await window.lib.ij.WindowManager;
+                            const frame = await WindowManager.getFrame(title);
 
-                            // Get the table as a string
-                            tableString = getInfo("window.contents");
+                            if (!frame) {
+                                return {
+                                    success: false,
+                                    error: 'Table not found: ' + title
+                                };
+                            }
 
-                            return tableString;
-                        `;
+                            // Try to get TextWindow
+                            const TextWindow = await window.lib.ij.text.TextWindow;
+                            if (frame instanceof TextWindow) {
+                                const textPanel = await frame.getTextPanel();
+                                const tableText = await textPanel.getText();
+                                console.log('✓ Retrieved table text:', tableText ? tableText.length + ' chars' : 'empty');
+                                return {
+                                    success: true,
+                                    text: tableText || ''
+                                };
+                            }
 
-                        const tableText = await IJ.runMacro(macro);
-
-                        if (tableText && tableText.startsWith('Table not found:')) {
                             return {
                                 success: false,
-                                error: tableText
+                                error: 'Window is not a text table: ' + title
+                            };
+                        } catch (apiError) {
+                            console.error('Error accessing table via API:', apiError);
+                            return {
+                                success: false,
+                                error: 'Failed to access table: ' + apiError.message
                             };
                         }
-
-                        console.log('✓ Retrieved table text:', tableText ? tableText.length + ' chars' : 'empty');
-                        return {
-                            success: true,
-                            text: tableText || ''
-                        };
 
                     } catch (error) {
                         console.error('✗ Error getting table text:', error);
@@ -1181,35 +1325,46 @@ async function connectToHypha() {
                                     });
                                 }
                             } else {
-                                // Fallback: use ImageJ macro to list files
-                                const macro = `
-                                    dir = "${path}";
-                                    list = getFileList(dir);
-                                    if (list.length == 0) exit("[]");
-                                    result = "";
-                                    for (i = 0; i < list.length; i++) {
-                                        if (i > 0) result += "|";
-                                        result += list[i];
-                                    }
-                                    return result;
-                                `;
+                                // Use Java File class directly to list files
+                                try {
+                                    const File = await window.lib.java.io.File;
+                                    const dirFile = await new File(path);
+                                    const exists = await dirFile.exists();
 
-                                const result = await IJ.runMacro(macro);
-                                if (result && result !== '[]') {
-                                    const fileList = result.split('|');
-                                    for (const fileName of fileList) {
-                                        // Filter by pattern if specified
-                                        if (pattern) {
-                                            const regex = new RegExp(pattern.replace(/\*/g, '.*').replace(/\?/g, '.'));
-                                            if (!regex.test(fileName)) continue;
+                                    if (!exists) {
+                                        console.log('Directory does not exist:', path);
+                                        // Return empty list instead of error
+                                    } else {
+                                        const isDir = await dirFile.isDirectory();
+
+                                        if (isDir) {
+                                            const fileArray = await dirFile.listFiles();
+
+                                            if (fileArray) {
+                                                const arrayLength = await fileArray.length;
+                                                for (let i = 0; i < arrayLength; i++) {
+                                                    const file = await fileArray[i];
+                                                    const fileName = await file.getName();
+                                                    const isDirectory = await file.isDirectory();
+
+                                                    // Filter by pattern if specified
+                                                    if (pattern) {
+                                                        const regex = new RegExp(pattern.replace(/\*/g, '.*').replace(/\?/g, '.'));
+                                                        if (!regex.test(fileName)) continue;
+                                                    }
+
+                                                    files.push({
+                                                        name: fileName,
+                                                        path: path + (path.endsWith('/') ? '' : '/') + fileName,
+                                                        isDirectory: isDirectory
+                                                    });
+                                                }
+                                            }
                                         }
-
-                                        files.push({
-                                            name: fileName,
-                                            path: path + (path.endsWith('/') ? '' : '/') + fileName,
-                                            isDirectory: fileName.endsWith('/')
-                                        });
                                     }
+                                } catch (fileError) {
+                                    console.error('Error listing files with Java File API:', fileError);
+                                    // Don't throw, just return empty list
                                 }
                             }
                         } else {
