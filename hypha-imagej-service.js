@@ -498,8 +498,242 @@ COMMON PATTERNS FOR JAVASCRIPT-JAVA INTERACTION:
                 }
             }
         }
+    },
+
+    searchCommands: {
+        name: "searchCommands",
+        description: "Search ImageJ's built-in command list to discover available functions",
+        parameters: {
+            type: "object",
+            properties: {
+                query: {
+                    type: "string",
+                    description: "Search term (e.g., 'particle', 'threshold', 'ROI')"
+                }
+            },
+            required: ["query"]
+        },
+        returns: {
+            type: "object",
+            properties: {
+                commands: {
+                    type: "array",
+                    items: {
+                        type: "object",
+                        properties: {
+                            command: { type: "string" },
+                            menuPath: { type: "string" }
+                        }
+                    },
+                    description: "List of matching commands"
+                }
+            }
+        }
+    },
+
+    listExamples: {
+        name: "listExamples",
+        description: "List available code examples from the markdown knowledge base (imagej-examples/)",
+        parameters: {
+            type: "object",
+            properties: {
+                category: {
+                    type: "string",
+                    description: "Filter by category folder name (e.g., 'segmentation', 'roi')"
+                },
+                tag: {
+                    type: "string",
+                    description: "Filter by tag (e.g., 'cheerpj-safe', 'roi')"
+                }
+            },
+            required: []
+        },
+        returns: {
+            type: "object",
+            properties: {
+                examples: {
+                    type: "array",
+                    items: {
+                        type: "object",
+                        properties: {
+                            path: { type: "string" },
+                            title: { type: "string" },
+                            category: { type: "string" },
+                            tags: { type: "array", items: { type: "string" } },
+                            difficulty: { type: "string" },
+                            language: { type: "string" }
+                        }
+                    }
+                }
+            }
+        }
+    },
+
+    readExample: {
+        name: "readExample",
+        description: "Read a specific example markdown file from the knowledge base",
+        parameters: {
+            type: "object",
+            properties: {
+                path: {
+                    type: "string",
+                    description: "Relative path to markdown file (e.g., 'segmentation/blob-segmentation-wand.md')"
+                }
+            },
+            required: ["path"]
+        },
+        returns: {
+            type: "object",
+            properties: {
+                content: {
+                    type: "string",
+                    description: "Full markdown content"
+                },
+                metadata: {
+                    type: "object",
+                    description: "Parsed YAML frontmatter metadata"
+                }
+            }
+        }
+    },
+
+    searchExamples: {
+        name: "searchExamples",
+        description: "Search examples by keyword in title, description, or content",
+        parameters: {
+            type: "object",
+            properties: {
+                query: {
+                    type: "string",
+                    description: "Search query"
+                }
+            },
+            required: ["query"]
+        },
+        returns: {
+            type: "object",
+            properties: {
+                examples: {
+                    type: "array",
+                    items: {
+                        type: "object",
+                        properties: {
+                            path: { type: "string" },
+                            title: { type: "string" },
+                            matches: { type: "string", description: "Matching content snippet" }
+                        }
+                    }
+                }
+            }
+        }
+    },
+
+    saveExample: {
+        name: "saveExample",
+        description: "Save a new example to the knowledge base as a markdown file",
+        parameters: {
+            type: "object",
+            properties: {
+                path: {
+                    type: "string",
+                    description: "Relative path for the new file (e.g., 'segmentation/new-technique.md')"
+                },
+                content: {
+                    type: "string",
+                    description: "Full markdown content including YAML frontmatter"
+                }
+            },
+            required: ["path", "content"]
+        },
+        returns: {
+            type: "object",
+            properties: {
+                success: { type: "boolean" },
+                path: { type: "string" }
+            }
+        }
     }
 };
+
+// Helper function to parse YAML frontmatter from markdown
+function parseFrontmatter(content) {
+    const frontmatterRegex = /^---\s*\n([\s\S]*?)\n---\s*\n([\s\S]*)$/;
+    const match = content.match(frontmatterRegex);
+    
+    if (!match) {
+        return { metadata: {}, content: content };
+    }
+    
+    const yamlStr = match[1];
+    const markdownContent = match[2];
+    
+    // Simple YAML parser (handles basic key: value pairs and arrays)
+    const metadata = {};
+    const lines = yamlStr.split('\n');
+    
+    for (const line of lines) {
+        const colonIndex = line.indexOf(':');
+        if (colonIndex === -1) continue;
+        
+        const key = line.substring(0, colonIndex).trim();
+        let value = line.substring(colonIndex + 1).trim();
+        
+        // Handle arrays [item1, item2]
+        if (value.startsWith('[') && value.endsWith(']')) {
+            value = value.slice(1, -1).split(',').map(v => v.trim().replace(/['"]/g, ''));
+        }
+        // Handle booleans
+        else if (value === 'true') value = true;
+        else if (value === 'false') value = false;
+        
+        metadata[key] = value;
+    }
+    
+    return { metadata, content: markdownContent };
+}
+
+// Helper function to read file from local filesystem
+async function readLocalFile(relativePath) {
+    try {
+        const response = await fetch(`imagej-examples/${relativePath}`);
+        if (!response.ok) {
+            throw new Error(`File not found: ${relativePath}`);
+        }
+        return await response.text();
+    } catch (error) {
+        throw new Error(`Failed to read file: ${error.message}`);
+    }
+}
+
+// Helper function to list files in examples directory
+async function listExampleFiles() {
+    // Since we can't directly list directories in browser, we'll use a catalog approach
+    // Read the README.md to get the list of examples, or have a manifest file
+    try {
+        const response = await fetch('imagej-examples/README.md');
+        if (!response.ok) {
+            throw new Error('Failed to load examples catalog');
+        }
+        const readmeContent = await response.text();
+        
+        // Extract markdown links to find example files
+        const linkRegex = /\[([^\]]+)\]\(([^)]+\.md)\)/g;
+        const examples = [];
+        let match;
+        
+        while ((match = linkRegex.exec(readmeContent)) !== null) {
+            examples.push({
+                title: match[1],
+                path: match[2]
+            });
+        }
+        
+        return examples;
+    } catch (error) {
+        console.error('Error listing examples:', error);
+        return [];
+    }
+}
 
 // Get configuration from URL parameters
 function getConfig() {
@@ -1379,6 +1613,230 @@ async function connectToHypha() {
                     }
                 },
                 { __schema__: schemas.listFiles }
+            ),
+
+            // Search ImageJ commands
+            searchCommands: Object.assign(
+                async ({ query }, context = null) => {
+                    console.log('🌐 Remote call: searchCommands(query=' + query + ')');
+
+                    try {
+                        const IJ = window.IJClass || window.IJ;
+                        if (!IJ) throw new Error('ImageJ not initialized');
+
+                        await IJ.log('🌐 Remote API Call: searchCommands(query=' + query + ')');
+
+                        // Use ImageJ's CommandFinder to search commands
+                        const Menus = await window.lib.ij.Menus;
+                        const commands = await Menus.getCommands();
+                        
+                        const results = [];
+                        const queryLower = query.toLowerCase();
+                        
+                        // Search through command hashtable
+                        const keys = await commands.keys();
+                        while (await keys.hasMoreElements()) {
+                            const key = await keys.nextElement();
+                            const keyStr = String(key);
+                            
+                            if (keyStr.toLowerCase().includes(queryLower)) {
+                                const value = await commands.get(key);
+                                results.push({
+                                    command: keyStr,
+                                    menuPath: String(value)
+                                });
+                            }
+                        }
+                        
+                        console.log(`✓ Found ${results.length} matching command(s)`);
+                        return { commands: results };
+                        
+                    } catch (error) {
+                        console.error('✗ Error searching commands:', error);
+                        return { commands: [], error: error.message };
+                    }
+                },
+                { __schema__: schemas.searchCommands }
+            ),
+
+            // List examples from knowledge base
+            listExamples: Object.assign(
+                async ({ category = null, tag = null }, context = null) => {
+                    console.log('🌐 Remote call: listExamples()');
+
+                    try {
+                        await IJ.log('🌐 Remote API Call: listExamples(category=' + category + ', tag=' + tag + ')');
+                        
+                        // Get list of examples from catalog
+                        const catalogExamples = await listExampleFiles();
+                        const examples = [];
+                        
+                        // Read metadata from each example
+                        for (const ex of catalogExamples) {
+                            try {
+                                const content = await readLocalFile(ex.path);
+                                const { metadata } = parseFrontmatter(content);
+                                
+                                // Apply filters
+                                if (category && metadata.category !== category) continue;
+                                if (tag && (!metadata.tags || !metadata.tags.includes(tag))) continue;
+                                
+                                examples.push({
+                                    path: ex.path,
+                                    title: metadata.title || ex.title,
+                                    category: metadata.category || '',
+                                    tags: metadata.tags || [],
+                                    difficulty: metadata.difficulty || '',
+                                    language: metadata.language || ''
+                                });
+                            } catch (readError) {
+                                console.error(`Error reading example ${ex.path}:`, readError);
+                            }
+                        }
+                        
+                        console.log(`✓ Found ${examples.length} example(s)`);
+                        return { examples };
+                        
+                    } catch (error) {
+                        console.error('✗ Error listing examples:', error);
+                        return { examples: [], error: error.message };
+                    }
+                },
+                { __schema__: schemas.listExamples }
+            ),
+
+            // Read specific example
+            readExample: Object.assign(
+                async ({ path }, context = null) => {
+                    console.log('🌐 Remote call: readExample(path=' + path + ')');
+
+                    try {
+                        const IJ = window.IJClass || window.IJ;
+                        if (IJ) {
+                            await IJ.log('🌐 Remote API Call: readExample(path=' + path + ')');
+                        }
+                        
+                        const content = await readLocalFile(path);
+                        const { metadata, content: markdownContent } = parseFrontmatter(content);
+                        
+                        console.log(`✓ Read example: ${metadata.title || path}`);
+                        return {
+                            content: markdownContent,
+                            metadata: metadata,
+                            fullContent: content
+                        };
+                        
+                    } catch (error) {
+                        console.error('✗ Error reading example:', error);
+                        return { error: error.message };
+                    }
+                },
+                { __schema__: schemas.readExample }
+            ),
+
+            // Search examples
+            searchExamples: Object.assign(
+                async ({ query }, context = null) => {
+                    console.log('🌐 Remote call: searchExamples(query=' + query + ')');
+
+                    try {
+                        const IJ = window.IJClass || window.IJ;
+                        if (IJ) {
+                            await IJ.log('🌐 Remote API Call: searchExamples(query=' + query + ')');
+                        }
+                        
+                        const catalogExamples = await listExampleFiles();
+                        const results = [];
+                        const queryLower = query.toLowerCase();
+                        
+                        for (const ex of catalogExamples) {
+                            try {
+                                const content = await readLocalFile(ex.path);
+                                const { metadata, content: markdownContent } = parseFrontmatter(content);
+                                
+                                // Search in title, tags, and content
+                                const title = (metadata.title || '').toLowerCase();
+                                const tags = (metadata.tags || []).join(' ').toLowerCase();
+                                const contentLower = markdownContent.toLowerCase();
+                                
+                                if (title.includes(queryLower) || 
+                                    tags.includes(queryLower) || 
+                                    contentLower.includes(queryLower)) {
+                                    
+                                    // Extract matching snippet
+                                    const index = contentLower.indexOf(queryLower);
+                                    const start = Math.max(0, index - 50);
+                                    const end = Math.min(markdownContent.length, index + 100);
+                                    const snippet = markdownContent.substring(start, end);
+                                    
+                                    results.push({
+                                        path: ex.path,
+                                        title: metadata.title || ex.title,
+                                        matches: '...' + snippet + '...'
+                                    });
+                                }
+                            } catch (readError) {
+                                console.error(`Error searching example ${ex.path}:`, readError);
+                            }
+                        }
+                        
+                        console.log(`✓ Found ${results.length} matching example(s)`);
+                        return { examples: results };
+                        
+                    } catch (error) {
+                        console.error('✗ Error searching examples:', error);
+                        return { examples: [], error: error.message };
+                    }
+                },
+                { __schema__: schemas.searchExamples }
+            ),
+
+            // Save new example
+            saveExample: Object.assign(
+                async ({ path, content }, context = null) => {
+                    console.log('🌐 Remote call: saveExample(path=' + path + ')');
+
+                    try {
+                        const IJ = window.IJClass || window.IJ;
+                        if (IJ) {
+                            await IJ.log('🌐 Remote API Call: saveExample(path=' + path + ')');
+                        }
+                        
+                        // For now, we can't directly write files in browser environment
+                        // Instead, provide download or localStorage option
+                        // Return the content so user can save it manually
+                        
+                        console.log('Note: Saving examples requires manual download in browser environment');
+                        
+                        // Create a downloadable blob
+                        const blob = new Blob([content], { type: 'text/markdown' });
+                        const url = URL.createObjectURL(blob);
+                        
+                        // Trigger download
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = path.split('/').pop();
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                        URL.revokeObjectURL(url);
+                        
+                        console.log(`✓ Example download triggered: ${path}`);
+                        return {
+                            success: true,
+                            path: path,
+                            message: 'Example file downloaded. Please save it to imagej-examples/' + path
+                        };
+                        
+                    } catch (error) {
+                        console.error('✗ Error saving example:', error);
+                        return { 
+                            success: false, 
+                            error: error.message 
+                        };
+                    }
+                },
+                { __schema__: schemas.saveExample }
             )
         });
 

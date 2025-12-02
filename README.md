@@ -389,6 +389,87 @@ Access files directly from public GitHub repositories:
 - Load custom ImageJ plugins from GitHub
 - Share preconfigured ImageJ environments with specific plugins
 
+## Knowledge Base & Remote API
+
+ImageJ.JS includes a growing **knowledge base** of working code examples and can be controlled remotely via the **Hypha MCP (Model Context Protocol)** interface. This allows AI assistants and external tools to interact with ImageJ programmatically.
+
+### Knowledge Base Structure
+
+Located in `imagej-examples/`, the knowledge base contains markdown files with working code examples:
+
+```
+imagej-examples/
+├── README.md              # Catalog of examples
+├── USAGE.md               # Usage guide
+├── segmentation/          # Segmentation techniques
+│   └── blob-segmentation-wand.md
+├── roi/                   # ROI management
+│   └── roi-manager-basics.md
+├── measurement/           # Quantitative analysis
+└── preprocessing/         # Image enhancement
+```
+
+Each example includes:
+- **YAML frontmatter** with metadata (tags, difficulty, compatibility)
+- **Description** of when and how to use the technique
+- **Working code** in both macro and JavaScript
+- **Notes** about CheerpJ compatibility and gotchas
+- **Related examples** for further learning
+
+### Remote API via Hypha MCP
+
+Connect ImageJ.JS to Hypha server to enable remote control:
+
+1. Click "Connect to Hypha" button in the interface
+2. Copy the MCP URL
+3. Add to your MCP client configuration
+
+**Available Tools:**
+
+**Core ImageJ Tools:**
+- `runMacro(macro, returnLog)` - Execute ImageJ macro code
+- `executeJavaScript(code)` - Direct Java API access
+- `takeScreenshot()` - Capture visual results
+- `getImageInfo()`, `listImages()` - Image management
+
+**Knowledge Base Tools:**
+- `searchCommands(query)` - Find ImageJ commands
+- `listExamples(category, tag)` - Browse code examples
+- `readExample(path)` - Read full example with code
+- `searchExamples(query)` - Search by keyword
+- `saveExample(path, content)` - Contribute new examples
+
+**Example Workflow:**
+
+```javascript
+// 1. Search for relevant commands
+searchCommands("threshold")
+
+// 2. Find working examples
+listExamples(category="segmentation")
+
+// 3. Read example code
+readExample("segmentation/blob-segmentation-wand.md")
+
+// 4. Execute the code
+runMacro(`
+    run("Blobs (25K)");
+    doWand(134, 87);
+    roiManager("Add");
+`)
+
+// 5. Verify results
+takeScreenshot()
+```
+
+**Benefits:**
+- **Learn from working examples** - No need to debug CheerpJ incompatibilities
+- **AI-assisted analysis** - Let AI agents help with complex image processing
+- **Reproducible workflows** - Share exact code that works
+- **Growing knowledge** - Examples improve over time with user contributions
+
+See [imagej-examples/USAGE.md](imagej-examples/USAGE.md) for detailed usage guide.
+
 ## Browser Compatibility
 
 ### Fully Supported

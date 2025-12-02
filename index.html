@@ -234,6 +234,12 @@
       }
     }
 
+    /* Add 20px extra height to all ImageJ windows */
+    /* .cjWindow.cjBordered {
+      padding-bottom: 20px !important;
+      box-sizing: content-box !important;
+    } */
+
     /* Mobile styles for status indicators */
     @media (max-width: 640px) {
       /* Adjust top status indicators for mobile */
@@ -766,6 +772,60 @@ await applyPatches();
 await parseAndMountGitHub();
 
 cheerpjCreateDisplay(-1, -1, document.getElementById("container"));
+
+// Patch cheerpjDisplay to prevent click redirects on blank area only
+function patchCheerpjDisplay() {
+  const cheerpjDisplay = document.getElementById('cheerpjDisplay');
+  
+  if (cheerpjDisplay) {
+    console.log('Patching cheerpjDisplay to disable click redirects on blank area...');
+    
+    // Only block clicks when clicking DIRECTLY on the cheerpjDisplay div
+    // This prevents CheerpJ's promotional redirect when clicking blank areas
+    // but allows clicks on ImageJ windows and UI elements to work normally
+    cheerpjDisplay.addEventListener('click', (e) => {
+      // Only block if the click target is exactly the cheerpjDisplay div itself
+      // (not on its children, which are the ImageJ windows)
+      if (e.target === cheerpjDisplay) {
+        e.preventDefault();
+        e.stopPropagation();
+        e.stopImmediatePropagation();
+        console.log('Blocked click on blank area of cheerpjDisplay');
+        return false;
+      }
+      // Let all other clicks through (ImageJ windows, buttons, menus, etc.)
+    }, true); // Use capture phase to intercept before CheerpJ's handlers
+    
+    console.log('✓ Patched cheerpjDisplay - only blank area clicks will be blocked');
+    return true;
+  }
+  
+  return false;
+}
+
+// Try to patch immediately, and retry with MutationObserver if element doesn't exist yet
+if (!patchCheerpjDisplay()) {
+  console.log('cheerpjDisplay not found yet, waiting for it to be created...');
+  
+  // Use MutationObserver to detect when cheerpjDisplay is added
+  const observer = new MutationObserver((mutations) => {
+    if (patchCheerpjDisplay()) {
+      observer.disconnect();
+    }
+  });
+  
+  observer.observe(document.body, {
+    childList: true,
+    subtree: true
+  });
+  
+  // Also try again after a short delay as a fallback
+  setTimeout(() => {
+    if (patchCheerpjDisplay()) {
+      observer.disconnect();
+    }
+  }, 1000);
+}
 
 // Load ImageJ as a library for JavaScript interop
 try {
