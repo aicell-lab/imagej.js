@@ -251,10 +251,10 @@
   <div id="hyphaServiceUrl" class="text-xs mt-1 hidden"></div>
 </div>
 
-<!-- Test Macro Error Handling Button -->
+<!-- Test Button -->
 <div class="fixed bottom-4 right-4 z-50">
   <button id="testJavaBtn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg shadow-lg transition-colors duration-200">
-    Test Macro Error
+    <span id="testBtnText">Test Macro Error</span>
   </button>
 </div>
 
@@ -303,6 +303,55 @@ async function applyPatches(){
     createNativeFileSystemPatches();
     // Apply local file system patches for drag-and-drop
     createLocalFileSystemPatches();
+    // Apply GitHub file system patches
+    createGitHubFileSystemPatches();
+}
+
+// Parse URL query parameters and get configuration
+function parseURLConfig() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const config = {
+        mount: urlParams.get('mount'),
+        pluginsDir: urlParams.get('plugins.dir')
+    };
+    return config;
+}
+
+// Parse URL query parameters and mount GitHub repos
+async function parseAndMountGitHub() {
+    const config = parseURLConfig();
+    const mountParam = config.mount;
+
+    if (!mountParam) {
+        return;
+    }
+
+    // Parse mount parameter format: github:owner/repo or github:owner/repo@branch
+    if (mountParam.startsWith('github:')) {
+        const repoSpec = mountParam.substring('github:'.length);
+        const [repoPath, branch] = repoSpec.split('@');
+        const [owner, repo] = repoPath.split('/');
+
+        if (!owner || !repo) {
+            console.error('Invalid GitHub mount format. Use: ?mount=github:owner/repo or ?mount=github:owner/repo@branch');
+            return;
+        }
+
+        try {
+            console.log(`Mounting GitHub repository: ${owner}/${repo}${branch ? `@${branch}` : ''}`);
+            await window.githubFS.mountRepo(owner, repo, branch);
+            console.log(`Successfully mounted ${owner}/${repo} at /github/${owner}/${repo}`);
+
+            // Update test button text
+            const testBtnText = document.getElementById('testBtnText');
+            if (testBtnText) {
+                testBtnText.textContent = 'Test GitHub FS';
+            }
+        } catch (err) {
+            console.error('Failed to mount GitHub repository:', err);
+            alert(`Failed to mount GitHub repository ${owner}/${repo}: ${err.message}`);
+        }
+    }
 }
 
 // Drag and drop handler
@@ -492,67 +541,121 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            console.log('🧪 Testing macro error handling with Interpreter.runMacroSilent()...');
+            // Check if GitHub repo is mounted
+            if (window.githubFS && window.githubFS.repos.size > 0) {
+                console.log('🧪 Testing GitHub file system access...');
 
-            // Test macro with intentional syntax error
-            const errorMacro = `
+                await IJClass.log('========================================');
+                await IJClass.log('🧪 TEST: GitHub File System Access');
+                await IJClass.log('========================================');
+
+                // Get the first mounted repo
+                const mountPath = Array.from(window.githubFS.repos.keys())[0];
+                const [owner, repo] = mountPath.split('/');
+
+                await IJClass.log(`Mounted repo: ${owner}/${repo}`);
+                await IJClass.log(`Path: /github/${mountPath}`);
+                await IJClass.log('');
+
+                // List files in the root of the mounted repo
+                try {
+                    await IJClass.log('Listing files in repo root...');
+                    const entries = await window.githubFS.listDirectory(mountPath);
+                    await IJClass.log(`Found ${entries.length} entries:`);
+                    for (let i = 0; i < Math.min(entries.length, 10); i++) {
+                        await IJClass.log(`  - ${entries[i]}`);
+                    }
+                    if (entries.length > 10) {
+                        await IJClass.log(`  ... and ${entries.length - 10} more`);
+                    }
+                    await IJClass.log('');
+
+                    // Try to find a README file to open
+                    const readmeFiles = entries.filter(name =>
+                        name.toLowerCase().startsWith('readme')
+                    );
+
+                    if (readmeFiles.length > 0) {
+                        const readmeFile = readmeFiles[0];
+                        const filePath = `/github/${mountPath}/${readmeFile}`;
+                        await IJClass.log(`Attempting to open: ${filePath}`);
+
+                        // Use ImageJ macro to open the file
+                        const macro = `open("${filePath}");`;
+                        await IJClass.runMacro(macro);
+
+                        await IJClass.log('✓ File opened successfully!');
+                    } else {
+                        await IJClass.log('No README file found in repo root');
+                    }
+                } catch (listErr) {
+                    await IJClass.log('✗ Error listing files: ' + listErr.message);
+                }
+
+                await IJClass.log('========================================');
+            } else {
+                console.log('🧪 Testing macro error handling with Interpreter.runMacroSilent()...');
+
+                // Test macro with intentional syntax error
+                const errorMacro = `
 // This macro has an intentional syntax error
 bitDepth <=> bitDepth();
 print("This line should not execute");
-            `;
+                `;
 
-            await IJClass.log('========================================');
-            await IJClass.log('🧪 TEST: Macro Error Handling');
-            await IJClass.log('========================================');
-            await IJClass.log('Running macro with intentional error...');
-            await IJClass.log('');
+                await IJClass.log('========================================');
+                await IJClass.log('🧪 TEST: Macro Error Handling');
+                await IJClass.log('========================================');
+                await IJClass.log('Running macro with intentional error...');
+                await IJClass.log('');
 
-            // Test via Hypha service if connected
-            if (window.hyphaService) {
-                console.log('Testing via Hypha service...');
-                await IJClass.log('Method: Hypha service (with runMacroSilent)');
+                // Test via Hypha service if connected
+                if (window.hyphaService) {
+                    console.log('Testing via Hypha service...');
+                    await IJClass.log('Method: Hypha service (with runMacroSilent)');
 
-                const result = await window.hyphaService.runMacro({
-                    macro: errorMacro,
-                    returnLog: false
-                });
+                    const result = await window.hyphaService.runMacro({
+                        macro: errorMacro,
+                        returnLog: false
+                    });
 
-                console.log('Result:', result);
+                    console.log('Result:', result);
 
-                if (result.success) {
-                    await IJClass.log('✓ Status: Success');
-                    await IJClass.log('Result: ' + result.result);
+                    if (result.success) {
+                        await IJClass.log('✓ Status: Success');
+                        await IJClass.log('Result: ' + result.result);
+                    } else {
+                        await IJClass.log('✗ Status: Error (captured, no dialog shown!)');
+                        await IJClass.log('Error: ' + result.error);
+                    }
                 } else {
-                    await IJClass.log('✗ Status: Error (captured, no dialog shown!)');
-                    await IJClass.log('Error: ' + result.error);
+                    // Test with direct runMacroSilent call
+                    console.log('Testing with Interpreter.runMacroSilent()...');
+                    await IJClass.log('Method: Direct Interpreter.runMacroSilent() call');
+
+                    const Interpreter = await window.lib.ij.macro.Interpreter;
+                    const resultArray = await Interpreter.runMacroSilent(errorMacro);
+
+                    // resultArray[0] = "success" or "error"
+                    // resultArray[1] = result or error message
+                    const status = await resultArray[0];
+                    const message = await resultArray[1];
+
+                    console.log('Status:', status, 'Message:', message);
+
+                    if (status === 'error') {
+                        await IJClass.log('✗ Status: Error (captured, no dialog shown!)');
+                        await IJClass.log('Error: ' + message);
+                    } else {
+                        await IJClass.log('✓ Status: Success');
+                        await IJClass.log('Result: ' + (message || '(null)'));
+                    }
                 }
-            } else {
-                // Test with direct runMacroSilent call
-                console.log('Testing with Interpreter.runMacroSilent()...');
-                await IJClass.log('Method: Direct Interpreter.runMacroSilent() call');
 
-                const Interpreter = await window.lib.ij.macro.Interpreter;
-                const resultArray = await Interpreter.runMacroSilent(errorMacro);
-
-                // resultArray[0] = "success" or "error"
-                // resultArray[1] = result or error message
-                const status = await resultArray[0];
-                const message = await resultArray[1];
-
-                console.log('Status:', status, 'Message:', message);
-
-                if (status === 'error') {
-                    await IJClass.log('✗ Status: Error (captured, no dialog shown!)');
-                    await IJClass.log('Error: ' + message);
-                } else {
-                    await IJClass.log('✓ Status: Success');
-                    await IJClass.log('Result: ' + (message || '(null)'));
-                }
+                await IJClass.log('');
+                await IJClass.log('Note: No error dialog should have appeared!');
+                await IJClass.log('========================================');
             }
-
-            await IJClass.log('');
-            await IJClass.log('Note: No error dialog should have appeared!');
-            await IJClass.log('========================================');
 
         } catch (err) {
             console.error('Test error:', err);
@@ -561,16 +664,30 @@ print("This line should not execute");
     });
 });
 
+// Get URL configuration
+const urlConfig = parseURLConfig();
+
+// Determine plugins directory
+const pluginsDir = urlConfig.pluginsDir || `/app${baseUrl}lib/ImageJ/plugins`;
+if (urlConfig.pluginsDir) {
+    console.log('Using custom plugins.dir from URL:', pluginsDir);
+} else {
+    console.log('Using default plugins.dir:', pluginsDir);
+}
+
 await cheerpjInit({
     clipboardMode: "java", // "permission" | "system" | "java"
     javaProperties: [
       "user.dir=/files",
-      `plugins.dir=/app${baseUrl}lib/ImageJ/plugins`,
+      `plugins.dir=${pluginsDir}`,
       "useJFileChooser=true"
     ],
 });
 
 await applyPatches();
+
+// Parse and mount GitHub repos from URL parameters
+await parseAndMountGitHub();
 
 cheerpjCreateDisplay(-1, -1, document.getElementById("container"));
 

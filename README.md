@@ -78,6 +78,9 @@ While CheerpJ provides excellent Java-in-browser capabilities, several hacks are
 ├── /app/             # Application files (CheerpJWebFolder) - served via HTTP
 │   └── /lib/ImageJ/  # ImageJ installation
 ├── /files/           # User files (CheerpJIndexedDBFolder) - persistent storage
+├── /local/           # Drag-and-drop files (LocalFileSystemHandler) - temporary, read-only
+├── /github/          # GitHub repositories (GitHubFileSystemHandler) - HTTP-based, read-only
+│   └── owner/repo/   # Mounted GitHub repos (e.g., /github/amun-ai/hypha/)
 ├── /lt/              # CheerpJ runtime files
 └── /dev/             # Device files (CheerpJDevFolder)
 ```
@@ -98,6 +101,88 @@ class NativeFileSystemHandler {
   }
 }
 ```
+
+### GitHub Repository File System
+
+ImageJ.JS supports mounting public GitHub repositories as read-only file systems, allowing you to directly access and process files from GitHub without downloading them first.
+
+#### Usage
+
+Mount a GitHub repository via URL parameter:
+
+```
+http://localhost:8000/?mount=github:owner/repo
+http://localhost:8000/?mount=github:owner/repo@branch
+http://localhost:8000/?mount=github:owner/repo&plugins.dir=/github/owner/repo/plugins
+```
+
+**Examples:**
+
+```
+# Mount the main branch of amun-ai/hypha
+http://localhost:8000/?mount=github:amun-ai/hypha
+
+# Mount a specific branch
+http://localhost:8000/?mount=github:oeway/ImageJ.JS@develop
+
+# Mount a repo and use its plugins directory
+http://localhost:8000/?mount=github:oeway/imagej-js-env-demo&plugins.dir=/github/oeway/imagej-js-env-demo/plugins
+```
+
+#### Accessing Files
+
+Once mounted, files are accessible at `/github/owner/repo/`:
+
+```javascript
+// Example: Open a file from mounted GitHub repo
+open("/github/amun-ai/hypha/README.md");
+
+// List files in a directory
+list = getFileList("/github/amun-ai/hypha/");
+```
+
+#### Implementation
+
+The GitHub file system handler (`GitHubFileSystemHandler` in `utils.js`) uses:
+
+- **GitHub API** (`https://api.github.com/repos/owner/repo/contents/path`) for listing directories
+- **Raw GitHub** (`https://raw.githubusercontent.com/owner/repo/branch/path`) for fetching file contents
+- **Caching** to minimize API calls and improve performance
+
+```javascript
+class GitHubFileSystemHandler {
+  async mountRepo(owner, repo, branch = 'main') {
+    // Verify repo exists and get default branch
+    const repoInfo = await fetch(`https://api.github.com/repos/${owner}/${repo}`);
+    // Store mount info
+    this.repos.set(`${owner}/${repo}`, { owner, repo, branch });
+  }
+
+  async getFileContent(path) {
+    // Fetch from raw.githubusercontent.com
+    const url = `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/${filePath}`;
+    const response = await fetch(url);
+    return new Uint8Array(await response.arrayBuffer());
+  }
+}
+```
+
+#### Features
+
+- ✅ **Read-only access** to public repositories (no authentication required)
+- ✅ **Directory browsing** via Java file dialogs
+- ✅ **Branch selection** with `@branch` syntax
+- ✅ **File caching** for improved performance
+- ✅ **Multiple repos** can be mounted simultaneously
+- ✅ **Plugin loading** from GitHub repositories via `plugins.dir` parameter
+- ✅ **Custom configurations** for ImageJ via URL parameters
+
+#### Limitations
+
+- **Public repos only**: Private repositories require authentication (not currently supported)
+- **Read-only**: Cannot write back to GitHub (would require OAuth + Git API)
+- **API rate limits**: GitHub API has rate limits (60 requests/hour unauthenticated, 5000/hour authenticated)
+- **File size**: Large files may take time to download on first access
 
 ### IdbOps Patching
 
@@ -196,9 +281,33 @@ imagej.js2/
 - Main application bootstrap
 
 #### `utils.js`
-- `NativeFileSystemHandler`: Manages native folder access
+- `NativeFileSystemHandler`: Manages native folder access via File System Access API
+- `LocalFileSystemHandler`: Manages drag-and-drop files (temporary, in-memory)
+- `GitHubFileSystemHandler`: Manages HTTP-based access to GitHub repositories
 - `createNativeFileSystemPatches()`: Patches IdbOps for native FS integration
-- File I/O wrappers for native file handles
+- `createLocalFileSystemPatches()`: Registers `/local/` mount point for drag-and-drop
+- `createGitHubFileSystemPatches()`: Registers `/github/` mount point for GitHub repos
+- File I/O wrappers and custom read/write operations for each file system type
+
+## URL Parameters
+
+ImageJ.JS supports several URL parameters for configuration:
+
+| Parameter | Description | Example |
+|-----------|-------------|---------|
+| `mount` | Mount a GitHub repository | `?mount=github:owner/repo` |
+| `mount` (with branch) | Mount a specific branch | `?mount=github:owner/repo@branch` |
+| `plugins.dir` | Set custom plugins directory | `?plugins.dir=/github/owner/repo/plugins` |
+
+**Combining Parameters:**
+
+```
+# Mount repo with custom plugins directory
+http://localhost:8000/?mount=github:oeway/imagej-js-env-demo&plugins.dir=/github/oeway/imagej-js-env-demo/plugins
+
+# Multiple parameters example
+http://localhost:8000/?mount=github:owner/repo@develop&plugins.dir=/github/owner/repo/custom-plugins
+```
 
 ## Development Setup
 
@@ -237,31 +346,80 @@ Then open http://localhost:8000 in your browser.
 1. Open the application in your browser
 2. ImageJ will load automatically with the default interface
 
-### Loading Local Files
+### Loading Local Files (Read/Write)
+
+**Option 1: Mount Local Folder** (Chrome/Edge only)
 1. Click the "Mount Local Folder" button in the bottom-left corner
 2. Select a folder containing your images
-3. The folder will be mounted and accessible from within ImageJ
+3. The folder will be mounted at `/files/` and accessible from within ImageJ
 4. Use ImageJ's File menu to open images from the mounted folder
+5. Files saved from ImageJ will be written back to the mounted folder in real-time
 
-### Saving Files
-Files saved from ImageJ will be written back to the mounted folder in real-time using the Native File System API.
+**Option 2: Drag and Drop** (All browsers)
+1. Drag files or folders from your file explorer directly into the browser window
+2. Files will be available at `/local/` (read-only, temporary)
+3. Files are kept in memory and cleared when you drop new files
+
+### Loading Files from GitHub (Read-only)
+
+Access files directly from public GitHub repositories:
+
+1. **Basic mounting** - Add `?mount=github:owner/repo` to the URL:
+   ```
+   http://localhost:8000/?mount=github:amun-ai/hypha
+   ```
+
+2. **With plugins** - Mount a repo and use its plugins directory:
+   ```
+   http://localhost:8000/?mount=github:oeway/imagej-js-env-demo&plugins.dir=/github/oeway/imagej-js-env-demo/plugins
+   ```
+
+3. Files will be available at `/github/owner/repo/`:
+   - Browse via ImageJ's File → Open dialog
+   - Navigate to the `/github/` folder
+   - Expand to find your repository and files
+
+4. Click the "Test GitHub FS" button to verify the mount and open a README file
+
+**Use Cases:**
+- Open sample images from public repositories
+- Access shared datasets without downloading
+- Process files from collaborative projects
+- Run analysis on public image databases
+- Load custom ImageJ plugins from GitHub
+- Share preconfigured ImageJ environments with specific plugins
 
 ## Browser Compatibility
 
 ### Fully Supported
-- Chrome 86+ (Desktop)
-- Edge 86+ (Desktop)
+- Chrome 86+ (Desktop) - All features including native file system mounting
+- Edge 86+ (Desktop) - All features including native file system mounting
 
 ### Limited Support
-- Safari: No File System Access API support (falls back to IndexedDB only)
-- Firefox: No File System Access API support (falls back to IndexedDB only)
-- Mobile browsers: Limited support due to File System Access API constraints
+- Safari: No File System Access API support (can use drag-and-drop and GitHub mounting)
+- Firefox: No File System Access API support (can use drag-and-drop and GitHub mounting)
+- Mobile browsers: Limited File System Access API support (can use drag-and-drop and GitHub mounting)
+
+### Feature Compatibility Matrix
+
+| Feature | Chrome/Edge | Safari | Firefox | Mobile |
+|---------|------------|--------|---------|--------|
+| Native Folder Mount (`/files/`) | ✅ Read/Write | ❌ | ❌ | ❌ |
+| Drag & Drop (`/local/`) | ✅ Read-only | ✅ Read-only | ✅ Read-only | ⚠️ Limited |
+| GitHub Repos (`/github/`) | ✅ Read-only | ✅ Read-only | ✅ Read-only | ✅ Read-only |
+| IndexedDB Storage | ✅ | ✅ | ✅ | ✅ |
 
 ## Known Issues & Limitations
 
 ### File System Access
-- **Safari/Firefox**: Native file system mounting not available, must use IndexedDB-based virtual file system
-- **Mobile browsers**: File System Access API not widely supported
+- **Safari/Firefox**: Native file system mounting not available, must use IndexedDB-based virtual file system or GitHub mounting
+- **Mobile browsers**: File System Access API not widely supported, use drag-and-drop or GitHub mounting instead
+
+### GitHub File System
+- **Rate limits**: GitHub API limits unauthenticated requests to 60/hour. For heavy usage, consider implementing authentication
+- **Private repositories**: Not currently supported (would require OAuth implementation)
+- **Large files**: Files >50MB may be slow to load on first access
+- **Network required**: Cannot work offline (unlike native file system or IndexedDB)
 
 ### Range Header Errors
 Some external resources (like imagej.net sample images) don't support Range headers. These are non-critical and don't affect core functionality.
@@ -374,6 +532,70 @@ console.log({
 - Verify no errors in browser console
 - Try clearing browser cache and IndexedDB
 
+## Practical Examples
+
+### Example 1: Processing Images from a Public Repository
+
+```
+# Mount a repository containing sample images
+http://localhost:8000/?mount=github:imagej/imagej.github.io
+
+# In ImageJ, navigate to File → Open
+# Browse to /github/imagej/imagej.github.io/media/
+# Open and process images directly from GitHub
+```
+
+### Example 2: Running Macros on GitHub Files
+
+```javascript
+// ImageJ macro to batch process files from GitHub
+dir = "/github/amun-ai/hypha/examples/images/";
+list = getFileList(dir);
+
+for (i = 0; i < list.length; i++) {
+    if (endsWith(list[i], ".tif")) {
+        open(dir + list[i]);
+        run("Enhance Contrast", "saturated=0.35");
+        // Process image...
+        close();
+    }
+}
+```
+
+### Example 3: Loading Plugins from GitHub
+
+You can load ImageJ plugins directly from a GitHub repository:
+
+```
+# Mount a repo containing ImageJ plugins and configure plugins.dir
+http://localhost:8000/?mount=github:oeway/imagej-js-env-demo&plugins.dir=/github/oeway/imagej-js-env-demo/plugins
+
+# ImageJ will now load plugins from the GitHub repository
+# The plugins will appear in ImageJ's Plugins menu
+```
+
+This is particularly useful for:
+- Sharing custom ImageJ environments
+- Testing plugins without local installation
+- Distributing preconfigured ImageJ setups
+- Creating reproducible analysis workflows
+
+### Example 4: Multiple Repository Mounts
+
+Currently, only one repository can be mounted per page load via URL parameter. To access multiple repositories:
+
+```
+# Load page with first repo
+http://localhost:8000/?mount=github:owner1/repo1
+
+# Use JavaScript console to mount additional repos
+await window.githubFS.mountRepo('owner2', 'repo2');
+
+# Now both repos are accessible:
+# /github/owner1/repo1/
+# /github/owner2/repo2/
+```
+
 ## Future Improvements
 
 - [ ] Support for Safari/Firefox file system access via alternative APIs
@@ -382,6 +604,10 @@ console.log({
 - [ ] Add support for Fiji distribution with full plugin ecosystem
 - [ ] Implement proper multi-threading using Web Workers
 - [ ] Optimize initial load time and caching
+- [ ] GitHub authentication for private repositories and higher rate limits
+- [ ] Multiple repository mounting via URL parameters (e.g., `?mount=github:owner1/repo1,github:owner2/repo2`)
+- [ ] Additional URL parameters for ImageJ configuration (e.g., `user.dir`, `macros.dir`, etc.)
+- [ ] Support for other Java properties via URL parameters
 
 ## Contributing
 

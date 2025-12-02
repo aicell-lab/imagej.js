@@ -121,6 +121,196 @@ class LocalFileSystemHandler {
   }
 }
 
+// GitHub File System Handler for HTTP-based access to GitHub repositories
+class GitHubFileSystemHandler {
+  constructor() {
+    this.repos = new Map(); // Map of mountPath -> {owner, repo, branch}
+    this.fileCache = new Map(); // Cache for file contents
+    this.directoryCache = new Map(); // Cache for directory listings
+  }
+
+  async mountRepo(owner, repo, branch = 'main') {
+    const mountPath = `${owner}/${repo}`;
+
+    // Verify repo exists and get default branch if not specified
+    try {
+      const repoInfo = await fetch(`https://api.github.com/repos/${owner}/${repo}`);
+      if (!repoInfo.ok) {
+        throw new Error(`Failed to access repository ${owner}/${repo}`);
+      }
+      const repoData = await repoInfo.json();
+      const actualBranch = branch || repoData.default_branch || 'main';
+
+      this.repos.set(mountPath, { owner, repo, branch: actualBranch });
+      console.log(`Mounted GitHub repo: ${owner}/${repo} (branch: ${actualBranch}) at /github/${mountPath}`);
+      return mountPath;
+    } catch (err) {
+      console.error(`Error mounting GitHub repo ${owner}/${repo}:`, err);
+      throw err;
+    }
+  }
+
+  parseRepoFromPath(path) {
+    // Path format: owner/repo/... or just owner/repo
+    const parts = path.split('/').filter(p => p);
+    if (parts.length < 2) return null;
+
+    const owner = parts[0];
+    const repo = parts[1];
+    const mountPath = `${owner}/${repo}`;
+
+    if (!this.repos.has(mountPath)) {
+      return null;
+    }
+
+    const repoInfo = this.repos.get(mountPath);
+    const filePath = parts.slice(2).join('/');
+
+    return {
+      owner,
+      repo,
+      branch: repoInfo.branch,
+      filePath,
+      mountPath
+    };
+  }
+
+  async listDirectory(path) {
+    const repoInfo = this.parseRepoFromPath(path);
+    if (!repoInfo) {
+      // List mounted repos at root level
+      if (!path || path === '') {
+        return Array.from(this.repos.keys()).map(mountPath => {
+          const [owner] = mountPath.split('/');
+          return owner;
+        }).filter((v, i, a) => a.indexOf(v) === i); // unique owners
+      }
+
+      // List repos for a specific owner
+      const owner = path.split('/')[0];
+      return Array.from(this.repos.keys())
+        .filter(mountPath => mountPath.startsWith(`${owner}/`))
+        .map(mountPath => mountPath.split('/')[1]);
+    }
+
+    const cacheKey = `${repoInfo.owner}/${repoInfo.repo}/${repoInfo.branch}/${repoInfo.filePath}`;
+
+    // Check cache first
+    if (this.directoryCache.has(cacheKey)) {
+      return this.directoryCache.get(cacheKey);
+    }
+
+    try {
+      const url = `https://api.github.com/repos/${repoInfo.owner}/${repoInfo.repo}/contents/${repoInfo.filePath}?ref=${repoInfo.branch}`;
+      const response = await fetch(url);
+
+      if (!response.ok) {
+        throw new Error(`GitHub API error: ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      if (!Array.isArray(data)) {
+        throw new Error('Not a directory');
+      }
+
+      const entries = data.map(item => item.name);
+
+      // Cache the result
+      this.directoryCache.set(cacheKey, entries);
+
+      return entries;
+    } catch (err) {
+      console.error('Error listing GitHub directory:', cacheKey, err);
+      throw err;
+    }
+  }
+
+  async getFileInfo(path) {
+    const repoInfo = this.parseRepoFromPath(path);
+    if (!repoInfo) return null;
+
+    try {
+      const url = `https://api.github.com/repos/${repoInfo.owner}/${repoInfo.repo}/contents/${repoInfo.filePath}?ref=${repoInfo.branch}`;
+      const response = await fetch(url);
+
+      if (!response.ok) {
+        return null;
+      }
+
+      const data = await response.json();
+
+      if (Array.isArray(data)) {
+        // It's a directory
+        return {
+          type: 'directory',
+          size: 0
+        };
+      }
+
+      // It's a file
+      return {
+        type: 'file',
+        size: data.size,
+        downloadUrl: data.download_url || `https://raw.githubusercontent.com/${repoInfo.owner}/${repoInfo.repo}/${repoInfo.branch}/${repoInfo.filePath}`
+      };
+    } catch (err) {
+      console.error('Error getting GitHub file info:', path, err);
+      return null;
+    }
+  }
+
+  async getFileContent(path) {
+    const repoInfo = this.parseRepoFromPath(path);
+    if (!repoInfo) return null;
+
+    const cacheKey = `${repoInfo.owner}/${repoInfo.repo}/${repoInfo.branch}/${repoInfo.filePath}`;
+
+    // Check cache first
+    if (this.fileCache.has(cacheKey)) {
+      return this.fileCache.get(cacheKey);
+    }
+
+    try {
+      // Use raw.githubusercontent.com for direct file download
+      const url = `https://raw.githubusercontent.com/${repoInfo.owner}/${repoInfo.repo}/${repoInfo.branch}/${repoInfo.filePath}`;
+      const response = await fetch(url);
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch file: ${response.status}`);
+      }
+
+      const arrayBuffer = await response.arrayBuffer();
+      const data = new Uint8Array(arrayBuffer);
+
+      // Cache the result
+      this.fileCache.set(cacheKey, data);
+
+      return data;
+    } catch (err) {
+      console.error('Error fetching GitHub file:', cacheKey, err);
+      throw err;
+    }
+  }
+
+  isDirectory(path) {
+    const repoInfo = this.parseRepoFromPath(path);
+    if (!repoInfo) {
+      // Root or owner level is always a directory
+      return true;
+    }
+
+    // If filePath is empty, it's the repo root (directory)
+    if (!repoInfo.filePath) {
+      return true;
+    }
+
+    // We need to check via API (cached in directoryCache or fileCache)
+    const cacheKey = `${repoInfo.owner}/${repoInfo.repo}/${repoInfo.branch}/${repoInfo.filePath}`;
+    return this.directoryCache.has(cacheKey);
+  }
+}
+
 // Native File System Integration
 class NativeFileSystemHandler {
   constructor() {
@@ -769,6 +959,288 @@ var LocalInodeOps = {
     close: null
 };
 
+// GitHub file system read function
+function githubFileReadAsync(fileData, fileOffset, buf, off, len, flags, cb) {
+    if (fileOffset >= fileData.length) {
+        return cb(0);
+    }
+
+    if (fileOffset + len > fileData.length) {
+        len = fileData.length - fileOffset;
+    }
+
+    if (len <= 0) {
+        return cb(0);
+    }
+
+    // Use the direct data that was loaded from GitHub
+    if (fileData.data) {
+        for (let i = 0; i < len; i++) {
+            buf[off + i] = fileData.data[fileOffset + i];
+        }
+        return cb(len);
+    }
+
+    // If data is not available, return 0 (this shouldn't happen)
+    console.error('GitHub file data not available');
+    return cb(0);
+}
+
+// GitHub file system operations
+function githubStatAsync(mp, path, fileRef, cb) {
+    // Remove the mount point prefix to get the GitHub path
+    const githubPath = path === '' || path === '/' ? '' : path.substring(1);
+
+    // Handle root directory
+    if (githubPath === '') {
+        fileRef.inodeId = Math.floor(Math.random() * 1000000);
+        fileRef.uid = 0;
+        fileRef.gid = 0;
+        fileRef.permType = CheerpJFileData.S_IFDIR | 0o777;
+        fileRef.lastModified = Math.floor(Date.now() / 1000);
+        return cb();
+    }
+
+    // Check if this is an owner directory (e.g., "amun-ai")
+    const parts = githubPath.split('/').filter(p => p);
+    if (parts.length === 1) {
+        const owner = parts[0];
+        // Check if we have any repos for this owner
+        const hasRepos = Array.from(window.githubFS.repos.keys()).some(
+            mountPath => mountPath.startsWith(`${owner}/`)
+        );
+        if (hasRepos) {
+            fileRef.inodeId = Math.floor(Math.random() * 1000000);
+            fileRef.uid = 0;
+            fileRef.gid = 0;
+            fileRef.permType = CheerpJFileData.S_IFDIR | 0o777;
+            fileRef.lastModified = Math.floor(Date.now() / 1000);
+            return cb();
+        } else {
+            fileRef.permType = 0;
+            return cb();
+        }
+    }
+
+    // Check if this is a repo directory (e.g., "amun-ai/hypha")
+    if (parts.length === 2) {
+        const mountPath = `${parts[0]}/${parts[1]}`;
+        if (window.githubFS.repos.has(mountPath)) {
+            fileRef.inodeId = Math.floor(Math.random() * 1000000);
+            fileRef.uid = 0;
+            fileRef.gid = 0;
+            fileRef.permType = CheerpJFileData.S_IFDIR | 0o777;
+            fileRef.lastModified = Math.floor(Date.now() / 1000);
+            return cb();
+        } else {
+            fileRef.permType = 0;
+            return cb();
+        }
+    }
+
+    // For files within repos, check via GitHub API
+    window.githubFS.getFileInfo(githubPath).then(info => {
+        if (!info) {
+            // File/directory doesn't exist
+            fileRef.permType = 0;
+            return cb();
+        }
+
+        fileRef.inodeId = Math.floor(Math.random() * 1000000);
+        fileRef.uid = 0;
+        fileRef.gid = 0;
+        fileRef.lastModified = Math.floor(Date.now() / 1000);
+
+        if (info.type === 'directory') {
+            fileRef.permType = CheerpJFileData.S_IFDIR | 0o777;
+        } else {
+            fileRef.permType = CheerpJFileData.S_IFREG | 0o444; // Read-only
+            fileRef.fileLength = info.size;
+        }
+
+        return cb();
+    }).catch(err => {
+        console.error('Error getting GitHub file info:', err);
+        fileRef.permType = 0;
+        return cb();
+    });
+}
+
+function githubListAsync(mp, path, fileRef, cb) {
+    const githubPath = path === '' || path === '/' ? '' : path.substring(1);
+
+    console.log('[githubListAsync] path:', path, 'githubPath:', githubPath);
+    console.log('[githubListAsync] mounted repos:', Array.from(window.githubFS.repos.keys()));
+
+    // Handle root directory - list all owners
+    if (githubPath === '') {
+        const owners = Array.from(window.githubFS.repos.keys()).map(mountPath => {
+            const [owner] = mountPath.split('/');
+            return owner;
+        }).filter((v, i, a) => a.indexOf(v) === i); // unique owners
+
+        console.log('[githubListAsync] listing owners:', owners);
+        for (const owner of owners) {
+            fileRef.push(owner);
+        }
+        return cb();
+    }
+
+    // Check if this is an owner directory (e.g., "amun-ai")
+    const parts = githubPath.split('/').filter(p => p);
+    console.log('[githubListAsync] parts:', parts, 'length:', parts.length);
+
+    if (parts.length === 1) {
+        const owner = parts[0];
+        // List all repos for this owner
+        const repos = Array.from(window.githubFS.repos.keys())
+            .filter(mountPath => mountPath.startsWith(`${owner}/`))
+            .map(mountPath => mountPath.split('/')[1]);
+
+        console.log('[githubListAsync] listing repos for owner', owner, ':', repos);
+        for (const repo of repos) {
+            fileRef.push(repo);
+        }
+        return cb();
+    }
+
+    // For repo contents, use the GitHub API
+    console.log('[githubListAsync] fetching from GitHub API for path:', githubPath);
+    window.githubFS.listDirectory(githubPath).then(entries => {
+        console.log('[githubListAsync] GitHub API returned entries:', entries);
+        for (const entry of entries) {
+            fileRef.push(entry);
+        }
+        return cb();
+    }).catch(err => {
+        console.error('Error listing GitHub directory:', err);
+        return cb();
+    });
+}
+
+function githubMakeFileData(mp, path, mode, uid, gid, cb) {
+    const githubPath = path === '' || path === '/' ? '' : path.substring(1);
+
+    console.log('[githubMakeFileData] path:', path, 'githubPath:', githubPath, 'mode:', mode);
+
+    // Handle root directory
+    if (githubPath === '') {
+        const fileData = new CheerpJFileData(
+            mp,
+            path,
+            0,
+            Math.floor(Math.random() * 1000000),
+            CheerpJFileData.S_IFDIR | 0o777,
+            Math.floor(Date.now() / 1000),
+            uid,
+            gid
+        );
+        fileData.mount = mp.inodeOps;
+        return cb(fileData);
+    }
+
+    // Check if this is an owner directory (e.g., "amun-ai")
+    const parts = githubPath.split('/').filter(p => p);
+    if (parts.length === 1) {
+        const owner = parts[0];
+        // Check if we have any repos for this owner
+        const hasRepos = Array.from(window.githubFS.repos.keys()).some(
+            mountPath => mountPath.startsWith(`${owner}/`)
+        );
+        if (hasRepos) {
+            console.log('[githubMakeFileData] creating virtual dir for owner:', owner);
+            const fileData = new CheerpJFileData(
+                mp,
+                path,
+                0,
+                Math.floor(Math.random() * 1000000),
+                CheerpJFileData.S_IFDIR | 0o777,
+                Math.floor(Date.now() / 1000),
+                uid,
+                gid
+            );
+            fileData.mount = mp.inodeOps;
+            return cb(fileData);
+        }
+    }
+
+    // Check if this is a repo directory (e.g., "amun-ai/hypha")
+    if (parts.length === 2) {
+        const mountPath = `${parts[0]}/${parts[1]}`;
+        if (window.githubFS.repos.has(mountPath)) {
+            console.log('[githubMakeFileData] creating virtual dir for repo:', mountPath);
+            const fileData = new CheerpJFileData(
+                mp,
+                path,
+                0,
+                Math.floor(Math.random() * 1000000),
+                CheerpJFileData.S_IFDIR | 0o777,
+                Math.floor(Date.now() / 1000),
+                uid,
+                gid
+            );
+            fileData.mount = mp.inodeOps;
+            return cb(fileData);
+        }
+    }
+
+    if (mode === "r") {
+        // Read mode - fetch file from GitHub
+        window.githubFS.getFileContent(githubPath).then(data => {
+            if (!data) {
+                console.error('[githubMakeFileData] getFileContent returned null for:', githubPath);
+                return cb(null);
+            }
+
+            const fileData = new CheerpJFileData(
+                mp,
+                path,
+                data.length,
+                Math.floor(Math.random() * 1000000),
+                CheerpJFileData.S_IFREG | 0o444, // Read-only
+                Math.floor(Date.now() / 1000),
+                uid,
+                gid
+            );
+
+            // Store the file data
+            fileData.data = data;
+
+            // Use GitHub read function
+            fileData.mount = mp.inodeOps;
+
+            return cb(fileData);
+        }).catch(err => {
+            console.error('Error fetching GitHub file:', err);
+            return cb(null);
+        });
+        return;
+    } else if (mode === "w" || mode === "r+") {
+        // Write mode not supported for GitHub FS (read-only)
+        console.warn('Write mode not supported for /github (GitHub files are read-only)');
+        return cb(null);
+    }
+
+    return cb(null);
+}
+
+// GitHub file system operations
+var GitHubOps = {
+    statAsync: githubStatAsync,
+    listAsync: githubListAsync,
+    makeFileData: githubMakeFileData,
+    createDirAsync: null,
+    renameAsync: null,
+    linkAsync: null,
+    unlinkAsync: null
+};
+
+var GitHubInodeOps = {
+    readAsync: githubFileReadAsync,
+    writeAsync: null,
+    close: null
+};
+
 // Custom CheerpJFolder for local file system (drag-and-drop)
 // We create a folder object that matches the CheerpJFolder structure
 function CheerpJLocalFolder(mp) {
@@ -831,22 +1303,88 @@ function createLocalFileSystemPatches() {
     console.log('Local file system mount registered at /local/');
 }
 
+// Custom CheerpJFolder for GitHub file system
+function CheerpJGitHubFolder(mp) {
+    this.mountPoint = mp;
+    this.isSplit = false;
+    this.mountOps = GitHubOps;
+    this.inodeOps = GitHubInodeOps;
+    this.devId = 200; // Arbitrary device ID (different from local FS)
+    this.fileCache = {};
+    this.cacheThreads = {};
+    this.inodeCache = [];
+}
+
+// Add the cache methods that CheerpJFolder has
+CheerpJGitHubFolder.prototype.getCached = function(fileName) {
+    var c = this.fileCache;
+    if(!c.hasOwnProperty(fileName))
+        return null;
+    var inodeId = c[fileName];
+    var ret = this.inodeCache[inodeId];
+    return ret;
+};
+
+CheerpJGitHubFolder.prototype.setCached = function(fileName, fileData) {
+    var c = this.fileCache;
+    var inodeId = fileData.inodeId;
+    c[fileName] = inodeId;
+    this.inodeCache[inodeId] = fileData;
+};
+
+CheerpJGitHubFolder.prototype.clearCached = function(fileName) {
+    var c = this.fileCache;
+    if(c.hasOwnProperty(fileName)) {
+        delete c[fileName];
+    }
+};
+
+CheerpJGitHubFolder.prototype.decRefCached = function(fileName, fileData) {
+    // No-op for GitHub FS
+};
+
+// Create and apply patches for GitHub file system
+// This registers /github as a proper mount point
+function createGitHubFileSystemPatches() {
+    // Add /github mount to the global cheerpjFSMounts array
+    // Insert before the root folder (which is always last)
+    const githubFolder = new CheerpJGitHubFolder("/github/");
+
+    // Find the index of the root folder
+    const rootIndex = cheerpjFSMounts.findIndex(m => m.mountPoint === "/");
+
+    if (rootIndex !== -1) {
+        // Insert before root
+        cheerpjFSMounts.splice(rootIndex, 0, githubFolder);
+    } else {
+        // Root not found, just push (shouldn't happen)
+        cheerpjFSMounts.push(githubFolder);
+    }
+
+    console.log('GitHub file system mount registered at /github/');
+}
+
 // Initialize the handlers
 const nativeFS = new NativeFileSystemHandler();
 const localFS = new LocalFileSystemHandler();
+const githubFS = new GitHubFileSystemHandler();
 
 // Expose globally for access from other scripts
 window.nativeFS = nativeFS;
 window.localFS = localFS;
+window.githubFS = githubFS;
 
 // Export for use in other files
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
         NativeFileSystemHandler,
         LocalFileSystemHandler,
+        GitHubFileSystemHandler,
         createNativeFileSystemPatches,
         createLocalFileSystemPatches,
+        createGitHubFileSystemPatches,
         nativeFS,
-        localFS
+        localFS,
+        githubFS
     };
 } 
