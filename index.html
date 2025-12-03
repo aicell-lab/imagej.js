@@ -423,7 +423,7 @@ async function parseAndMountGitHub() {
         try {
             console.log(`Mounting GitHub repository: ${owner}/${repo}@${branch}`);
             await window.githubFS.mountRepo(owner, repo, branch);
-            console.log(`Successfully mounted ${owner}/${repo}@${branch} at /github/${owner}/${repo}/${branch}`);
+            console.log(`Successfully mounted ${owner}/${repo}@${branch} at /github/${owner}/${repo}@${branch}`);
 
             // Update test button text
             const testBtnText = document.getElementById('testBtnText');

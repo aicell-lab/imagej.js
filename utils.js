@@ -125,10 +125,6 @@ class LocalFileSystemHandler {
 class GitHubFileSystemHandler {
   constructor() {
     this.repos = new Map(); // Map of mountPath -> {owner, repo, branch}
-    this.fileCache = new Map(); // Cache for file contents
-    this.directoryCache = new Map(); // Cache for directory listings
-    this.fileInfoCache = new Map(); // Cache for file metadata (positive results)
-    this.negativeCache = new Map(); // Cache for missing files (404/403 responses)
   }
 
   async mountRepo(owner, repo, branch) {
@@ -136,7 +132,7 @@ class GitHubFileSystemHandler {
       throw new Error('Branch must be explicitly specified. Use: mountRepo(owner, repo, branch)');
     }
 
-    const mountPath = `${owner}/${repo}/${branch}`;
+    const mountPath = `${owner}/${repo}@${branch}`;
 
     // NO GitHub API calls - just mount directly
     // We'll verify the repo exists on first file access
@@ -146,20 +142,26 @@ class GitHubFileSystemHandler {
   }
 
   parseRepoFromPath(path) {
-    // Path format: owner/repo/branch/file/path
+    // Path format: owner/repo@branch/file/path
     const parts = path.split('/').filter(p => p);
-    if (parts.length < 3) return null;
+    if (parts.length < 2) return null;
 
     const owner = parts[0];
-    const repo = parts[1];
-    const branch = parts[2];
-    const mountPath = `${owner}/${repo}/${branch}`;
+    const repoBranch = parts[1]; // repo@branch format
+
+    // Check if it contains @ separator
+    if (!repoBranch.includes('@')) {
+      return null;
+    }
+
+    const [repo, branch] = repoBranch.split('@');
+    const mountPath = `${owner}/${repo}@${branch}`;
 
     if (!this.repos.has(mountPath)) {
       return null;
     }
 
-    const filePath = parts.slice(3).join('/');
+    const filePath = parts.slice(2).join('/');
 
     return {
       owner,
@@ -188,40 +190,20 @@ class GitHubFileSystemHandler {
       const parts = path.split('/').filter(p => p);
       if (parts.length === 1) {
         const owner = parts[0];
-        // List repos for this owner
+        // List repos@branches for this owner (e.g., "imagej-js-env-demo@main")
         return Array.from(this.repos.keys())
           .filter(mountPath => mountPath.startsWith(`${owner}/`))
           .map(mountPath => {
-            const p = mountPath.split('/');
-            return p[1]; // return repo name
+            // Extract repo@branch from owner/repo@branch
+            return mountPath.substring(owner.length + 1);
           })
           .filter((v, i, a) => a.indexOf(v) === i); // unique
-      }
-
-      // Check if this is listing owner/repo (e.g., "oeway/imagej-js-env-demo")
-      if (parts.length === 2) {
-        const owner = parts[0];
-        const repo = parts[1];
-        // List branches for this repo
-        return Array.from(this.repos.keys())
-          .filter(mountPath => mountPath.startsWith(`${owner}/${repo}/`))
-          .map(mountPath => {
-            const p = mountPath.split('/');
-            return p[2]; // return branch name
-          });
       }
 
       return [];
     }
 
     console.log('[listDirectory] repoInfo:', repoInfo);
-    const cacheKey = `${repoInfo.owner}/${repoInfo.repo}/${repoInfo.branch}/${repoInfo.filePath}`;
-
-    // Check cache first
-    if (this.directoryCache.has(cacheKey)) {
-      console.log('[listDirectory] Returning cached result for:', cacheKey);
-      return this.directoryCache.get(cacheKey);
-    }
 
     // Try to use index.list file first (avoids GitHub API calls)
     try {
@@ -230,16 +212,26 @@ class GitHubFileSystemHandler {
 
       const indexContent = await this.getFileContent(indexListPath);
       if (indexContent) {
-        // Parse index.list - it's a text file with one entry per line
+        // Parse index.list - supports type prefixes
+        // Format: "dir:dirname" for directories, "filename" for files
         const text = new TextDecoder().decode(indexContent);
-        const entries = text.split('\n')
-          .map(line => line.trim())
-          .filter(line => line.length > 0); // Remove empty lines
+        const entries = [];
+
+        text.split('\n').forEach(line => {
+          line = line.trim();
+          if (line.length === 0) return;
+
+          // Check for type prefix
+          if (line.startsWith('dir:')) {
+            const dirName = line.substring(4);
+            entries.push(dirName);
+          } else {
+            // No prefix = file
+            entries.push(line);
+          }
+        });
 
         console.log('[listDirectory] Using index.list with', entries.length, 'entries');
-
-        // Cache the result
-        this.directoryCache.set(cacheKey, entries);
         return entries;
       }
     } catch (indexErr) {
@@ -255,96 +247,195 @@ class GitHubFileSystemHandler {
     return [];
   }
 
+  // Helper method to get type info from parent's index.list
+  async getTypeFromParentIndexList(path) {
+    const repoInfo = this.parseRepoFromPath(path);
+    if (!repoInfo) return null;
+
+    // Root is always a directory
+    if (!repoInfo.filePath || repoInfo.filePath === '') {
+      return 'directory';
+    }
+
+    // Get parent directory path and filename
+    const pathParts = repoInfo.filePath.split('/');
+    const fileName = pathParts[pathParts.length - 1];
+    const parentPath = pathParts.slice(0, -1).join('/');
+    const parentFullPath = parentPath ?
+      `${repoInfo.owner}/${repoInfo.repo}@${repoInfo.branch}/${parentPath}` :
+      `${repoInfo.owner}/${repoInfo.repo}@${repoInfo.branch}`;
+
+    console.log('[getTypeFromParentIndexList] Checking parent:', parentFullPath, 'for file:', fileName);
+
+    // First, verify all ancestor directories exist by checking each level
+    // For path like "images/crosshair-cursor.gif", we need to verify "images" exists in root
+    if (parentPath) {
+      const ancestorParts = parentPath.split('/');
+      let currentPath = '';
+
+      for (let i = 0; i < ancestorParts.length; i++) {
+        const ancestorName = ancestorParts[i];
+        const ancestorParentPath = ancestorParts.slice(0, i).join('/');
+        const ancestorParentFullPath = ancestorParentPath ?
+          `${repoInfo.owner}/${repoInfo.repo}@${repoInfo.branch}/${ancestorParentPath}` :
+          `${repoInfo.owner}/${repoInfo.repo}@${repoInfo.branch}`;
+
+        console.log('[getTypeFromParentIndexList] Verifying ancestor exists:', ancestorName, 'in', ancestorParentFullPath);
+
+        try {
+          const ancestorIndexPath = `${ancestorParentFullPath}/index.list`;
+          const ancestorIndexContent = await this.getFileContent(ancestorIndexPath);
+
+          if (ancestorIndexContent) {
+            const text = new TextDecoder().decode(ancestorIndexContent);
+            let ancestorExists = false;
+
+            for (const line of text.split('\n')) {
+              const trimmedLine = line.trim();
+              if (trimmedLine === `dir:${ancestorName}`) {
+                ancestorExists = true;
+                break;
+              }
+            }
+
+            if (!ancestorExists) {
+              console.log('[getTypeFromParentIndexList] Ancestor directory not found in index.list:', ancestorName);
+              return null;
+            }
+
+            console.log('[getTypeFromParentIndexList] Ancestor exists:', ancestorName);
+          } else {
+            // No index.list at this level
+            console.log('[getTypeFromParentIndexList] No index.list at ancestor level, cannot verify');
+            return undefined;
+          }
+        } catch (err) {
+          // Failed to fetch ancestor index.list
+          console.log('[getTypeFromParentIndexList] Failed to fetch ancestor index.list');
+          return undefined;
+        }
+
+        currentPath = currentPath ? `${currentPath}/${ancestorName}` : ancestorName;
+      }
+    }
+
+    // All ancestors verified, now check the parent's index.list for our file
+    try {
+      const indexListPath = `${parentFullPath}/index.list`;
+      const indexContent = await this.getFileContent(indexListPath);
+
+      if (indexContent) {
+        const text = new TextDecoder().decode(indexContent);
+
+        // Check each line for our filename
+        for (const line of text.split('\n')) {
+          const trimmedLine = line.trim();
+          if (trimmedLine.length === 0) continue;
+
+          if (trimmedLine.startsWith('dir:')) {
+            const dirName = trimmedLine.substring(4);
+            if (dirName === fileName) {
+              console.log('[getTypeFromParentIndexList] Found as directory in index.list');
+              return 'directory';
+            }
+          } else {
+            // No prefix = file
+            if (trimmedLine === fileName) {
+              console.log('[getTypeFromParentIndexList] Found as file in index.list');
+              return 'file';
+            }
+          }
+        }
+
+        // Not found in index.list = doesn't exist
+        console.log('[getTypeFromParentIndexList] Not found in parent index.list');
+        return null;
+      }
+    } catch (err) {
+      // No index.list in parent (but we know parent exists because we verified ancestors)
+      console.log('[getTypeFromParentIndexList] No index.list in parent directory');
+    }
+
+    return undefined; // Unknown - parent has no index.list
+  }
+
   async getFileInfo(path) {
     const repoInfo = this.parseRepoFromPath(path);
     if (!repoInfo) return null;
 
-    const cacheKey = `${repoInfo.owner}/${repoInfo.repo}/${repoInfo.branch}/${repoInfo.filePath}`;
+    console.log('[getFileInfo] Called for path:', path);
 
-    // Check positive cache first (file exists)
-    if (this.fileInfoCache.has(cacheKey)) {
-      return this.fileInfoCache.get(cacheKey);
-    }
+    // Check parent directory's index.list first
+    const typeFromIndex = await this.getTypeFromParentIndexList(path);
 
-    // Check negative cache (file doesn't exist) - cache for 60 seconds
-    if (this.negativeCache.has(cacheKey)) {
-      const cachedTime = this.negativeCache.get(cacheKey);
-      if (Date.now() - cachedTime < 60000) {
+    if (typeFromIndex === 'directory') {
+      // Found as directory in index.list - return immediately, no HEAD request
+      console.log('[getFileInfo] Returning directory (from index.list)');
+      return {
+        type: 'directory',
+        size: 0
+      };
+    } else if (typeFromIndex === 'file') {
+      // Found as file in index.list - make HEAD request to get size
+      const url = `https://raw.githubusercontent.com/${repoInfo.owner}/${repoInfo.repo}/${repoInfo.branch}/${repoInfo.filePath}`;
+      console.log('[getFileInfo] Found as file in index.list, making HEAD request for size:', url);
+
+      try {
+        const response = await fetch(url, { method: 'HEAD' });
+        if (response.ok) {
+          const contentLength = response.headers.get('content-length');
+          const size = contentLength ? parseInt(contentLength, 10) : 0;
+          console.log('[getFileInfo] File size:', size);
+          return {
+            type: 'file',
+            size: size,
+            downloadUrl: url
+          };
+        } else {
+          console.log('[getFileInfo] HEAD request failed with status:', response.status);
+          return null;
+        }
+      } catch (err) {
+        console.log('[getFileInfo] HEAD request error:', err.message);
         return null;
       }
-      this.negativeCache.delete(cacheKey);
-    }
-
-    // NO GitHub API - try to determine file vs directory heuristically
-    try {
-      // Check if it's likely a directory by checking for index.list
-      if (!repoInfo.filePath || repoInfo.filePath === '') {
-        // Root of repo is a directory
-        const info = {
-          type: 'directory',
-          size: 0
-        };
-        this.fileInfoCache.set(cacheKey, info);
-        return info;
-      }
-
-      // If path doesn't have an extension, might be a directory
-      // Check for index.list to confirm
-      const hasExtension = /\.[^/.]+$/.test(repoInfo.filePath);
-      if (!hasExtension) {
-        try {
-          const indexListPath = `${path}/index.list`;
-          const indexContent = await this.getFileContent(indexListPath);
-          if (indexContent) {
-            // Has index.list, so it's a directory
-            const info = {
-              type: 'directory',
-              size: 0
-            };
-            this.fileInfoCache.set(cacheKey, info);
-            return info;
-          }
-        } catch (e) {
-          // No index.list, assume directory anyway
-        }
-
-        const info = {
-          type: 'directory',
-          size: 0
-        };
-        this.fileInfoCache.set(cacheKey, info);
-        return info;
-      }
-
-      // Has extension, assume it's a file
-      // We'll verify when actually reading it
-      const info = {
-        type: 'file',
-        size: 0, // Unknown size without API call
-        downloadUrl: `https://raw.githubusercontent.com/${repoInfo.owner}/${repoInfo.repo}/${repoInfo.branch}/${repoInfo.filePath}`
-      };
-
-      // Cache the positive result
-      this.fileInfoCache.set(cacheKey, info);
-      return info;
-    } catch (err) {
-      console.error('Error getting GitHub file info:', path, err);
-      // Cache network errors as negative results
-      this.negativeCache.set(cacheKey, Date.now());
+    } else if (typeFromIndex === null) {
+      // Explicitly not found in index.list - doesn't exist
+      console.log('[getFileInfo] Not found in parent index.list - does not exist');
       return null;
+    } else {
+      // typeFromIndex === undefined - parent has no index.list
+      // Fall back to HEAD request
+      console.log('[getFileInfo] Parent has no index.list, falling back to HEAD request');
+
+      const url = `https://raw.githubusercontent.com/${repoInfo.owner}/${repoInfo.repo}/${repoInfo.branch}/${repoInfo.filePath}`;
+      console.log('[getFileInfo] Making HEAD request to:', url);
+
+      try {
+        const response = await fetch(url, { method: 'HEAD' });
+        if (response.ok) {
+          const contentLength = response.headers.get('content-length');
+          const size = contentLength ? parseInt(contentLength, 10) : 0;
+          console.log('[getFileInfo] File exists, size:', size);
+          return {
+            type: 'file',
+            size: size,
+            downloadUrl: url
+          };
+        } else {
+          console.log('[getFileInfo] HEAD request failed with status:', response.status);
+          return null;
+        }
+      } catch (err) {
+        console.log('[getFileInfo] HEAD request error:', err.message);
+        return null;
+      }
     }
   }
 
   async getFileContent(path) {
     const repoInfo = this.parseRepoFromPath(path);
     if (!repoInfo) return null;
-
-    const cacheKey = `${repoInfo.owner}/${repoInfo.repo}/${repoInfo.branch}/${repoInfo.filePath}`;
-
-    // Check cache first
-    if (this.fileCache.has(cacheKey)) {
-      return this.fileCache.get(cacheKey);
-    }
 
     try {
       // Use raw.githubusercontent.com for direct file download
@@ -358,12 +449,9 @@ class GitHubFileSystemHandler {
       const arrayBuffer = await response.arrayBuffer();
       const data = new Uint8Array(arrayBuffer);
 
-      // Cache the result
-      this.fileCache.set(cacheKey, data);
-
       return data;
     } catch (err) {
-      console.error('Error fetching GitHub file:', cacheKey, err);
+      console.error('Error fetching GitHub file:', path, err);
       throw err;
     }
   }
@@ -1275,9 +1363,12 @@ function githubListAsync(mp, path, fileRef, cb) {
         }).filter((v, i, a) => a.indexOf(v) === i); // unique owners
 
         console.log('[githubListAsync] listing owners:', owners);
+        console.log('[githubListAsync] fileRef before push:', fileRef, 'length:', fileRef.length);
         for (const owner of owners) {
+            console.log('[githubListAsync] pushing owner:', owner);
             fileRef.push(owner);
         }
+        console.log('[githubListAsync] fileRef after push:', fileRef, 'length:', fileRef.length);
         return cb();
     }
 
@@ -1287,28 +1378,39 @@ function githubListAsync(mp, path, fileRef, cb) {
 
     if (parts.length === 1) {
         const owner = parts[0];
-        // List all repos for this owner
+        // List all repos@branches for this owner (format: repo@branch)
         const repos = Array.from(window.githubFS.repos.keys())
             .filter(mountPath => mountPath.startsWith(`${owner}/`))
-            .map(mountPath => mountPath.split('/')[1]);
+            .map(mountPath => {
+                // Extract repo@branch from owner/repo@branch
+                return mountPath.substring(owner.length + 1);
+            });
 
         console.log('[githubListAsync] listing repos for owner', owner, ':', repos);
+        console.log('[githubListAsync] fileRef before push:', fileRef, 'length:', fileRef.length);
         for (const repo of repos) {
+            console.log('[githubListAsync] pushing repo:', repo);
             fileRef.push(repo);
         }
+        console.log('[githubListAsync] fileRef after push:', fileRef, 'length:', fileRef.length);
         return cb();
     }
 
     // For repo contents, use the GitHub API
     console.log('[githubListAsync] fetching from GitHub API for path:', githubPath);
+    console.log('[githubListAsync] fileRef before push:', fileRef, 'length:', fileRef.length);
     window.githubFS.listDirectory(githubPath).then(entries => {
         console.log('[githubListAsync] GitHub API returned entries:', entries);
+        console.log('[githubListAsync] entries type:', typeof entries, 'isArray:', Array.isArray(entries));
         for (const entry of entries) {
+            console.log('[githubListAsync] pushing entry:', entry, 'type:', typeof entry);
             fileRef.push(entry);
         }
+        console.log('[githubListAsync] fileRef after push:', fileRef, 'length:', fileRef.length);
+        console.log('[githubListAsync] calling callback');
         return cb();
     }).catch(err => {
-        console.error('Error listing GitHub directory:', err);
+        console.error('[githubListAsync] Error listing GitHub directory:', err);
         return cb();
     });
 }
@@ -1383,8 +1485,25 @@ function githubMakeFileData(mp, path, mode, uid, gid, cb) {
         // Read mode - need to check if it's a file or directory first
         window.githubFS.getFileInfo(githubPath).then(info => {
             if (!info) {
-                console.error('[githubMakeFileData] getFileInfo returned null for:', githubPath);
-                return cb(null);
+                // getFileInfo returned null - likely path without branch
+                // Default to directory for compatibility
+                console.warn('[githubMakeFileData] getFileInfo returned null for:', githubPath);
+                console.warn('[githubMakeFileData] This might be a path without branch - defaulting to directory');
+                console.warn('[githubMakeFileData] Update your URL to include branch: /github/owner/repo@main/...');
+
+                // Create directory file descriptor as fallback
+                const fileData = new CheerpJFileData(
+                    mp,
+                    path,
+                    0,
+                    Math.floor(Math.random() * 1000000),
+                    CheerpJFileData.S_IFDIR | 0o777,
+                    Math.floor(Date.now() / 1000),
+                    uid,
+                    gid
+                );
+                fileData.mount = mp.inodeOps;
+                return cb(fileData);
             }
 
             // If it's a directory, create a directory file descriptor

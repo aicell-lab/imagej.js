@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>ImageJ2 with CheerpJ</title>
+<script src="https://cjrtnc.leaningtech.com/4.2/loader.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<style>
+    html,
+    body {
+      margin: 0;
+    }
+
+    #container {
+      width: 100vw;
+      height: 100svh;
+    }
+
+    .cheerpjNC:before {
+      content: "" !important;
+    }
+
+    /* Modern window border styling */
+    div.cjBordered {
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+                  0 2px 4px -1px rgba(0, 0, 0, 0.06),
+                  0 0 0 1px rgba(59, 130, 246, 0.2) !important;
+      border-radius: 6px !important;
+    }
+
+    /* Enhanced title bar styling */
+    .cjTitleBar {
+      background: linear-gradient(180deg, #3b82f6 0%, #2563eb 100%) !important;
+      border-bottom: 1px solid #1e40af !important;
+      padding: 2px 6px !important;
+      height: 20px !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: space-between !important;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15) !important;
+    }
+
+    .cjTitleBarText {
+      color: #ffffff !important;
+      font-weight: 600 !important;
+      font-size: 11px !important;
+      letter-spacing: 0.3px !important;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3) !important;
+      flex: 1 !important;
+      cursor: move !important;
+      line-height: 16px !important;
+    }
+
+    /* Enhanced control buttons */
+    .cjControls {
+      width: 16px !important;
+      height: 16px !important;
+      padding: 2px !important;
+      margin-left: 4px !important;
+      cursor: pointer !important;
+      border-radius: 3px !important;
+      transition: all 0.15s ease !important;
+      background: rgba(255, 255, 255, 0.15) !important;
+      flex-shrink: 0 !important;
+    }
+
+    .cjControls:hover {
+      background: rgba(255, 255, 255, 0.25) !important;
+      transform: scale(1.1) !important;
+    }
+
+    .cjControls:active {
+      background: rgba(255, 255, 255, 0.35) !important;
+      transform: scale(0.95) !important;
+    }
+
+    .cjControls line,
+    .cjControls rect {
+      stroke: #ffffff !important;
+      stroke-width: 1.5 !important;
+      fill: none !important;
+    }
+
+    .cjControls:hover line {
+      stroke: #fef2f2 !important;
+    }
+
+    .cjControls:first-of-type:hover {
+      background: rgba(239, 68, 68, 0.9) !important;
+    }
+
+    .cjControls:last-of-type:hover {
+      background: rgba(59, 130, 246, 0.5) !important;
+    }
+  </style>
+</head>
+
+<body>
+<!-- Status indicator -->
+<div id="status" class="fixed top-4 right-4 z-50 bg-blue-600 text-white px-4 py-2 rounded-lg shadow-lg">
+  <div class="text-sm font-bold">ImageJ2 Experiment</div>
+  <div id="statusText" class="text-xs mt-1">Loading...</div>
+</div>
+
+<script type="module">
+// Get the directory path
+const baseUrl = location.pathname.endsWith('/')
+  ? location.pathname
+  : location.pathname.substring(0, location.pathname.lastIndexOf('/') + 1);
+
+function updateStatus(text, isError = false) {
+  const statusDiv = document.getElementById('status');
+  const statusText = document.getElementById('statusText');
+  statusText.textContent = text;
+
+  if (isError) {
+    statusDiv.classList.remove('bg-blue-600');
+    statusDiv.classList.add('bg-red-600');
+  } else {
+    statusDiv.classList.remove('bg-red-600');
+    statusDiv.classList.add('bg-blue-600');
+  }
+
+  console.log(`[ImageJ2] ${text}`);
+}
+
+try {
+  updateStatus('Initializing CheerpJ...');
+
+  await cheerpjInit({
+    clipboardMode: "java",
+    javaProperties: [
+      "user.dir=/app/files",
+      "useJFileChooser=true"
+    ],
+  });
+
+  updateStatus('Creating display...');
+  cheerpjCreateDisplay(-1, -1, document.getElementById("container"));
+
+  // Patch cheerpjDisplay to prevent click redirects on blank area
+  function patchCheerpjDisplay() {
+    const cheerpjDisplay = document.getElementById('cheerpjDisplay');
+
+    if (cheerpjDisplay) {
+      console.log('Patching cheerpjDisplay to disable click redirects on blank area...');
+
+      cheerpjDisplay.addEventListener('click', (e) => {
+        if (e.target === cheerpjDisplay) {
+          e.preventDefault();
+          e.stopPropagation();
+          e.stopImmediatePropagation();
+          console.log('Blocked click on blank area of cheerpjDisplay');
+          return false;
+        }
+      }, true);
+
+      console.log('✓ Patched cheerpjDisplay');
+      return true;
+    }
+
+    return false;
+  }
+
+  if (!patchCheerpjDisplay()) {
+    const observer = new MutationObserver((mutations) => {
+      if (patchCheerpjDisplay()) {
+        observer.disconnect();
+      }
+    });
+
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true
+    });
+
+    setTimeout(() => {
+      if (patchCheerpjDisplay()) {
+        observer.disconnect();
+      }
+    }, 1000);
+  }
+
+  updateStatus('Loading ImageJ2 JAR...');
+
+  // Load ImageJ2 uber-JAR from the imagej2/target directory
+  const jarPath = `/app${baseUrl}imagej2/target/imagej-2.1.1-SNAPSHOT-all.jar`;
+
+  console.log('Attempting to load JAR from:', jarPath);
+
+  updateStatus('Running ImageJ2...');
+
+  // Try running as library first
+  try {
+    const lib = await cheerpjRunLibrary(jarPath);
+    console.log('✓ Loaded as library:', lib);
+
+    // Try to find the main class
+    // ImageJ2 main class is typically net.imagej.Main
+    updateStatus('Looking for main class...');
+
+    try {
+      const MainClass = await lib.net.imagej.Main;
+      console.log('✓ Found main class: net.imagej.Main');
+
+      updateStatus('Starting ImageJ2...');
+      await MainClass.main([]);
+
+      updateStatus('ImageJ2 running!', false);
+
+      // Expose lib globally for debugging
+      window.lib = lib;
+
+    } catch (mainErr) {
+      console.error('Could not find net.imagej.Main:', mainErr);
+
+      // Try alternative main classes
+      try {
+        const ImageJClass = await lib.ij.ImageJ;
+        console.log('✓ Found alternative main class: ij.ImageJ');
+
+        updateStatus('Starting ImageJ (fallback)...');
+        await ImageJClass.main([]);
+
+        updateStatus('ImageJ running (fallback mode)!', false);
+
+        window.lib = lib;
+
+      } catch (altErr) {
+        console.error('Could not find ij.ImageJ either:', altErr);
+        throw new Error('Could not find suitable main class');
+      }
+    }
+
+  } catch (libErr) {
+    console.error('Failed to load as library:', libErr);
+
+    // Fallback: try running directly
+    updateStatus('Trying direct execution...');
+
+    try {
+      await cheerpjRunJar(jarPath);
+      updateStatus('ImageJ2 running (direct mode)!', false);
+    } catch (jarErr) {
+      console.error('Failed to run JAR directly:', jarErr);
+      throw new Error(`Failed to load ImageJ2: ${jarErr.message}`);
+    }
+  }
+
+} catch (err) {
+  console.error('Fatal error:', err);
+  updateStatus(`Error: ${err.message}`, true);
+}
+
+</script>
+<div id="container"></div>
+</body>
+</html>

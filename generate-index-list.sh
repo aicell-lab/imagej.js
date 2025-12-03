@@ -1,6 +1,10 @@
 #!/bin/bash
 # Generate index.list files for GitHub filesystem optimization
-# This script creates index.list files in specified directories to avoid GitHub API calls
+# This script creates index.list files with type information to avoid GitHub API calls
+#
+# Format:
+#   dir:dirname  - for directories
+#   filename     - for files
 
 set -e
 
@@ -17,11 +21,26 @@ generate_index() {
 
     echo "📝 Generating $dir/index.list"
 
-    # List files and directories (excluding index.list itself and hidden files)
-    ls -1 "$dir" | grep -v "^index.list$" | grep -v "^\." > "$dir/index.list"
+    # Clear or create index.list
+    > "$dir/index.list"
 
-    local count=$(wc -l < "$dir/index.list" | tr -d ' ')
-    echo "   ✓ Added $count entries"
+    local file_count=0
+    local dir_count=0
+
+    # List files and directories (excluding index.list itself and hidden files)
+    while IFS= read -r entry; do
+        if [ -d "$dir/$entry" ]; then
+            # It's a directory - add with dir: prefix
+            echo "dir:$entry" >> "$dir/index.list"
+            ((dir_count++))
+        else
+            # It's a file - add without prefix
+            echo "$entry" >> "$dir/index.list"
+            ((file_count++))
+        fi
+    done < <(ls -1 "$dir" | grep -v "^index.list$" | grep -v "^\.")
+
+    echo "   ✓ Added $file_count file(s) and $dir_count dir(s)"
 }
 
 # Generate for lib/ImageJ/plugins if it exists
