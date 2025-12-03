@@ -1,0 +1,50 @@
+--- a/ij/macro/Interpreter.java
++++ b/ij/macro/Interpreter.java
+@@ -39,6 +39,7 @@ public class Interpreter implements MacroConstants {
+ 	static volatile Interpreter instance, previousInstance;
+ 	public static boolean batchMode;
+ 	static Vector imageTable; // images opened in batch mode
++	static boolean suppressErrorDialogs;
+ 	static Vector imageActivations; // images ordered by activation time
+ 	volatile boolean done;
+ 	Program pgm;
+@@ -106,6 +107,28 @@ public class Interpreter implements MacroConstants {
+ 		previousReturnValue = returnValue;
+ 		return returnValue;
+ 	}
++
++	/** Runs a macro in silent mode, suppressing error dialogs.
++	 *  Returns a String array: [status, message]
++	 *  where status is "success" or "error"
++	 */
++	public static String[] runMacroSilent(String macro) {
++		boolean savedSuppressErrorDialogs = suppressErrorDialogs;
++		suppressErrorDialogs = true;
++		try {
++			Interpreter interp = new Interpreter();
++			String result = interp.run(macro);
++			suppressErrorDialogs = savedSuppressErrorDialogs;
++			return new String[]{"success", result != null ? result : ""};
++		} catch (Throwable e) {
++			suppressErrorDialogs = savedSuppressErrorDialogs;
++			String error = e.getMessage();
++			if (error == null || error.length() == 0)
++				error = "" + e;
++			return new String[]{"error", error};
++		}
++	}
+
+ 	void openBatchMacroImage(ImagePlus imp) {
+ 		if (imageTable==null)
+@@ -1356,6 +1379,11 @@ public class Interpreter implements MacroConstants {
+
+ 	void error(String message) {
+ 		errorMessage = message;
++		if (suppressErrorDialogs) {
++			// Throw exception instead of showing dialog
++			errorCount++;
++			throw new RuntimeException(message);
++		}
+ 		if (ignoreErrors)
+ 			return;
+ 		errorCount++;

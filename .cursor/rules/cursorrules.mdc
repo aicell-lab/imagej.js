@@ -1,0 +1,73 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# ImageJ.JS - Running ImageJ in the Browser via CheerpJ
+
+## Project Overview
+This project aims to run ImageJ (Java application) in web browsers using CheerpJ technology. The main goals are:
+1. Provide a web-based ImageJ experience that runs natively in browsers
+2. Enable access to large file systems through browser APIs
+3. Support mounting local user directories for seamless file access
+
+## Key Technologies
+- **CheerpJ**: Java-to-WebAssembly compiler for running Java applications in browsers
+- **File System Access API**: For mounting and accessing local user directories
+- **ImageJ**: Popular image processing and analysis software
+
+## Architecture Considerations
+- The application loads ImageJ JAR files and runs them through CheerpJ
+- File system patches are needed to bridge browser file access with Java file operations
+- Plugin system should support dynamic loading of ImageJ plugins
+- Large file handling requires efficient streaming and chunked processing
+
+## Development Guidelines
+
+### File System Integration
+- Implement patches to intercept Java file operations and redirect to browser APIs
+- Use File System Access API for mounting local directories when available
+- Provide fallback mechanisms for browsers without full file system support
+- Consider memory-efficient streaming for large image files
+
+### CheerpJ Integration
+- Patch DirectDownloader for custom file handling logic
+- Configure proper Java properties for file paths and plugin directories
+- Handle CORS issues for external resource loading
+- Optimize initialization and loading performance
+
+### Code Organization
+- Keep file system patches modular and well-documented
+- Separate browser API integration from core ImageJ functionality
+- Maintain compatibility with standard ImageJ plugin architecture
+- Use TypeScript/modern JavaScript for better maintainability
+
+### Performance Optimization
+- Implement lazy loading for plugins and resources
+- Use efficient file streaming for large datasets
+- Consider WebWorkers for heavy computational tasks
+- Optimize memory usage for large image processing
+
+### Browser Compatibility
+- Test across major browsers (Chrome, Firefox, Safari, Edge)
+- Provide graceful degradation for unsupported features
+- Handle different file system API implementations
+- Consider mobile browser limitations
+
+## File Naming Conventions
+- Use descriptive names for patch functions (e.g., `ddlSend` for DirectDownloader patches)
+- Keep configuration files organized (plugins_manifest.txt, index.list files)
+- Maintain clear separation between ImageJ core and web-specific code
+
+## Testing Strategy
+- Test with various image formats and sizes
+- Verify plugin loading and functionality
+- Test file system mounting and access across browsers
+- Performance testing with large datasets
+- Cross-browser compatibility testing
+
+## Documentation
+ - The documentation for cheerpj is a single file located at `docs/cheerpj.md`
+ - There is a cheerpOS.js file which is part of the cheerpj runtime, it is provided as a reference for the cheerpOS API, and the functions in this file are globally available, so we can patch them if needed. E.g. in index.html we patch `DirectDownloader.prototype.send = ddlSend;` to use the patched function. You will likely need to patch more file in order to support our own file system.
+ - run the server using this command: `npx http-server`
+ - You can use browsermcp to test the website served at http://localhost:8080/ and it will take some time to load, so you need to wait for like 10 seconds before you can use it.

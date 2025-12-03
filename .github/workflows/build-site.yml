@@ -14,11 +14,30 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
-    - name: Get compiled ImageJ and plugins
+
+    - name: Set up JDK 8
+      uses: actions/setup-java@v3
+      with:
+        distribution: 'temurin'
+        java-version: '8'
+
+    - name: Install Apache Ant
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y ant
+
+    - name: Build ImageJ from source with patches
       run: bash prepare.sh
+
     - name: Copy files to dist
-      run: mkdir dist && cp index.html dist/ && cp -r lib dist/
-    - name: Deploy the plugin file to GitHub Pages
+      run: |
+        mkdir dist
+        cp index.html dist/
+        cp hypha-imagej-service.js dist/
+        cp utils.js dist/
+        cp -r lib dist/
+
+    - name: Deploy to GitHub Pages
       if: github.ref == 'refs/heads/main'
       uses: peaceiris/actions-gh-pages@v3
       with:

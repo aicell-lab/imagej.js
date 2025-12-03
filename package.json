@@ -1,0 +1,19 @@
+{
+  "name": "imagej.js2",
+  "version": "1.0.0",
+  "description": "ImageJ.JS - Run ImageJ in the browser using CheerpJ",
+  "scripts": {
+    "dev": "http-server -p 8000 --cors -c-1",
+    "start": "npm run dev"
+  },
+  "devDependencies": {
+    "http-server": "^14.1.1"
+  },
+  "keywords": [
+    "imagej",
+    "cheerpj",
+    "webassembly"
+  ],
+  "author": "",
+  "license": "MIT"
+}
