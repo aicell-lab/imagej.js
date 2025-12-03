@@ -2,91 +2,867 @@
 <html lang="en">
 <head>
 <title>ImageJ.JS</title>
-<script src="https://cjrtnc.leaningtech.com/20201217_2/loader.js"></script>
+<script src="https://cjrtnc.leaningtech.com/4.2/loader.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
+
 <style>
     html,
     body {
       margin: 0;
     }
-  
+
     #container {
       width: 100vw;
       height: 100svh;
+    }
+
+    .cheerpjNC:before {
+      content: "" !important;
+    }
+
+    /* Modern window border styling */
+    div.cjBordered {
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+                  0 2px 4px -1px rgba(0, 0, 0, 0.06),
+                  0 0 0 1px rgba(59, 130, 246, 0.2) !important;
+      border-radius: 6px !important;
+    }
+
+    /* Bring the main ImageJ window to top when hovering */
+    #cheerpjDisplay > .cjWindow.cjBordered:first-of-type:hover {
+      z-index: 999 !important;
+    }
+
+    /* Enhanced title bar styling */
+    .cjTitleBar {
+      background: linear-gradient(180deg, #3b82f6 0%, #2563eb 100%) !important;
+      border-bottom: 1px solid #1e40af !important;
+      padding: 2px 6px !important;
+      height: 20px !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: space-between !important;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15) !important;
+    }
+
+    .cjTitleBarText {
+      color: #ffffff !important;
+      font-weight: 600 !important;
+      font-size: 11px !important;
+      letter-spacing: 0.3px !important;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3) !important;
+      flex: 1 !important;
+      cursor: move !important;
+      line-height: 16px !important;
+    }
+
+    /* Enhanced control buttons */
+    .cjControls {
+      width: 16px !important;
+      height: 16px !important;
+      padding: 2px !important;
+      margin-left: 4px !important;
+      cursor: pointer !important;
+      border-radius: 3px !important;
+      transition: all 0.15s ease !important;
+      background: rgba(255, 255, 255, 0.15) !important;
+      flex-shrink: 0 !important;
+    }
+
+    .cjControls:hover {
+      background: rgba(255, 255, 255, 0.25) !important;
+      transform: scale(1.1) !important;
+    }
+
+    .cjControls:active {
+      background: rgba(255, 255, 255, 0.35) !important;
+      transform: scale(0.95) !important;
+    }
+
+    /* Style the SVG lines and shapes */
+    .cjControls line,
+    .cjControls rect {
+      stroke: #ffffff !important;
+      stroke-width: 1.5 !important;
+      fill: none !important;
+    }
+
+    /* Close button (X) - red hover effect */
+    .cjControls:hover line {
+      stroke: #fef2f2 !important;
+    }
+
+    .cjControls:first-of-type:hover {
+      background: rgba(239, 68, 68, 0.9) !important;
+    }
+
+    /* Maximize button - keep blue */
+    .cjControls:last-of-type:hover {
+      background: rgba(59, 130, 246, 0.5) !important;
+    }
+
+    /* Drag and drop overlay */
+    #dropOverlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(59, 130, 246, 0.9);
+      z-index: 10000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+    }
+
+    #dropOverlay.active {
+      display: flex;
+    }
+
+    .drop-message {
+      color: white;
+      font-size: 2rem;
+      font-weight: bold;
+      text-align: center;
+      padding: 2rem;
+      border: 4px dashed white;
+      border-radius: 1rem;
+    }
+
+    /* Tooltip styles */
+    .tooltip-wrapper {
+      position: relative;
+    }
+
+    .tooltip {
+      position: absolute;
+      bottom: 100%;
+      left: 0;
+      transform: translateY(-8px);
+      background: rgba(0, 0, 0, 0.9);
+      color: white;
+      padding: 0.75rem 1rem;
+      border-radius: 0.5rem;
+      font-size: 0.875rem;
+      line-height: 1.4;
+      white-space: normal;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+      z-index: 1000;
+      min-width: 280px;
+      max-width: 400px;
+      text-align: center;
+    }
+
+    .tooltip::after {
+      content: '';
+      position: absolute;
+      top: 100%;
+      left: 2rem;
+      border: 6px solid transparent;
+      border-top-color: rgba(0, 0, 0, 0.9);
+    }
+
+    .tooltip-wrapper:hover .tooltip {
+      opacity: 1;
+    }
+
+    /* Disabled button styles */
+    button:disabled {
+      cursor: not-allowed !important;
+      opacity: 0.5;
+    }
+
+    button:disabled:hover {
+      transform: none !important;
+    }
+
+    /* Mobile responsive styles */
+    @media (max-width: 640px) {
+      /* Stack buttons vertically on mobile */
+      .button-panel {
+        flex-direction: column;
+        left: 0.5rem !important;
+        bottom: 0.5rem !important;
+        right: 0.5rem;
+        gap: 0.5rem !important;
+      }
+
+      .button-panel button {
+        width: 100%;
+        justify-content: center;
+        font-size: 0.875rem;
+        padding: 0.5rem 0.75rem !important;
+      }
+
+      .button-panel .tooltip-wrapper {
+        width: 100%;
+      }
+
+      /* Adjust tooltip for mobile */
+      .tooltip {
+        min-width: 200px;
+        max-width: 280px;
+        font-size: 0.75rem;
+        padding: 0.5rem 0.75rem;
+      }
+
+      /* Make button text truncate more aggressively on mobile */
+      .button-panel button span {
+        max-width: 150px !important;
+      }
+    }
+
+    /* Very small screens */
+    @media (max-width: 380px) {
+      .button-panel button {
+        font-size: 0.75rem;
+        padding: 0.4rem 0.6rem !important;
+      }
+
+      .button-panel button svg {
+        width: 1rem;
+        height: 1rem;
+      }
+
+      .button-panel button span {
+        max-width: 120px !important;
+      }
+    }
+
+    /* Add 20px extra height to all ImageJ windows */
+    /* .cjWindow.cjBordered {
+      padding-bottom: 20px !important;
+      box-sizing: content-box !important;
+    } */
+
+    /* Mobile styles for status indicators */
+    @media (max-width: 640px) {
+      /* Adjust top status indicators for mobile */
+      #localFilesStatus {
+        font-size: 0.75rem;
+        padding: 0.4rem 0.6rem !important;
+        top: 0.5rem !important;
+        right: 0.5rem !important;
+        left: 0.5rem !important;
+        max-width: calc(100vw - 1rem);
+      }
+
+      /* Hypha status above button panel on mobile */
+      #hyphaStatus {
+        font-size: 0.75rem;
+        padding: 0.4rem 0.6rem !important;
+        left: 0.5rem !important;
+        bottom: 11rem !important; /* Adjust for stacked buttons on mobile */
+        max-width: calc(100vw - 1rem);
+      }
+
+      /* Test button at bottom-right */
+      .fixed.bottom-4.right-4 button {
+        font-size: 0.75rem;
+        padding: 0.5rem 0.75rem !important;
+        bottom: 0.5rem !important;
+        right: 0.5rem !important;
+      }
+
+      /* Drag and drop overlay text */
+      .drop-message {
+        font-size: 1.5rem !important;
+        padding: 1rem !important;
+      }
     }
   </style>
 </head>
 
 <body>
-<script type="module">
-const baseUrl = location.pathname === "/" ? "/" : location.pathname;
-async function applyPatches(){
+<!-- Native File System and Connect Buttons -->
+<div class="button-panel fixed bottom-4 left-4 z-50 flex gap-2">
+  <div class="tooltip-wrapper">
+    <button id="loadFolderBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg shadow-lg transition-colors duration-200 flex items-center space-x-2">
+      <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-5l-2-2H5a2 2 0 00-2 2z"></path>
+      </svg>
+      <span class="truncate max-w-[200px]">Mount Local Folder</span>
+    </button>
+    <div id="loadFolderTooltip" class="tooltip">
+      Mount a local folder to enable read/write access<br>
+      Files will be available under <strong>/files/</strong> in ImageJ
+    </div>
+  </div>
 
-    class CustomXMLHttpRequest extends XMLHttpRequest {
-        send() {
-            const path = this._url.startsWith("http") ? new URL(this._url).pathname.toLowerCase() : this._url.toLowerCase();
-            if (path.startsWith(`${baseUrl}lib/imagej`) && (path.includes("cz.cuni.lf1.lge.thunderstorm") || path.endsWith('.jar.js') || path.endsWith('.class'))) {
-                console.log("skipping", path)
-                // Emulate a 404 error
-                setTimeout(() => {
-                    this.onload({
-                        target: {
-                            status: 404,
-                            statusText: 'Not Found',
-                            responseType: this.responseType,
-                            response: null,
-                            downloader: this.downloader, // Ensure downloader is set
-                            responseURL: this._url
-                        }
-                    });
-                }, 0);
-            } else {
-                // Call the original send method
-                super.send();
+  <button id="connectBtn" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-lg shadow-lg transition-colors duration-200 flex items-center space-x-2">
+    <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+    </svg>
+    <span class="truncate max-w-[200px]">Hypha MCP Server</span>
+  </button>
+
+  <button id="copyMcpBtn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg shadow-lg transition-colors duration-200 flex items-center space-x-2 hidden relative">
+    <!-- Green dot indicator -->
+    <div class="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full border-2 border-white"></div>
+    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+    </svg>
+    <span>Copy MCP URL</span>
+  </button>
+</div>
+
+<!-- Drag and drop overlay -->
+<div id="dropOverlay">
+  <div class="drop-message">
+    📁 Drop files or folders here
+  </div>
+</div>
+
+<!-- Local files status -->
+<div id="localFilesStatus" class="fixed top-4 right-4 z-50 bg-purple-600 text-white px-3 py-2 rounded-md shadow-lg hidden">
+  <div class="text-sm font-bold">Local Files (/local)</div>
+  <div id="localFilesList" class="text-xs mt-1"></div>
+</div>
+
+<!-- Hypha connection status - positioned above buttons -->
+<div id="hyphaStatus" class="fixed bottom-28 left-4 z-50 bg-gray-800 text-white px-3 py-2 rounded-md shadow-lg hidden">
+  <div class="flex items-center space-x-2">
+    <div id="hyphaStatusDot" class="w-2 h-2 rounded-full bg-gray-400"></div>
+    <div class="text-sm font-bold" id="hyphaStatusText">Disconnected</div>
+  </div>
+  <div id="hyphaServiceUrl" class="text-xs mt-1 hidden"></div>
+</div>
+
+<!-- Test Button -->
+<div class="fixed bottom-4 right-4 z-50">
+  <button id="testRoiBtn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg shadow-lg transition-colors duration-200">
+    <span id="testBtnText">Test ROI→GeoJSON</span>
+  </button>
+</div>
+
+<!-- Load utilities -->
+<script src="utils.js"></script>
+
+<!-- Load Hypha service -->
+<script type="module" src="hypha-imagej-service.js"></script>
+
+<script type="module">
+// Get the directory path, ensuring it ends with /
+const baseUrl = location.pathname.endsWith('/')
+  ? location.pathname
+  : location.pathname.substring(0, location.pathname.lastIndexOf('/') + 1);
+function patchDownloader(){
+  // Original DirectDownloader patch
+  function ddlSend()
+  {
+      var downloader = this;
+      var headers = {};
+      var method = "GET";
+      if(downloader.rangeHeader)
+          headers["Range"] = downloader.rangeHeader;
+      else if(downloader.metaDataOnly)
+          headers["Range"] = "bytes=0-0";
+      // Disabled redirect to imagej.net because their server doesn't support Range headers in CheerpJ 4.2
+      // if(this.url.startsWith(`${baseUrl}lib/ImageJ/samples/`)){
+      //     this.url = this.url.replace(`${baseUrl}lib/ImageJ/samples/`, 'https://imagej.net/images/');
+      // }
+      fetch(downloader.url, {"method": method, "mode": "cors", "headers" : headers})
+          .then(function(response){
+              ddlOnLoad(response, downloader);
+          })
+          .catch(function(err){
+              ddlOnError(downloader, err);
+          });
+  }
+
+  // Apply DirectDownloader patch
+  DirectDownloader.prototype.send = ddlSend;
+}
+
+async function applyPatches(){
+    patchDownloader();
+    // Apply native file system patches from utils.js
+    createNativeFileSystemPatches();
+    // Apply local file system patches for drag-and-drop
+    createLocalFileSystemPatches();
+    // Apply GitHub file system patches
+    createGitHubFileSystemPatches();
+}
+
+// Parse URL query parameters and get configuration
+function parseURLConfig() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const config = {
+        mount: urlParams.get('mount'),
+        pluginsDir: urlParams.get('plugins.dir')
+    };
+    return config;
+}
+
+// Parse URL query parameters and mount GitHub repos
+async function parseAndMountGitHub() {
+    const config = parseURLConfig();
+    const mountParam = config.mount;
+
+    if (!mountParam) {
+        return;
+    }
+
+    // Parse mount parameter format: github:owner/repo@branch (branch is required now)
+    if (mountParam.startsWith('github:')) {
+        const repoSpec = mountParam.substring('github:'.length);
+        const [repoPath, branch] = repoSpec.split('@');
+        const [owner, repo] = repoPath.split('/');
+
+        if (!owner || !repo || !branch) {
+            console.error('Invalid GitHub mount format. Branch is required! Use: ?mount=github:owner/repo@branch');
+            console.error('Example: ?mount=github:oeway/imagej-js-env-demo@main');
+            return;
+        }
+
+        try {
+            console.log(`Mounting GitHub repository: ${owner}/${repo}@${branch}`);
+            await window.githubFS.mountRepo(owner, repo, branch);
+            console.log(`Successfully mounted ${owner}/${repo}@${branch} at /github/${owner}/${repo}@${branch}`);
+
+            // Update test button text
+            const testBtnText = document.getElementById('testBtnText');
+            if (testBtnText) {
+                testBtnText.textContent = 'Test GitHub FS';
+            }
+        } catch (err) {
+            console.error('Failed to mount GitHub repository:', err);
+            alert(`Failed to mount GitHub repository ${owner}/${repo}: ${err.message}`);
+        }
+    }
+}
+
+// Drag and drop handler
+function setupDragAndDrop() {
+    const dropOverlay = document.getElementById('dropOverlay');
+    const localFilesStatus = document.getElementById('localFilesStatus');
+    const localFilesList = document.getElementById('localFilesList');
+
+    let dragCounter = 0;
+
+    // Prevent default drag behaviors
+    document.addEventListener('dragenter', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        dragCounter++;
+        if (dragCounter === 1) {
+            dropOverlay.classList.add('active');
+        }
+    });
+
+    document.addEventListener('dragleave', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        dragCounter--;
+        if (dragCounter === 0) {
+            dropOverlay.classList.remove('active');
+        }
+    });
+
+    document.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+    });
+
+    document.addEventListener('drop', async (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        dragCounter = 0;
+        dropOverlay.classList.remove('active');
+
+        console.log('Files dropped!');
+
+        const items = Array.from(e.dataTransfer.items);
+        const files = Array.from(e.dataTransfer.files);
+
+        // Check if localFS is available
+        if (!window.localFS) {
+            console.error('localFS not initialized yet');
+            alert('File system not ready. Please wait a moment and try again.');
+            return;
+        }
+
+        // Clear previous files
+        window.localFS.clear();
+
+        // Process dropped items
+        if (items.length > 0 && items[0].webkitGetAsEntry) {
+            // Use webkitGetAsEntry for better folder support
+            const entries = items.map(item => item.webkitGetAsEntry()).filter(entry => entry !== null);
+
+            for (const entry of entries) {
+                if (entry.isFile) {
+                    const file = await new Promise((resolve) => entry.file(resolve));
+                    await window.localFS.addFile(file, entry.name);
+                } else if (entry.isDirectory) {
+                    await processDirectoryEntry(entry);
+                }
+            }
+        } else {
+            // Fallback to files array
+            await window.localFS.addFiles(files);
+        }
+
+        // Update UI
+        updateLocalFilesUI();
+
+        console.log(`Loaded ${window.localFS.files.size} files to /local`);
+
+        // Auto-open the dropped files in ImageJ if it's running
+        if (IJClass && window.localFS.files.size > 0) {
+            try {
+                console.log('Opening dropped files in ImageJ...');
+
+                // Get all file paths
+                const filePaths = Array.from(window.localFS.files.keys());
+
+                // Open each file
+                for (const filePath of filePaths) {
+                    const fullPath = `/local/${filePath}`;
+                    console.log('Opening:', fullPath);
+
+                    // Use ImageJ macro to open the file
+                    const macro = `open("${fullPath}");`;
+                    await IJClass.runMacro(macro);
+                }
+
+                console.log(`Successfully opened ${filePaths.length} file(s)`);
+            } catch (err) {
+                console.error('Error opening dropped files:', err);
+            }
+        } else if (!IJClass) {
+            console.log('ImageJ not ready yet - files added to /local but not opened automatically');
+        }
+    });
+
+    async function processDirectoryEntry(dirEntry, basePath = '') {
+        const path = basePath ? `${basePath}/${dirEntry.name}` : dirEntry.name;
+        window.localFS.directories.add(path);
+
+        const reader = dirEntry.createReader();
+        const entries = await new Promise((resolve, reject) => {
+            reader.readEntries(resolve, reject);
+        });
+
+        for (const entry of entries) {
+            if (entry.isFile) {
+                const file = await new Promise((resolve) => entry.file(resolve));
+                await window.localFS.addFile(file, `${path}/${file.name}`);
+            } else if (entry.isDirectory) {
+                await processDirectoryEntry(entry, path);
             }
         }
-    
-        open(method, url) {
-            this._url = url;  // Save the URL to check it in the send method
-            super.open(method, url);
-        }
-    }
-    
-
-    function ddlSend()
-    {
-        if(this.url.startsWith(`${baseUrl}lib/ImageJ/samples/`)){
-            this.url = this.url.replace(`${baseUrl}lib/ImageJ/samples/`, 'https://imagej.net/images/');
-        }
-        var xhr = new CustomXMLHttpRequest();
-        xhr.downloader = this;
-        xhr.open(this.method, this.url);
-        xhr.responseType = this.responseType;
-        xhr.onload = ddlOnLoad;
-        xhr.onerror = ddlOnError;
-        xhr.send();
     }
 
+    let localFilesStatusTimeout = null;
 
-    DirectDownloader.prototype.send = ddlSend;
+    function updateLocalFilesUI() {
+        if (window.localFS.isEmpty()) {
+            localFilesStatus.classList.add('hidden');
+        } else {
+            localFilesStatus.classList.remove('hidden');
+            const fileCount = window.localFS.files.size;
+            const dirCount = window.localFS.directories.size;
+            localFilesList.textContent = `${fileCount} file(s), ${dirCount} folder(s)`;
+
+            // Clear any existing timeout
+            if (localFilesStatusTimeout) {
+                clearTimeout(localFilesStatusTimeout);
+            }
+
+            // Auto-hide after 5 seconds
+            localFilesStatusTimeout = setTimeout(() => {
+                localFilesStatus.classList.add('hidden');
+            }, 5000);
+        }
+    }
+}
+
+// Global variables to store library and class references
+let lib = null;
+let IJClass = null;
+
+// Event listener for buttons
+document.addEventListener('DOMContentLoaded', () => {
+    // Setup drag and drop after DOM is ready
+    setupDragAndDrop();
+
+    const loadFolderBtn = document.getElementById('loadFolderBtn');
+    const loadFolderTooltip = document.getElementById('loadFolderTooltip');
+
+    // Check if File System Access API is supported (Chromium-based browsers)
+    if (!('showDirectoryPicker' in window)) {
+        // Disable button for non-Chromium browsers
+        loadFolderBtn.disabled = true;
+        loadFolderBtn.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+        loadFolderBtn.classList.add('bg-gray-400', 'cursor-not-allowed', 'opacity-50');
+
+        // Update tooltip to explain why it's disabled
+        if (loadFolderTooltip) {
+            loadFolderTooltip.innerHTML = `<strong>⚠️ Not Supported</strong><br>This feature requires a Chromium-based browser<br>(Chrome, Edge, Opera, etc.)`;
+        }
+
+        console.warn('File System Access API not supported in this browser');
+    } else {
+        // Enable button click for supported browsers
+        loadFolderBtn.addEventListener('click', () => {
+            // Use the nativeFS instance from utils.js
+            window.nativeFS.loadDirectory();
+        });
+    }
+
+    const testRoiBtn = document.getElementById('testRoiBtn');
+    testRoiBtn.addEventListener('click', async () => {
+        try {
+            if (!IJClass) {
+                alert('IJ class not loaded yet. Please wait for ImageJ to start.');
+                return;
+            }
+
+            console.log('🧪 Testing ROI to GeoJSON conversion...');
+
+            await IJClass.log('========================================');
+            await IJClass.log('🧪 TEST: ROI → GeoJSON Conversion');
+            await IJClass.log('========================================');
+
+            // Get current ROI from active image
+            let hasCurrentRoi = false;
+            try {
+                const imp = await IJClass.getImage();
+                if (imp) {
+                    const currentRoi = await imp.getRoi();
+                    if (currentRoi) {
+                        hasCurrentRoi = true;
+                        await IJClass.log('✓ Found current ROI on active image');
+
+                        // Get ROI type and name
+                        const roiType = await currentRoi.getTypeAsString();
+                        const roiName = await currentRoi.getName();
+                        await IJClass.log(`  Type: ${roiType}`);
+                        await IJClass.log(`  Name: ${roiName || 'Unnamed'}`);
+                    } else {
+                        await IJClass.log('No ROI selected on active image');
+                    }
+                } else {
+                    await IJClass.log('No active image');
+                }
+            } catch (e) {
+                await IJClass.log('No active image with ROI');
+            }
+
+            // Check ROI Manager
+            let roiManagerCount = 0;
+            try {
+                const RoiManager = await window.lib.ij.plugin.frame.RoiManager;
+                const rm = await RoiManager.getInstance();
+
+                if (rm) {
+                    roiManagerCount = await rm.getCount();
+                    await IJClass.log(`✓ ROI Manager open with ${roiManagerCount} ROI(s)`);
+                } else {
+                    await IJClass.log('ROI Manager not open');
+                }
+            } catch (e) {
+                await IJClass.log('ROI Manager not available');
+            }
+
+            // Import the conversion function from hypha-imagej-service.js
+            const { roiToGeoJson } = await import('./hypha-imagej-service.js');
+
+            if (hasCurrentRoi || roiManagerCount > 0) {
+                await IJClass.log('');
+                await IJClass.log('Converting ROIs to GeoJSON...');
+
+                // Get GeoJSON
+                const features = [];
+
+                // Convert current ROI
+                if (hasCurrentRoi) {
+                    const imp = await IJClass.getImage();
+                    const currentRoi = await imp.getRoi();
+                    const feature = await roiToGeoJson(currentRoi, 'Current Selection', true);
+                    if (feature) {
+                        features.push(feature);
+                        await IJClass.log('✓ Converted current ROI');
+                    }
+                }
+
+                // Convert ROI Manager ROIs
+                if (roiManagerCount > 0) {
+                    const RoiManager = await window.lib.ij.plugin.frame.RoiManager;
+                    const rm = await RoiManager.getInstance();
+
+                    for (let i = 0; i < roiManagerCount; i++) {
+                        const roi = await rm.getRoi(i);
+                        const roiName = await roi.getName() || `ROI ${i + 1}`;
+                        const feature = await roiToGeoJson(roi, roiName, true);
+                        if (feature) {
+                            feature.properties.index = i;
+                            feature.properties.source = 'ROI Manager';
+                            features.push(feature);
+                        }
+                    }
+                    await IJClass.log(`✓ Converted ${roiManagerCount} ROI(s) from ROI Manager`);
+                }
+
+                // Create GeoJSON FeatureCollection
+                const geojson = {
+                    type: "FeatureCollection",
+                    features: features
+                };
+
+                // Log to console
+                console.log('GeoJSON Result:');
+                console.log(JSON.stringify(geojson, null, 2));
+
+                await IJClass.log('');
+                await IJClass.log(`✓ Total: ${features.length} ROI(s) converted`);
+                await IJClass.log('📋 GeoJSON printed to browser console');
+                await IJClass.log('');
+                await IJClass.log('Open browser DevTools (F12) to see the full GeoJSON output');
+            } else {
+                await IJClass.log('');
+                await IJClass.log('⚠️  No ROIs found!');
+                await IJClass.log('');
+                await IJClass.log('To test:');
+                await IJClass.log('1. Open an image in ImageJ');
+                await IJClass.log('2. Draw an ROI using selection tools');
+                await IJClass.log('3. Or add ROIs to ROI Manager');
+                await IJClass.log('4. Click this button again');
+            }
+
+            await IJClass.log('========================================');
+
+        } catch (err) {
+            console.error('Test error:', err);
+            await IJClass.log('✗ Error: ' + err.message);
+            alert('Error: ' + (err.message || err.toString()));
+        }
+    });
+});
+
+// Get URL configuration
+const urlConfig = parseURLConfig();
+
+// Determine plugins directory
+const pluginsDir = urlConfig.pluginsDir || `/app${baseUrl}lib/ImageJ/plugins`;
+if (urlConfig.pluginsDir) {
+    console.log('Using custom plugins.dir from URL:', pluginsDir);
+} else {
+    console.log('Using default plugins.dir:', pluginsDir);
 }
 
 await cheerpjInit({
     clipboardMode: "java", // "permission" | "system" | "java"
     javaProperties: [
       "user.dir=/files",
-      `plugins.dir=/app${baseUrl}lib/ImageJ/plugins`
+      `plugins.dir=${pluginsDir}`,
+      "useJFileChooser=true"
     ],
-    fetch(){
-        debugger
-        return fetch(...arguments);
-    }
 });
+
 await applyPatches();
+
+// Parse and mount GitHub repos from URL parameters
+await parseAndMountGitHub();
+
 cheerpjCreateDisplay(-1, -1, document.getElementById("container"));
-await cheerpjRunJar(`/app${baseUrl}lib/ImageJ/ij.jar`);
-// await cheerpjRunMain("net.imagej.Main", `/app${baseUrl}lib/ImageJ/imagej2-cheerpj-0-SNAPSHOT-all.jar`);
+
+// Patch cheerpjDisplay to prevent click redirects on blank area only
+function patchCheerpjDisplay() {
+  const cheerpjDisplay = document.getElementById('cheerpjDisplay');
+  
+  if (cheerpjDisplay) {
+    console.log('Patching cheerpjDisplay to disable click redirects on blank area...');
+    
+    // Only block clicks when clicking DIRECTLY on the cheerpjDisplay div
+    // This prevents CheerpJ's promotional redirect when clicking blank areas
+    // but allows clicks on ImageJ windows and UI elements to work normally
+    cheerpjDisplay.addEventListener('click', (e) => {
+      // Only block if the click target is exactly the cheerpjDisplay div itself
+      // (not on its children, which are the ImageJ windows)
+      if (e.target === cheerpjDisplay) {
+        e.preventDefault();
+        e.stopPropagation();
+        e.stopImmediatePropagation();
+        console.log('Blocked click on blank area of cheerpjDisplay');
+        return false;
+      }
+      // Let all other clicks through (ImageJ windows, buttons, menus, etc.)
+    }, true); // Use capture phase to intercept before CheerpJ's handlers
+    
+    console.log('✓ Patched cheerpjDisplay - only blank area clicks will be blocked');
+    return true;
+  }
+  
+  return false;
+}
+
+// Try to patch immediately, and retry with MutationObserver if element doesn't exist yet
+if (!patchCheerpjDisplay()) {
+  console.log('cheerpjDisplay not found yet, waiting for it to be created...');
+  
+  // Use MutationObserver to detect when cheerpjDisplay is added
+  const observer = new MutationObserver((mutations) => {
+    if (patchCheerpjDisplay()) {
+      observer.disconnect();
+    }
+  });
+  
+  observer.observe(document.body, {
+    childList: true,
+    subtree: true
+  });
+  
+  // Also try again after a short delay as a fallback
+  setTimeout(() => {
+    if (patchCheerpjDisplay()) {
+      observer.disconnect();
+    }
+  }, 1000);
+}
+
+// Load ImageJ as a library for JavaScript interop
+try {
+    console.log('Loading ImageJ as library...');
+    lib = await cheerpjRunLibrary(`/app${baseUrl}lib/ImageJ/ij.jar`);
+
+    console.log('Accessing ImageJ and IJ classes...');
+    // Access the ImageJ class (ij.ImageJ has the main method)
+    const ImageJClass = await lib.ij.ImageJ;
+
+    // Access the IJ class (ij.IJ has utility methods like runMacro, log, etc.)
+    IJClass = await lib.ij.IJ;
+
+    console.log('Classes loaded successfully!');
+
+    // Call ImageJ's main method with empty arguments
+    console.log('Starting ImageJ...');
+    await ImageJClass.main([]);
+
+    // Set ImageJ preferences directly via Prefs class AFTER starting
+    // Note: Directory properties (user.dir, plugins.dir) are set via cheerpjInit's javaProperties
+    // and read by ImageJ during initialization, so we don't set them here
+    console.log('Setting ImageJ preferences...');
+    const Prefs = await lib.ij.Prefs;
+
+    // Set useJFileChooser preference (public static field)
+    Prefs.useJFileChooser = true;
+
+    console.log('ImageJ preferences set!');
+
+    console.log('ImageJ started successfully!');
+    window.IJ = IJClass; // Expose IJ globally for debugging
+    window.IJClass = IJClass; // Also expose as IJClass for Hypha service
+    window.lib = lib; // Expose library globally for debugging
+} catch (err) {
+    console.error('Failed to load ImageJ:', err);
+}
  
 </script>
 <div id="container"></div>

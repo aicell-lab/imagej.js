@@ -1,0 +1,1729 @@
+// Native File System Integration Utilities for ImageJ.JS
+// This file contains all the patches and utilities for native file system support
+
+// Global variable to store the directory handle
+let nativeDirectoryHandle = null;
+
+// Local File System Handler for drag-and-drop files
+class LocalFileSystemHandler {
+  constructor() {
+    this.files = new Map(); // Map of path -> File object
+    this.directories = new Set(); // Set of directory paths
+  }
+
+  clear() {
+    this.files.clear();
+    this.directories.clear();
+    console.log('Cleared all local files');
+  }
+
+  async addFile(file, path = null) {
+    // Use provided path or construct from file name
+    const filePath = path || file.name;
+    this.files.set(filePath, file);
+
+    // Add parent directories
+    const parts = filePath.split('/');
+    let currentPath = '';
+    for (let i = 0; i < parts.length - 1; i++) {
+      currentPath += (currentPath ? '/' : '') + parts[i];
+      this.directories.add(currentPath);
+    }
+
+    console.log('Added file to local FS:', filePath);
+  }
+
+  async addFiles(files, basePath = '') {
+    for (const file of files) {
+      const path = basePath ? `${basePath}/${file.name}` : file.name;
+      await this.addFile(file, path);
+    }
+  }
+
+  async addFileTree(entries, basePath = '') {
+    for (const entry of entries) {
+      if (entry.kind === 'file') {
+        const file = await entry.getAsFile();
+        if (file) {
+          const path = basePath ? `${basePath}/${file.name}` : file.name;
+          await this.addFile(file, path);
+        }
+      } else if (entry.kind === 'directory') {
+        const dirReader = entry.createReader();
+        const childEntries = await new Promise((resolve, reject) => {
+          dirReader.readEntries(resolve, reject);
+        });
+
+        const dirPath = basePath ? `${basePath}/${entry.name}` : entry.name;
+        this.directories.add(dirPath);
+
+        await this.addFileTree(childEntries, dirPath);
+      }
+    }
+  }
+
+  getFile(path) {
+    return this.files.get(path);
+  }
+
+  isDirectory(path) {
+    return this.directories.has(path);
+  }
+
+  listDirectory(path) {
+    const entries = [];
+    const prefix = path ? `${path}/` : '';
+    const prefixLength = prefix.length;
+
+    // List files
+    for (const filePath of this.files.keys()) {
+      if (filePath.startsWith(prefix)) {
+        const remainder = filePath.substring(prefixLength);
+        const slashIndex = remainder.indexOf('/');
+        if (slashIndex === -1) {
+          // Direct child file
+          entries.push(remainder);
+        } else {
+          // Child directory
+          const dirName = remainder.substring(0, slashIndex);
+          if (!entries.includes(dirName)) {
+            entries.push(dirName);
+          }
+        }
+      }
+    }
+
+    // List directories
+    for (const dirPath of this.directories) {
+      if (dirPath.startsWith(prefix) && dirPath !== path) {
+        const remainder = dirPath.substring(prefixLength);
+        const slashIndex = remainder.indexOf('/');
+        if (slashIndex === -1) {
+          // Direct child directory
+          if (!entries.includes(remainder)) {
+            entries.push(remainder);
+          }
+        } else {
+          // Nested directory
+          const dirName = remainder.substring(0, slashIndex);
+          if (!entries.includes(dirName)) {
+            entries.push(dirName);
+          }
+        }
+      }
+    }
+
+    return entries;
+  }
+
+  isEmpty() {
+    return this.files.size === 0 && this.directories.size === 0;
+  }
+}
+
+// GitHub File System Handler for HTTP-based access to GitHub repositories
+class GitHubFileSystemHandler {
+  constructor() {
+    this.repos = new Map(); // Map of mountPath -> {owner, repo, branch}
+  }
+
+  async mountRepo(owner, repo, branch) {
+    if (!branch) {
+      throw new Error('Branch must be explicitly specified. Use: mountRepo(owner, repo, branch)');
+    }
+
+    const mountPath = `${owner}/${repo}@${branch}`;
+
+    // NO GitHub API calls - just mount directly
+    // We'll verify the repo exists on first file access
+    this.repos.set(mountPath, { owner, repo, branch });
+    console.log(`Mounted GitHub repo: ${owner}/${repo}@${branch} at /github/${mountPath}`);
+    return mountPath;
+  }
+
+  parseRepoFromPath(path) {
+    // Path format: owner/repo@branch/file/path
+    const parts = path.split('/').filter(p => p);
+    if (parts.length < 2) return null;
+
+    const owner = parts[0];
+    const repoBranch = parts[1]; // repo@branch format
+
+    // Check if it contains @ separator
+    if (!repoBranch.includes('@')) {
+      return null;
+    }
+
+    const [repo, branch] = repoBranch.split('@');
+    const mountPath = `${owner}/${repo}@${branch}`;
+
+    if (!this.repos.has(mountPath)) {
+      return null;
+    }
+
+    const filePath = parts.slice(2).join('/');
+
+    return {
+      owner,
+      repo,
+      branch,
+      filePath,
+      mountPath
+    };
+  }
+
+  async listDirectory(path) {
+    console.log('[listDirectory] Called with path:', path);
+
+    const repoInfo = this.parseRepoFromPath(path);
+    if (!repoInfo) {
+      console.log('[listDirectory] No repoInfo, handling special cases');
+      // List mounted repos at root level
+      if (!path || path === '') {
+        return Array.from(this.repos.keys()).map(mountPath => {
+          const [owner] = mountPath.split('/');
+          return owner;
+        }).filter((v, i, a) => a.indexOf(v) === i); // unique owners
+      }
+
+      // Check if this is listing an owner (e.g., "oeway")
+      const parts = path.split('/').filter(p => p);
+      if (parts.length === 1) {
+        const owner = parts[0];
+        // List repos@branches for this owner (e.g., "imagej-js-env-demo@main")
+        return Array.from(this.repos.keys())
+          .filter(mountPath => mountPath.startsWith(`${owner}/`))
+          .map(mountPath => {
+            // Extract repo@branch from owner/repo@branch
+            return mountPath.substring(owner.length + 1);
+          })
+          .filter((v, i, a) => a.indexOf(v) === i); // unique
+      }
+
+      return [];
+    }
+
+    console.log('[listDirectory] repoInfo:', repoInfo);
+
+    // Try to use index.list file first (avoids GitHub API calls)
+    try {
+      const indexListPath = `${path}/index.list`;
+      console.log('[listDirectory] Checking for index.list at:', indexListPath);
+
+      const indexContent = await this.getFileContent(indexListPath);
+      if (indexContent) {
+        // Parse index.list - supports type prefixes
+        // Format: "dir:dirname" for directories, "filename" for files
+        const text = new TextDecoder().decode(indexContent);
+        const entries = [];
+
+        text.split('\n').forEach(line => {
+          line = line.trim();
+          if (line.length === 0) return;
+
+          // Check for type prefix
+          if (line.startsWith('dir:')) {
+            const dirName = line.substring(4);
+            entries.push(dirName);
+          } else {
+            // No prefix = file
+            entries.push(line);
+          }
+        });
+
+        console.log('[listDirectory] Using index.list with', entries.length, 'entries');
+        return entries;
+      }
+    } catch (indexErr) {
+      // index.list doesn't exist or couldn't be read
+      console.warn('[listDirectory] No index.list found at:', `${path}/index.list`);
+      console.warn('[listDirectory] Directory listing requires index.list file to avoid GitHub API calls');
+      console.warn('[listDirectory] See INDEX_LIST_README.md for how to create index.list files');
+    }
+
+    // NO fallback to GitHub API - return empty array
+    // This forces users to provide index.list files for directories
+    console.log('[listDirectory] Returning empty array (no index.list)');
+    return [];
+  }
+
+  // Helper method to get type info from parent's index.list
+  async getTypeFromParentIndexList(path) {
+    const repoInfo = this.parseRepoFromPath(path);
+    if (!repoInfo) return null;
+
+    // Root is always a directory
+    if (!repoInfo.filePath || repoInfo.filePath === '') {
+      return 'directory';
+    }
+
+    // Get parent directory path and filename
+    const pathParts = repoInfo.filePath.split('/');
+    const fileName = pathParts[pathParts.length - 1];
+    const parentPath = pathParts.slice(0, -1).join('/');
+    const parentFullPath = parentPath ?
+      `${repoInfo.owner}/${repoInfo.repo}@${repoInfo.branch}/${parentPath}` :
+      `${repoInfo.owner}/${repoInfo.repo}@${repoInfo.branch}`;
+
+    console.log('[getTypeFromParentIndexList] Checking parent:', parentFullPath, 'for file:', fileName);
+
+    // First, verify all ancestor directories exist by checking each level
+    // For path like "images/crosshair-cursor.gif", we need to verify "images" exists in root
+    if (parentPath) {
+      const ancestorParts = parentPath.split('/');
+      let currentPath = '';
+
+      for (let i = 0; i < ancestorParts.length; i++) {
+        const ancestorName = ancestorParts[i];
+        const ancestorParentPath = ancestorParts.slice(0, i).join('/');
+        const ancestorParentFullPath = ancestorParentPath ?
+          `${repoInfo.owner}/${repoInfo.repo}@${repoInfo.branch}/${ancestorParentPath}` :
+          `${repoInfo.owner}/${repoInfo.repo}@${repoInfo.branch}`;
+
+        console.log('[getTypeFromParentIndexList] Verifying ancestor exists:', ancestorName, 'in', ancestorParentFullPath);
+
+        try {
+          const ancestorIndexPath = `${ancestorParentFullPath}/index.list`;
+          const ancestorIndexContent = await this.getFileContent(ancestorIndexPath);
+
+          if (ancestorIndexContent) {
+            const text = new TextDecoder().decode(ancestorIndexContent);
+            let ancestorExists = false;
+
+            for (const line of text.split('\n')) {
+              const trimmedLine = line.trim();
+              if (trimmedLine === `dir:${ancestorName}`) {
+                ancestorExists = true;
+                break;
+              }
+            }
+
+            if (!ancestorExists) {
+              console.log('[getTypeFromParentIndexList] Ancestor directory not found in index.list:', ancestorName);
+              return null;
+            }
+
+            console.log('[getTypeFromParentIndexList] Ancestor exists:', ancestorName);
+          } else {
+            // No index.list at this level
+            console.log('[getTypeFromParentIndexList] No index.list at ancestor level, cannot verify');
+            return undefined;
+          }
+        } catch (err) {
+          // Failed to fetch ancestor index.list
+          console.log('[getTypeFromParentIndexList] Failed to fetch ancestor index.list');
+          return undefined;
+        }
+
+        currentPath = currentPath ? `${currentPath}/${ancestorName}` : ancestorName;
+      }
+    }
+
+    // All ancestors verified, now check the parent's index.list for our file
+    try {
+      const indexListPath = `${parentFullPath}/index.list`;
+      const indexContent = await this.getFileContent(indexListPath);
+
+      if (indexContent) {
+        const text = new TextDecoder().decode(indexContent);
+
+        // Check each line for our filename
+        for (const line of text.split('\n')) {
+          const trimmedLine = line.trim();
+          if (trimmedLine.length === 0) continue;
+
+          if (trimmedLine.startsWith('dir:')) {
+            const dirName = trimmedLine.substring(4);
+            if (dirName === fileName) {
+              console.log('[getTypeFromParentIndexList] Found as directory in index.list');
+              return 'directory';
+            }
+          } else {
+            // No prefix = file
+            if (trimmedLine === fileName) {
+              console.log('[getTypeFromParentIndexList] Found as file in index.list');
+              return 'file';
+            }
+          }
+        }
+
+        // Not found in index.list = doesn't exist
+        console.log('[getTypeFromParentIndexList] Not found in parent index.list');
+        return null;
+      }
+    } catch (err) {
+      // No index.list in parent (but we know parent exists because we verified ancestors)
+      console.log('[getTypeFromParentIndexList] No index.list in parent directory');
+    }
+
+    return undefined; // Unknown - parent has no index.list
+  }
+
+  async getFileInfo(path) {
+    const repoInfo = this.parseRepoFromPath(path);
+    if (!repoInfo) return null;
+
+    console.log('[getFileInfo] Called for path:', path);
+
+    // Check parent directory's index.list first
+    const typeFromIndex = await this.getTypeFromParentIndexList(path);
+
+    if (typeFromIndex === 'directory') {
+      // Found as directory in index.list - return immediately, no HEAD request
+      console.log('[getFileInfo] Returning directory (from index.list)');
+      return {
+        type: 'directory',
+        size: 0
+      };
+    } else if (typeFromIndex === 'file') {
+      // Found as file in index.list - make HEAD request to get size
+      const url = `https://raw.githubusercontent.com/${repoInfo.owner}/${repoInfo.repo}/${repoInfo.branch}/${repoInfo.filePath}`;
+      console.log('[getFileInfo] Found as file in index.list, making HEAD request for size:', url);
+
+      try {
+        const response = await fetch(url, { method: 'HEAD' });
+        if (response.ok) {
+          const contentLength = response.headers.get('content-length');
+          const size = contentLength ? parseInt(contentLength, 10) : 0;
+          console.log('[getFileInfo] File size:', size);
+          return {
+            type: 'file',
+            size: size,
+            downloadUrl: url
+          };
+        } else {
+          console.log('[getFileInfo] HEAD request failed with status:', response.status);
+          return null;
+        }
+      } catch (err) {
+        console.log('[getFileInfo] HEAD request error:', err.message);
+        return null;
+      }
+    } else if (typeFromIndex === null) {
+      // Explicitly not found in index.list - doesn't exist
+      console.log('[getFileInfo] Not found in parent index.list - does not exist');
+      return null;
+    } else {
+      // typeFromIndex === undefined - parent has no index.list
+      // Fall back to HEAD request
+      console.log('[getFileInfo] Parent has no index.list, falling back to HEAD request');
+
+      const url = `https://raw.githubusercontent.com/${repoInfo.owner}/${repoInfo.repo}/${repoInfo.branch}/${repoInfo.filePath}`;
+      console.log('[getFileInfo] Making HEAD request to:', url);
+
+      try {
+        const response = await fetch(url, { method: 'HEAD' });
+        if (response.ok) {
+          const contentLength = response.headers.get('content-length');
+          const size = contentLength ? parseInt(contentLength, 10) : 0;
+          console.log('[getFileInfo] File exists, size:', size);
+          return {
+            type: 'file',
+            size: size,
+            downloadUrl: url
+          };
+        } else {
+          console.log('[getFileInfo] HEAD request failed with status:', response.status);
+          return null;
+        }
+      } catch (err) {
+        console.log('[getFileInfo] HEAD request error:', err.message);
+        return null;
+      }
+    }
+  }
+
+  async getFileContent(path) {
+    const repoInfo = this.parseRepoFromPath(path);
+    if (!repoInfo) return null;
+
+    try {
+      // Use raw.githubusercontent.com for direct file download
+      const url = `https://raw.githubusercontent.com/${repoInfo.owner}/${repoInfo.repo}/${repoInfo.branch}/${repoInfo.filePath}`;
+      const response = await fetch(url);
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch file: ${response.status}`);
+      }
+
+      const arrayBuffer = await response.arrayBuffer();
+      const data = new Uint8Array(arrayBuffer);
+
+      return data;
+    } catch (err) {
+      console.error('Error fetching GitHub file:', path, err);
+      throw err;
+    }
+  }
+
+  isDirectory(path) {
+    const repoInfo = this.parseRepoFromPath(path);
+    if (!repoInfo) {
+      // Root or owner level is always a directory
+      return true;
+    }
+
+    // If filePath is empty, it's the repo root (directory)
+    if (!repoInfo.filePath) {
+      return true;
+    }
+
+    // We need to check via API (cached in directoryCache or fileCache)
+    const cacheKey = `${repoInfo.owner}/${repoInfo.repo}/${repoInfo.branch}/${repoInfo.filePath}`;
+    return this.directoryCache.has(cacheKey);
+  }
+}
+
+// Native File System Integration
+class NativeFileSystemHandler {
+  constructor() {
+    this.directoryHandle = null;
+    this.fileCache = new Map();
+  }
+
+  async loadDirectory() {
+    try {
+      if ('showDirectoryPicker' in window) {
+        this.directoryHandle = await window.showDirectoryPicker();
+        nativeDirectoryHandle = this.directoryHandle;
+
+        // Update global window reference
+        window.nativeDirectoryHandle = this.directoryHandle;
+        window.nativeFS = this;
+
+        // Update button to show mounted folder
+        const loadBtnEl = document.getElementById('loadFolderBtn');
+        const btnIcon = loadBtnEl.querySelector('svg');
+        const btnText = loadBtnEl.querySelector('span');
+        const tooltip = document.getElementById('loadFolderTooltip');
+
+        // Change button appearance to show it's mounted
+        loadBtnEl.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+        loadBtnEl.classList.add('bg-green-600', 'hover:bg-green-700');
+
+        // Add checkmark indicator
+        btnIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>';
+
+        // Update text to show folder name
+        btnText.textContent = `📁 ${this.directoryHandle.name}`;
+
+        // Update tooltip message for mounted state
+        if (tooltip) {
+          tooltip.innerHTML = `Folder mounted under <strong>/files/</strong><br>Use <strong>File → Open</strong> in ImageJ to load files<br><em style="opacity: 0.7; font-size: 0.85em;">Click to change folder</em>`;
+        }
+
+        console.log('Native directory loaded:', this.directoryHandle.name);
+        console.log('Global nativeDirectoryHandle set:', window.nativeDirectoryHandle);
+        return true;
+      } else {
+        alert('File System Access API is not supported in this browser. Please use Chrome 86+ or Edge 86+.');
+        return false;
+      }
+    } catch (err) {
+      if (err.name !== 'AbortError') {
+        console.error('Error loading directory:', err);
+        alert('Error loading directory: ' + err.message);
+      }
+      return false;
+    }
+  }
+
+  async getFileHandle(path) {
+    if (!this.directoryHandle) return null;
+    
+    try {
+      const pathParts = path.split('/').filter(part => part.length > 0);
+      let currentHandle = this.directoryHandle;
+      
+      for (let i = 0; i < pathParts.length - 1; i++) {
+        currentHandle = await currentHandle.getDirectoryHandle(pathParts[i]);
+      }
+      
+      const fileName = pathParts[pathParts.length - 1];
+      return await currentHandle.getFileHandle(fileName);
+    } catch (err) {
+      return null;
+    }
+  }
+
+  async createFileHandle(path) {
+    if (!this.directoryHandle) return null;
+    
+    try {
+      const pathParts = path.split('/').filter(part => part.length > 0);
+      let currentHandle = this.directoryHandle;
+      
+      // Create directories if they don't exist
+      for (let i = 0; i < pathParts.length - 1; i++) {
+        try {
+          currentHandle = await currentHandle.getDirectoryHandle(pathParts[i]);
+        } catch {
+          currentHandle = await currentHandle.getDirectoryHandle(pathParts[i], { create: true });
+        }
+      }
+      
+      const fileName = pathParts[pathParts.length - 1];
+      return await currentHandle.getFileHandle(fileName, { create: true });
+    } catch (err) {
+      console.error('Error creating file:', path, err);
+      return null;
+    }
+  }
+
+  async listDirectory(path) {
+    if (!this.directoryHandle) return [];
+    
+    try {
+      const pathParts = path.split('/').filter(part => part.length > 0);
+      let currentHandle = this.directoryHandle;
+      
+      for (const part of pathParts) {
+        currentHandle = await currentHandle.getDirectoryHandle(part);
+      }
+      
+      const entries = [];
+      for await (const [name, handle] of currentHandle.entries()) {
+        entries.push(name);
+      }
+      return entries;
+    } catch (err) {
+      throw err;  // Re-throw the error instead of returning empty array
+    }
+  }
+}
+
+// Custom read function for native files (also used for local FS)
+function nativeFileReadAsync(fileData, fileOffset, buf, off, len, flags, cb) {
+    if (fileOffset >= fileData.length) {
+        return cb(0);
+    }
+
+    if (fileOffset + len > fileData.length) {
+        len = fileData.length - fileOffset;
+    }
+
+    if (len <= 0) {
+        return cb(0);
+    }
+
+    // Use the direct data if available
+    if (fileData.data) {
+        for (let i = 0; i < len; i++) {
+            buf[off + i] = fileData.data[fileOffset + i];
+        }
+        return cb(len);
+    }
+
+    // Fall back to chunk-based reading
+    const chunkSize = 1024 * 1024;
+    let bytesRead = 0;
+
+    while (bytesRead < len) {
+        const currentOffset = fileOffset + bytesRead;
+        const chunkIndex = Math.floor(currentOffset / chunkSize);
+        const chunkOffset = currentOffset % chunkSize;
+
+        if (chunkIndex >= fileData.chunks.length) {
+            break;
+        }
+
+        const chunk = fileData.chunks[chunkIndex];
+        if (!chunk) {
+            break;
+        }
+
+        const bytesToRead = Math.min(len - bytesRead, chunkSize - chunkOffset);
+        for (let i = 0; i < bytesToRead; i++) {
+            buf[off + bytesRead + i] = chunk[chunkOffset + i];
+        }
+
+        bytesRead += bytesToRead;
+    }
+
+    return cb(bytesRead);
+}
+
+// Streaming read function for local files (drag-and-drop)
+// This reads from the File object on-demand without loading entire file into memory
+function localFileReadAsync(fileData, fileOffset, buf, off, len, flags, cb) {
+    if (fileOffset >= fileData.length) {
+        return cb(0);
+    }
+
+    if (fileOffset + len > fileData.length) {
+        len = fileData.length - fileOffset;
+    }
+
+    if (len <= 0) {
+        return cb(0);
+    }
+
+    // Read the requested slice from the File object
+    const file = fileData.localFile;
+    if (!file) {
+        console.error('No localFile reference in fileData');
+        return cb(0);
+    }
+
+    // Use File.slice() to read only the requested portion
+    const blob = file.slice(fileOffset, fileOffset + len);
+
+    blob.arrayBuffer().then(arrayBuffer => {
+        const data = new Uint8Array(arrayBuffer);
+        for (let i = 0; i < data.length; i++) {
+            buf[off + i] = data[i];
+        }
+        cb(data.length);
+    }).catch(err => {
+        console.error('Error reading file slice:', err);
+        cb(0);
+    });
+}
+
+// Create and apply all patches to CheerpOS
+function createNativeFileSystemPatches() {
+    // Store original functions
+    const originalIdbStatAsync = IdbOps.statAsync;
+    const originalIdbListAsync = IdbOps.listAsync;
+    const originalIdbMakeFileData = IdbOps.makeFileData;
+    const originalIdbCommitFileData = IdbInodeOps.close;
+
+    // Patch IndexedDB folder operations to use native file system
+    function patchedIdbStatAsync(mp, path, fileRef, cb) {
+        if (window.nativeDirectoryHandle && (path.startsWith('/') || path === '')) {
+            // Map paths to the root of the mounted directory
+            let nativePath;
+            if (path === '' || path === '/' || path === '/files' || path === '/files/') {
+                nativePath = '';  // Root of mounted directory
+            } else if (path.startsWith('/files/')) {
+                nativePath = path.substring('/files/'.length);  // Remove /files/ prefix
+            } else if (path.startsWith('/') && !path.startsWith('/.') && !path.includes('C:\\')) {
+                // Handle other root-level paths that might be user files
+                nativePath = path.substring(1);  // Remove leading slash
+            } else {
+                // For system paths like /.java or Windows paths, fall back to original implementation
+                return originalIdbStatAsync.call(this, mp, path, fileRef, cb);
+            }
+            
+            // Handle root directory case (mounted folder root)
+            if (nativePath === '') {
+                fileRef.inodeId = Math.floor(Math.random() * 1000000);
+                fileRef.uid = 0;
+                fileRef.gid = 0;
+                fileRef.permType = CheerpJFileData.S_IFDIR | 0o777;
+                fileRef.lastModified = Math.floor(Date.now() / 1000);
+                return cb();
+            }
+            
+            // First try to get the file
+            window.nativeFS.getFileHandle(nativePath).then(async (handle) => {
+                if (handle) {
+                    const file = await handle.getFile();
+                    fileRef.inodeId = Math.floor(Math.random() * 1000000);
+                    fileRef.uid = 0;
+                    fileRef.gid = 0;
+                    fileRef.permType = CheerpJFileData.S_IFREG | 0o666;
+                    fileRef.fileLength = file.size;
+                    fileRef.lastModified = Math.floor(file.lastModified / 1000);
+                    cb();
+                } else {
+                    // This shouldn't happen, but if it does, treat as not found
+                    fileRef.permType = 0;
+                    cb();
+                }
+            }).catch(async (err) => {
+                // File doesn't exist, try as directory
+                try {
+                    const entries = await window.nativeFS.listDirectory(nativePath);
+                    fileRef.inodeId = Math.floor(Math.random() * 1000000);
+                    fileRef.uid = 0;
+                    fileRef.gid = 0;
+                    fileRef.permType = CheerpJFileData.S_IFDIR | 0o777;
+                    fileRef.lastModified = Math.floor(Date.now() / 1000);
+                    cb();
+                } catch (dirErr) {
+                    // Neither file nor directory exists
+                    fileRef.permType = 0;  // Indicate that the file/directory doesn't exist
+                    cb();
+                }
+            });
+            return;
+        }
+        
+        // Fall back to original implementation
+        return originalIdbStatAsync.call(this, mp, path, fileRef, cb);
+    }
+
+    function patchedIdbListAsync(mp, path, fileRef, cb) {
+        if (window.nativeDirectoryHandle && (path.startsWith('/') || path === '')) {
+            // Map paths to the root of the mounted directory
+            let nativePath;
+            if (path === '' || path === '/' || path === '/files' || path === '/files/') {
+                nativePath = '';  // Root of mounted directory
+            } else if (path.startsWith('/files/')) {
+                nativePath = path.substring('/files/'.length);  // Remove /files/ prefix
+            } else if (path.startsWith('/') && !path.startsWith('/.') && !path.includes('C:\\')) {
+                // Handle other root-level paths that might be user files
+                nativePath = path.substring(1);  // Remove leading slash
+            } else {
+                // For system paths like /.java or Windows paths, fall back to original implementation
+                return originalIdbListAsync.call(this, mp, path, fileRef, cb);
+            }
+            
+            window.nativeFS.listDirectory(nativePath).then((entries) => {
+                for (const entry of entries) {
+                    fileRef.push(entry);
+                }
+                cb();
+            }).catch((err) => {
+                cb();
+            });
+            return;
+        }
+        
+        // Fall back to original implementation
+        return originalIdbListAsync.call(this, mp, path, fileRef, cb);
+    }
+
+    function patchedIdbMakeFileData(mp, path, mode, uid, gid, cb) {
+        if (window.nativeDirectoryHandle && (path.startsWith('/') || path === '')) {
+            // Map paths to the root of the mounted directory
+            let nativePath;
+            if (path === '' || path === '/' || path === '/files' || path === '/files/') {
+                nativePath = '';  // Root of mounted directory
+            } else if (path.startsWith('/files/')) {
+                nativePath = path.substring('/files/'.length);  // Remove /files/ prefix
+            } else if (path.startsWith('/') && !path.startsWith('/.') && !path.includes('C:\\')) {
+                // Handle other root-level paths that might be user files
+                nativePath = path.substring(1);  // Remove leading slash
+            } else {
+                // For system paths like /.java or Windows paths, fall back to original implementation
+                return originalIdbMakeFileData.call(this, mp, path, mode, uid, gid, cb);
+            }
+            
+            // Handle root directory case (mounted folder root)
+            if (nativePath === '') {
+                const fileData = new CheerpJFileData(
+                    mp, 
+                    path, 
+                    0, 
+                    Math.floor(Math.random() * 1000000), 
+                    CheerpJFileData.S_IFDIR | 0o777, 
+                    Math.floor(Date.now() / 1000), 
+                    uid, 
+                    gid
+                );
+                fileData.mount = mp.inodeOps;
+                return cb(fileData);
+            }
+            
+            if (mode === "r") {
+                window.nativeFS.getFileHandle(nativePath).then(async (handle) => {
+                    if (handle) {
+                        const file = await handle.getFile();
+                        const arrayBuffer = await file.arrayBuffer();
+                        const data = new Uint8Array(arrayBuffer);
+                        
+                        const fileData = new CheerpJFileData(
+                            mp, 
+                            path, 
+                            data.length, 
+                            Math.floor(Math.random() * 1000000), 
+                            CheerpJFileData.S_IFREG | 0o666, 
+                            Math.floor(file.lastModified / 1000), 
+                            uid, 
+                            gid
+                        );
+                        
+                        // Set up the file data properly for ImageJ
+                        fileData.data = data;
+                        
+                        // Also set up chunks for compatibility with CheerpJ's chunked reading
+                        const chunkSize = 1024 * 1024; // 1MB chunks
+                        const chunks = [];
+                        let offset = 0;
+                        
+                        while (offset < data.length) {
+                            const chunkLength = Math.min(chunkSize, data.length - offset);
+                            const chunk = new Uint8Array(chunkSize);
+                            chunk.set(data.subarray(offset, offset + chunkLength));
+                            chunks.push(chunk);
+                            offset += chunkLength;
+                        }
+                        
+                        fileData.chunks = chunks;
+                        
+                        // Create custom inode operations for native files
+                        fileData.mount = {
+                            readAsync: nativeFileReadAsync,
+                            writeAsync: mp.inodeOps.writeAsync,
+                            close: mp.inodeOps.close
+                        };
+                        
+                        cb(fileData);
+                    } else {
+                        cb(null);
+                    }
+                }).catch((err) => {
+                    cb(null);
+                });
+                return;
+            } else if (mode === "w" || mode === "r+") {
+                // Create or open for writing
+                window.nativeFS.createFileHandle(nativePath).then(async (handle) => {
+                    if (handle) {
+                        console.log('Created file for writing:', nativePath);
+                        const fileData = new CheerpJFileData(
+                            mp, 
+                            path, 
+                            0, 
+                            Math.floor(Math.random() * 1000000), 
+                            CheerpJFileData.S_IFREG | 0o666, 
+                            Math.floor(Date.now() / 1000), 
+                            uid, 
+                            gid
+                        );
+                        fileData.mount = mp.inodeOps;
+                        fileData.dirty = 1;
+                        fileData.chunks = [];
+                        fileData.nativeHandle = handle;
+                        cb(fileData);
+                    } else {
+                        console.error('Failed to create file handle:', nativePath);
+                        cb(null);
+                    }
+                }).catch((err) => {
+                    console.error('Error creating file handle:', nativePath, err.message);
+                    cb(null);
+                });
+                return;
+            }
+        }
+        
+        // Fall back to original implementation
+        return originalIdbMakeFileData.call(this, mp, path, mode, uid, gid, cb);
+    }
+
+    function patchedIdbCommitFileData(fileData, cb) {
+        if (fileData.nativeHandle && fileData.dirty) {
+            // Write to native file system
+            const writeToNativeFile = async () => {
+                try {
+                    const writable = await fileData.nativeHandle.createWritable();
+
+                    // Reconstruct file content from chunks
+                    const chunkSize = 1024 * 1024;
+
+                    // Calculate actual file size based on chunks
+                    let totalSize = 0;
+                    for (let i = 0; i < fileData.chunks.length; i++) {
+                        if (fileData.chunks[i]) {
+                            totalSize += chunkSize;
+                        }
+                    }
+
+                    // Use either the calculated size or fileData.length, whichever is larger
+                    const fileSize = Math.max(totalSize, fileData.length);
+
+                    if (fileSize === 0 && fileData.chunks.length === 0) {
+                        // Empty file, just close it
+                        await writable.write(new Uint8Array(0));
+                        await writable.close();
+                        console.log('Wrote empty file to native file system');
+                        fileData.dirty = 0;
+                        cb();
+                        return;
+                    }
+
+                    // Write chunks directly
+                    for (let i = 0; i < fileData.chunks.length; i++) {
+                        const chunk = fileData.chunks[i];
+                        if (chunk) {
+                            // For the last chunk, only write the actual data length
+                            if (i === fileData.chunks.length - 1 && fileData.length > 0) {
+                                const lastChunkSize = fileData.length - (i * chunkSize);
+                                if (lastChunkSize > 0 && lastChunkSize < chunkSize) {
+                                    await writable.write(chunk.subarray(0, lastChunkSize));
+                                } else {
+                                    await writable.write(chunk);
+                                }
+                            } else {
+                                await writable.write(chunk);
+                            }
+                        }
+                    }
+
+                    await writable.close();
+                    console.log('Successfully wrote file to native file system:', fileData.path, 'size:', fileData.length);
+
+                    fileData.dirty = 0;
+                    cb();
+                } catch (err) {
+                    console.error('Error writing to native file:', fileData.path, err);
+                    cb();
+                }
+            };
+
+            writeToNativeFile();
+            return;
+        }
+
+        // Fall back to original implementation
+        return originalIdbCommitFileData.call(this, fileData, cb);
+    }
+
+    // Apply patches
+    IdbOps.statAsync = patchedIdbStatAsync;
+    IdbOps.listAsync = patchedIdbListAsync;
+    IdbOps.makeFileData = patchedIdbMakeFileData;
+    IdbInodeOps.close = patchedIdbCommitFileData;
+
+    // Expose to global window object for CheerpJ runtime access
+    window.IdbOps = IdbOps;
+    window.IdbInodeOps = IdbInodeOps;
+    window.DirectDownloader = DirectDownloader;
+    window.nativeDirectoryHandle = nativeDirectoryHandle;
+    window.nativeFS = window.nativeFS || new NativeFileSystemHandler();
+    window.CheerpJFileData = CheerpJFileData;
+    
+    // Also expose the patched functions directly
+    window.patchedIdbStatAsync = patchedIdbStatAsync;
+    window.patchedIdbListAsync = patchedIdbListAsync;
+    window.patchedIdbMakeFileData = patchedIdbMakeFileData;
+    window.patchedIdbCommitFileData = patchedIdbCommitFileData;
+}
+
+// Local file system operations - Define these first before CheerpJLocalFolder
+function localStatAsync(mp, path, fileRef, cb) {
+    // Remove the mount point prefix to get the local path
+    const localPath = path === '' || path === '/' ? '' : path.substring(1);
+
+    // Handle root directory
+    if (localPath === '') {
+        fileRef.inodeId = Math.floor(Math.random() * 1000000);
+        fileRef.uid = 0;
+        fileRef.gid = 0;
+        fileRef.permType = CheerpJFileData.S_IFDIR | 0o777;
+        fileRef.lastModified = Math.floor(Date.now() / 1000);
+        return cb();
+    }
+
+    // Check if it's a drag-and-dropped file (read-only)
+    const file = window.localFS.getFile(localPath);
+    if (file) {
+        fileRef.inodeId = Math.floor(Math.random() * 1000000);
+        fileRef.uid = 0;
+        fileRef.gid = 0;
+        fileRef.permType = CheerpJFileData.S_IFREG | 0o666;
+        fileRef.fileLength = file.size;
+        fileRef.lastModified = Math.floor(file.lastModified / 1000);
+        return cb();
+    }
+
+    // Check if it's a directory
+    if (window.localFS.isDirectory(localPath)) {
+        fileRef.inodeId = Math.floor(Math.random() * 1000000);
+        fileRef.uid = 0;
+        fileRef.gid = 0;
+        fileRef.permType = CheerpJFileData.S_IFDIR | 0o777;
+        fileRef.lastModified = Math.floor(Date.now() / 1000);
+        return cb();
+    }
+
+    // For all other files, report they don't exist
+    // This allows ImageJ to always create fresh files for writing/downloading
+    // Note: /local is a virtual write-only filesystem for downloads
+    fileRef.permType = 0;
+    return cb();
+}
+
+function localListAsync(mp, path, fileRef, cb) {
+    const localPath = path === '' || path === '/' ? '' : path.substring(1);
+
+    try {
+        const entries = window.localFS.listDirectory(localPath);
+        for (const entry of entries) {
+            fileRef.push(entry);
+        }
+        return cb();
+    } catch (err) {
+        console.error('Error listing local directory:', localPath, err);
+        return cb();
+    }
+}
+
+function localMakeFileData(mp, path, mode, uid, gid, cb) {
+    const localPath = path === '' || path === '/' ? '' : path.substring(1);
+
+    // Handle root directory
+    if (localPath === '') {
+        const fileData = new CheerpJFileData(
+            mp,
+            path,
+            0,
+            Math.floor(Math.random() * 1000000),
+            CheerpJFileData.S_IFDIR | 0o777,
+            Math.floor(Date.now() / 1000),
+            uid,
+            gid
+        );
+        fileData.mount = mp.inodeOps;
+        return cb(fileData);
+    }
+
+    if (mode === "r") {
+        // Read mode - get file from local FS
+        const file = window.localFS.getFile(localPath);
+        if (!file) {
+            return cb(null);
+        }
+
+        // Create file data WITHOUT loading the entire file into memory
+        // We'll use streaming reads via localFileReadAsync
+        const fileData = new CheerpJFileData(
+            mp,
+            path,
+            file.size,  // Just store the size, not the data
+            Math.floor(Math.random() * 1000000),
+            CheerpJFileData.S_IFREG | 0o666,
+            Math.floor(file.lastModified / 1000),
+            uid,
+            gid
+        );
+
+        // Store reference to the File object for streaming reads
+        fileData.localFile = file;
+
+        // Use streaming read function that reads chunks on-demand
+        fileData.mount = mp.inodeOps;
+
+        return cb(fileData);
+    } else if (mode === "w" || mode === "r+") {
+        // Write mode - create in-memory file that will trigger download on close
+        console.log('Creating writable file for download:', localPath);
+
+        const fileData = new CheerpJFileData(
+            mp,
+            path,
+            0, // Start with 0 length
+            Math.floor(Math.random() * 1000000),
+            CheerpJFileData.S_IFREG | 0o666,
+            Math.floor(Date.now() / 1000),
+            uid,
+            gid
+        );
+
+        // Initialize for writing
+        fileData.chunks = [];
+        fileData.dirty = 0;
+        fileData.mount = mp.inodeOps; // Use LocalInodeOps which includes write and close
+
+        return cb(fileData);
+    }
+
+    return cb(null);
+}
+
+// Local file system operations
+var LocalOps = {
+    statAsync: localStatAsync,
+    listAsync: localListAsync,
+    makeFileData: localMakeFileData,
+    createDirAsync: null,
+    renameAsync: null,
+    linkAsync: null,
+    unlinkAsync: null
+};
+
+// Write function for local files - accumulates data in memory
+function localFileWriteAsync(fileData, fileOffset, buf, off, len, cb) {
+    // Check if callback is provided
+    if (typeof cb !== 'function') {
+        console.error('[localFileWriteAsync] ERROR: cb is not a function!', cb);
+        return 0; // Return 0 bytes written on error
+    }
+
+    // Initialize chunks array if not present
+    if (!fileData.chunks) {
+        fileData.chunks = [];
+    }
+
+    const chunkSize = 1024 * 1024; // 1MB chunks
+
+    // Write data to chunks
+    let bytesWritten = 0;
+    while (bytesWritten < len) {
+        const currentOffset = fileOffset + bytesWritten;
+        const chunkIndex = Math.floor(currentOffset / chunkSize);
+        const chunkOffset = currentOffset % chunkSize;
+
+        // Create chunk if it doesn't exist
+        if (!fileData.chunks[chunkIndex]) {
+            fileData.chunks[chunkIndex] = new Uint8Array(chunkSize);
+        }
+
+        const chunk = fileData.chunks[chunkIndex];
+        const bytesToWrite = Math.min(len - bytesWritten, chunkSize - chunkOffset);
+
+        // Copy data to chunk
+        for (let i = 0; i < bytesToWrite; i++) {
+            chunk[chunkOffset + i] = buf[off + bytesWritten + i];
+        }
+
+        bytesWritten += bytesToWrite;
+    }
+
+    // Update file length
+    const endOffset = fileOffset + len;
+    if (endOffset > fileData.length) {
+        fileData.length = endOffset;
+    }
+
+    fileData.dirty = 1; // Mark as modified
+
+    return cb(bytesWritten);
+}
+
+// Close function for local files - triggers download
+function localFileClose(fileData, cb) {
+    // Check if callback is provided
+    if (typeof cb !== 'function') {
+        console.error('[localFileClose] ERROR: cb is not a function!', cb);
+        return; // Just return without calling cb
+    }
+
+    // Only trigger download if the file was written to
+    if (fileData.dirty && fileData.chunks && fileData.chunks.length > 0) {
+
+        // Reconstruct file content from chunks
+        const chunkSize = 1024 * 1024;
+        const totalSize = fileData.length;
+        const fileContent = new Uint8Array(totalSize);
+
+        let offset = 0;
+        for (let i = 0; i < fileData.chunks.length && offset < totalSize; i++) {
+            const chunk = fileData.chunks[i];
+            if (chunk) {
+                const bytesToCopy = Math.min(chunkSize, totalSize - offset);
+                fileContent.set(chunk.subarray(0, bytesToCopy), offset);
+                offset += bytesToCopy;
+            }
+        }
+
+        // Trigger browser download
+        const blob = new Blob([fileContent]);
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+
+        // Extract filename from path (remove /local/ prefix)
+        const fileName = fileData.path.split('/').pop() || 'downloaded-file';
+        a.download = fileName;
+
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+
+        console.log(`✓ Downloaded file: ${fileName} (${totalSize} bytes)`);
+
+        // Clear the file data to free memory
+        fileData.chunks = null;
+        fileData.dirty = 0;
+        fileData.length = 0;
+    }
+
+    return cb();
+}
+
+var LocalInodeOps = {
+    readAsync: localFileReadAsync,
+    writeAsync: localFileWriteAsync,
+    close: localFileClose
+};
+
+// GitHub file system read function
+function githubFileReadAsync(fileData, fileOffset, buf, off, len, flags, cb) {
+    if (fileOffset >= fileData.length) {
+        return cb(0);
+    }
+
+    if (fileOffset + len > fileData.length) {
+        len = fileData.length - fileOffset;
+    }
+
+    if (len <= 0) {
+        return cb(0);
+    }
+
+    // Use the direct data that was loaded from GitHub
+    if (fileData.data) {
+        for (let i = 0; i < len; i++) {
+            buf[off + i] = fileData.data[fileOffset + i];
+        }
+        return cb(len);
+    }
+
+    // If data is not available, return 0 (this shouldn't happen)
+    console.error('GitHub file data not available');
+    return cb(0);
+}
+
+// GitHub file system operations
+function githubStatAsync(mp, path, fileRef, cb) {
+    // Remove the mount point prefix to get the GitHub path
+    const githubPath = path === '' || path === '/' ? '' : path.substring(1);
+
+    // Handle root directory
+    if (githubPath === '') {
+        fileRef.inodeId = Math.floor(Math.random() * 1000000);
+        fileRef.uid = 0;
+        fileRef.gid = 0;
+        fileRef.permType = CheerpJFileData.S_IFDIR | 0o777;
+        fileRef.lastModified = Math.floor(Date.now() / 1000);
+        return cb();
+    }
+
+    // Check if this is an owner directory (e.g., "amun-ai")
+    const parts = githubPath.split('/').filter(p => p);
+    if (parts.length === 1) {
+        const owner = parts[0];
+        // Check if we have any repos for this owner
+        const hasRepos = Array.from(window.githubFS.repos.keys()).some(
+            mountPath => mountPath.startsWith(`${owner}/`)
+        );
+        if (hasRepos) {
+            fileRef.inodeId = Math.floor(Math.random() * 1000000);
+            fileRef.uid = 0;
+            fileRef.gid = 0;
+            fileRef.permType = CheerpJFileData.S_IFDIR | 0o777;
+            fileRef.lastModified = Math.floor(Date.now() / 1000);
+            return cb();
+        } else {
+            fileRef.permType = 0;
+            return cb();
+        }
+    }
+
+    // Check if this is a repo directory (e.g., "amun-ai/hypha")
+    if (parts.length === 2) {
+        const mountPath = `${parts[0]}/${parts[1]}`;
+        if (window.githubFS.repos.has(mountPath)) {
+            fileRef.inodeId = Math.floor(Math.random() * 1000000);
+            fileRef.uid = 0;
+            fileRef.gid = 0;
+            fileRef.permType = CheerpJFileData.S_IFDIR | 0o777;
+            fileRef.lastModified = Math.floor(Date.now() / 1000);
+            return cb();
+        } else {
+            fileRef.permType = 0;
+            return cb();
+        }
+    }
+
+    // For files within repos, check via GitHub API
+    window.githubFS.getFileInfo(githubPath).then(info => {
+        if (!info) {
+            // File/directory doesn't exist
+            fileRef.permType = 0;
+            return cb();
+        }
+
+        fileRef.inodeId = Math.floor(Math.random() * 1000000);
+        fileRef.uid = 0;
+        fileRef.gid = 0;
+        fileRef.lastModified = Math.floor(Date.now() / 1000);
+
+        if (info.type === 'directory') {
+            fileRef.permType = CheerpJFileData.S_IFDIR | 0o777;
+        } else {
+            fileRef.permType = CheerpJFileData.S_IFREG | 0o444; // Read-only
+            fileRef.fileLength = info.size;
+        }
+
+        return cb();
+    }).catch(err => {
+        console.error('Error getting GitHub file info:', err);
+        fileRef.permType = 0;
+        return cb();
+    });
+}
+
+function githubListAsync(mp, path, fileRef, cb) {
+    const githubPath = path === '' || path === '/' ? '' : path.substring(1);
+
+    console.log('[githubListAsync] path:', path, 'githubPath:', githubPath);
+    console.log('[githubListAsync] mounted repos:', Array.from(window.githubFS.repos.keys()));
+
+    // Handle root directory - list all owners
+    if (githubPath === '') {
+        const owners = Array.from(window.githubFS.repos.keys()).map(mountPath => {
+            const [owner] = mountPath.split('/');
+            return owner;
+        }).filter((v, i, a) => a.indexOf(v) === i); // unique owners
+
+        console.log('[githubListAsync] listing owners:', owners);
+        console.log('[githubListAsync] fileRef before push:', fileRef, 'length:', fileRef.length);
+        for (const owner of owners) {
+            console.log('[githubListAsync] pushing owner:', owner);
+            fileRef.push(owner);
+        }
+        console.log('[githubListAsync] fileRef after push:', fileRef, 'length:', fileRef.length);
+        return cb();
+    }
+
+    // Check if this is an owner directory (e.g., "amun-ai")
+    const parts = githubPath.split('/').filter(p => p);
+    console.log('[githubListAsync] parts:', parts, 'length:', parts.length);
+
+    if (parts.length === 1) {
+        const owner = parts[0];
+        // List all repos@branches for this owner (format: repo@branch)
+        const repos = Array.from(window.githubFS.repos.keys())
+            .filter(mountPath => mountPath.startsWith(`${owner}/`))
+            .map(mountPath => {
+                // Extract repo@branch from owner/repo@branch
+                return mountPath.substring(owner.length + 1);
+            });
+
+        console.log('[githubListAsync] listing repos for owner', owner, ':', repos);
+        console.log('[githubListAsync] fileRef before push:', fileRef, 'length:', fileRef.length);
+        for (const repo of repos) {
+            console.log('[githubListAsync] pushing repo:', repo);
+            fileRef.push(repo);
+        }
+        console.log('[githubListAsync] fileRef after push:', fileRef, 'length:', fileRef.length);
+        return cb();
+    }
+
+    // For repo contents, use the GitHub API
+    console.log('[githubListAsync] fetching from GitHub API for path:', githubPath);
+    console.log('[githubListAsync] fileRef before push:', fileRef, 'length:', fileRef.length);
+    window.githubFS.listDirectory(githubPath).then(entries => {
+        console.log('[githubListAsync] GitHub API returned entries:', entries);
+        console.log('[githubListAsync] entries type:', typeof entries, 'isArray:', Array.isArray(entries));
+        for (const entry of entries) {
+            console.log('[githubListAsync] pushing entry:', entry, 'type:', typeof entry);
+            fileRef.push(entry);
+        }
+        console.log('[githubListAsync] fileRef after push:', fileRef, 'length:', fileRef.length);
+        console.log('[githubListAsync] calling callback');
+        return cb();
+    }).catch(err => {
+        console.error('[githubListAsync] Error listing GitHub directory:', err);
+        return cb();
+    });
+}
+
+function githubMakeFileData(mp, path, mode, uid, gid, cb) {
+    const githubPath = path === '' || path === '/' ? '' : path.substring(1);
+
+    console.log('[githubMakeFileData] path:', path, 'githubPath:', githubPath, 'mode:', mode);
+
+    // Handle root directory
+    if (githubPath === '') {
+        const fileData = new CheerpJFileData(
+            mp,
+            path,
+            0,
+            Math.floor(Math.random() * 1000000),
+            CheerpJFileData.S_IFDIR | 0o777,
+            Math.floor(Date.now() / 1000),
+            uid,
+            gid
+        );
+        fileData.mount = mp.inodeOps;
+        return cb(fileData);
+    }
+
+    // Check if this is an owner directory (e.g., "amun-ai")
+    const parts = githubPath.split('/').filter(p => p);
+    if (parts.length === 1) {
+        const owner = parts[0];
+        // Check if we have any repos for this owner
+        const hasRepos = Array.from(window.githubFS.repos.keys()).some(
+            mountPath => mountPath.startsWith(`${owner}/`)
+        );
+        if (hasRepos) {
+            console.log('[githubMakeFileData] creating virtual dir for owner:', owner);
+            const fileData = new CheerpJFileData(
+                mp,
+                path,
+                0,
+                Math.floor(Math.random() * 1000000),
+                CheerpJFileData.S_IFDIR | 0o777,
+                Math.floor(Date.now() / 1000),
+                uid,
+                gid
+            );
+            fileData.mount = mp.inodeOps;
+            return cb(fileData);
+        }
+    }
+
+    // Check if this is a repo directory (e.g., "amun-ai/hypha")
+    if (parts.length === 2) {
+        const mountPath = `${parts[0]}/${parts[1]}`;
+        if (window.githubFS.repos.has(mountPath)) {
+            console.log('[githubMakeFileData] creating virtual dir for repo:', mountPath);
+            const fileData = new CheerpJFileData(
+                mp,
+                path,
+                0,
+                Math.floor(Math.random() * 1000000),
+                CheerpJFileData.S_IFDIR | 0o777,
+                Math.floor(Date.now() / 1000),
+                uid,
+                gid
+            );
+            fileData.mount = mp.inodeOps;
+            return cb(fileData);
+        }
+    }
+
+    if (mode === "r") {
+        // Read mode - need to check if it's a file or directory first
+        window.githubFS.getFileInfo(githubPath).then(info => {
+            if (!info) {
+                // getFileInfo returned null - likely path without branch
+                // Default to directory for compatibility
+                console.warn('[githubMakeFileData] getFileInfo returned null for:', githubPath);
+                console.warn('[githubMakeFileData] This might be a path without branch - defaulting to directory');
+                console.warn('[githubMakeFileData] Update your URL to include branch: /github/owner/repo@main/...');
+
+                // Create directory file descriptor as fallback
+                const fileData = new CheerpJFileData(
+                    mp,
+                    path,
+                    0,
+                    Math.floor(Math.random() * 1000000),
+                    CheerpJFileData.S_IFDIR | 0o777,
+                    Math.floor(Date.now() / 1000),
+                    uid,
+                    gid
+                );
+                fileData.mount = mp.inodeOps;
+                return cb(fileData);
+            }
+
+            // If it's a directory, create a directory file descriptor
+            if (info.type === 'directory') {
+                console.log('[githubMakeFileData] creating directory for:', githubPath);
+                const fileData = new CheerpJFileData(
+                    mp,
+                    path,
+                    0,
+                    Math.floor(Math.random() * 1000000),
+                    CheerpJFileData.S_IFDIR | 0o777,
+                    Math.floor(Date.now() / 1000),
+                    uid,
+                    gid
+                );
+                fileData.mount = mp.inodeOps;
+                return cb(fileData);
+            }
+
+            // It's a file - fetch the content
+            return window.githubFS.getFileContent(githubPath).then(data => {
+                if (!data) {
+                    console.error('[githubMakeFileData] getFileContent returned null for:', githubPath);
+                    return cb(null);
+                }
+
+                const fileData = new CheerpJFileData(
+                    mp,
+                    path,
+                    data.length,
+                    Math.floor(Math.random() * 1000000),
+                    CheerpJFileData.S_IFREG | 0o444, // Read-only
+                    Math.floor(Date.now() / 1000),
+                    uid,
+                    gid
+                );
+
+                // Store the file data
+                fileData.data = data;
+
+                // Use GitHub read function
+                fileData.mount = mp.inodeOps;
+
+                return cb(fileData);
+            });
+        }).catch(err => {
+            console.error('Error fetching GitHub file:', err);
+            return cb(null);
+        });
+        return;
+    } else if (mode === "w" || mode === "r+") {
+        // Write mode not supported for GitHub FS (read-only)
+        console.warn('Write mode not supported for /github (GitHub files are read-only)');
+        return cb(null);
+    }
+
+    return cb(null);
+}
+
+// GitHub file system operations
+var GitHubOps = {
+    statAsync: githubStatAsync,
+    listAsync: githubListAsync,
+    makeFileData: githubMakeFileData,
+    createDirAsync: null,
+    renameAsync: null,
+    linkAsync: null,
+    unlinkAsync: null
+};
+
+var GitHubInodeOps = {
+    readAsync: githubFileReadAsync,
+    writeAsync: null,
+    close: null
+};
+
+// Custom CheerpJFolder for local file system (drag-and-drop)
+// We create a folder object that matches the CheerpJFolder structure
+function CheerpJLocalFolder(mp) {
+    this.mountPoint = mp;
+    this.isSplit = false;
+    this.mountOps = LocalOps;
+    this.inodeOps = LocalInodeOps;
+    this.devId = 100; // Arbitrary device ID
+    this.fileCache = {};
+    this.cacheThreads = {};
+    this.inodeCache = [];
+}
+
+// Add the cache methods that CheerpJFolder has
+CheerpJLocalFolder.prototype.getCached = function(fileName) {
+    var c = this.fileCache;
+    if(!c.hasOwnProperty(fileName))
+        return null;
+    var inodeId = c[fileName];
+    var ret = this.inodeCache[inodeId];
+    return ret;
+};
+
+CheerpJLocalFolder.prototype.setCached = function(fileName, fileData) {
+    var c = this.fileCache;
+    var inodeId = fileData.inodeId;
+    c[fileName] = inodeId;
+    this.inodeCache[inodeId] = fileData;
+};
+
+CheerpJLocalFolder.prototype.clearCached = function(fileName) {
+    var c = this.fileCache;
+    if(c.hasOwnProperty(fileName)) {
+        delete c[fileName];
+    }
+};
+
+CheerpJLocalFolder.prototype.decRefCached = function(fileName, fileData) {
+    // No-op for local FS
+};
+
+// Create and apply patches for local file system (drag-and-drop)
+// This registers /local as a proper mount point
+function createLocalFileSystemPatches() {
+    // Add /local mount to the global cheerpjFSMounts array
+    // Insert before the root folder (which is always last)
+    const localFolder = new CheerpJLocalFolder("/local/");
+
+    // Find the index of the root folder
+    const rootIndex = cheerpjFSMounts.findIndex(m => m.mountPoint === "/");
+
+    if (rootIndex !== -1) {
+        // Insert before root
+        cheerpjFSMounts.splice(rootIndex, 0, localFolder);
+    } else {
+        // Root not found, just push (shouldn't happen)
+        cheerpjFSMounts.push(localFolder);
+    }
+
+    console.log('Local file system mount registered at /local/');
+}
+
+// Custom CheerpJFolder for GitHub file system
+function CheerpJGitHubFolder(mp) {
+    this.mountPoint = mp;
+    this.isSplit = false;
+    this.mountOps = GitHubOps;
+    this.inodeOps = GitHubInodeOps;
+    this.devId = 200; // Arbitrary device ID (different from local FS)
+    this.fileCache = {};
+    this.cacheThreads = {};
+    this.inodeCache = [];
+}
+
+// Add the cache methods that CheerpJFolder has
+CheerpJGitHubFolder.prototype.getCached = function(fileName) {
+    var c = this.fileCache;
+    if(!c.hasOwnProperty(fileName))
+        return null;
+    var inodeId = c[fileName];
+    var ret = this.inodeCache[inodeId];
+    return ret;
+};
+
+CheerpJGitHubFolder.prototype.setCached = function(fileName, fileData) {
+    var c = this.fileCache;
+    var inodeId = fileData.inodeId;
+    c[fileName] = inodeId;
+    this.inodeCache[inodeId] = fileData;
+};
+
+CheerpJGitHubFolder.prototype.clearCached = function(fileName) {
+    var c = this.fileCache;
+    if(c.hasOwnProperty(fileName)) {
+        delete c[fileName];
+    }
+};
+
+CheerpJGitHubFolder.prototype.decRefCached = function(fileName, fileData) {
+    // No-op for GitHub FS
+};
+
+// Create and apply patches for GitHub file system
+// This registers /github as a proper mount point
+function createGitHubFileSystemPatches() {
+    // Add /github mount to the global cheerpjFSMounts array
+    // Insert before the root folder (which is always last)
+    const githubFolder = new CheerpJGitHubFolder("/github/");
+
+    // Find the index of the root folder
+    const rootIndex = cheerpjFSMounts.findIndex(m => m.mountPoint === "/");
+
+    if (rootIndex !== -1) {
+        // Insert before root
+        cheerpjFSMounts.splice(rootIndex, 0, githubFolder);
+    } else {
+        // Root not found, just push (shouldn't happen)
+        cheerpjFSMounts.push(githubFolder);
+    }
+
+    console.log('GitHub file system mount registered at /github/');
+}
+
+// Initialize the handlers
+const nativeFS = new NativeFileSystemHandler();
+const localFS = new LocalFileSystemHandler();
+const githubFS = new GitHubFileSystemHandler();
+
+// Expose globally for access from other scripts
+window.nativeFS = nativeFS;
+window.localFS = localFS;
+window.githubFS = githubFS;
+
+// Export for use in other files
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = {
+        NativeFileSystemHandler,
+        LocalFileSystemHandler,
+        GitHubFileSystemHandler,
+        createNativeFileSystemPatches,
+        createLocalFileSystemPatches,
+        createGitHubFileSystemPatches,
+        nativeFS,
+        localFS,
+        githubFS
+    };
+} 
