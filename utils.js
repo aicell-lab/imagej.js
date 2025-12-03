@@ -127,57 +127,55 @@ class GitHubFileSystemHandler {
     this.repos = new Map(); // Map of mountPath -> {owner, repo, branch}
     this.fileCache = new Map(); // Cache for file contents
     this.directoryCache = new Map(); // Cache for directory listings
+    this.fileInfoCache = new Map(); // Cache for file metadata (positive results)
+    this.negativeCache = new Map(); // Cache for missing files (404/403 responses)
   }
 
-  async mountRepo(owner, repo, branch = 'main') {
-    const mountPath = `${owner}/${repo}`;
-
-    // Verify repo exists and get default branch if not specified
-    try {
-      const repoInfo = await fetch(`https://api.github.com/repos/${owner}/${repo}`);
-      if (!repoInfo.ok) {
-        throw new Error(`Failed to access repository ${owner}/${repo}`);
-      }
-      const repoData = await repoInfo.json();
-      const actualBranch = branch || repoData.default_branch || 'main';
-
-      this.repos.set(mountPath, { owner, repo, branch: actualBranch });
-      console.log(`Mounted GitHub repo: ${owner}/${repo} (branch: ${actualBranch}) at /github/${mountPath}`);
-      return mountPath;
-    } catch (err) {
-      console.error(`Error mounting GitHub repo ${owner}/${repo}:`, err);
-      throw err;
+  async mountRepo(owner, repo, branch) {
+    if (!branch) {
+      throw new Error('Branch must be explicitly specified. Use: mountRepo(owner, repo, branch)');
     }
+
+    const mountPath = `${owner}/${repo}/${branch}`;
+
+    // NO GitHub API calls - just mount directly
+    // We'll verify the repo exists on first file access
+    this.repos.set(mountPath, { owner, repo, branch });
+    console.log(`Mounted GitHub repo: ${owner}/${repo}@${branch} at /github/${mountPath}`);
+    return mountPath;
   }
 
   parseRepoFromPath(path) {
-    // Path format: owner/repo/... or just owner/repo
+    // Path format: owner/repo/branch/file/path
     const parts = path.split('/').filter(p => p);
-    if (parts.length < 2) return null;
+    if (parts.length < 3) return null;
 
     const owner = parts[0];
     const repo = parts[1];
-    const mountPath = `${owner}/${repo}`;
+    const branch = parts[2];
+    const mountPath = `${owner}/${repo}/${branch}`;
 
     if (!this.repos.has(mountPath)) {
       return null;
     }
 
-    const repoInfo = this.repos.get(mountPath);
-    const filePath = parts.slice(2).join('/');
+    const filePath = parts.slice(3).join('/');
 
     return {
       owner,
       repo,
-      branch: repoInfo.branch,
+      branch,
       filePath,
       mountPath
     };
   }
 
   async listDirectory(path) {
+    console.log('[listDirectory] Called with path:', path);
+
     const repoInfo = this.parseRepoFromPath(path);
     if (!repoInfo) {
+      console.log('[listDirectory] No repoInfo, handling special cases');
       // List mounted repos at root level
       if (!path || path === '') {
         return Array.from(this.repos.keys()).map(mountPath => {
@@ -186,76 +184,153 @@ class GitHubFileSystemHandler {
         }).filter((v, i, a) => a.indexOf(v) === i); // unique owners
       }
 
-      // List repos for a specific owner
-      const owner = path.split('/')[0];
-      return Array.from(this.repos.keys())
-        .filter(mountPath => mountPath.startsWith(`${owner}/`))
-        .map(mountPath => mountPath.split('/')[1]);
+      // Check if this is listing an owner (e.g., "oeway")
+      const parts = path.split('/').filter(p => p);
+      if (parts.length === 1) {
+        const owner = parts[0];
+        // List repos for this owner
+        return Array.from(this.repos.keys())
+          .filter(mountPath => mountPath.startsWith(`${owner}/`))
+          .map(mountPath => {
+            const p = mountPath.split('/');
+            return p[1]; // return repo name
+          })
+          .filter((v, i, a) => a.indexOf(v) === i); // unique
+      }
+
+      // Check if this is listing owner/repo (e.g., "oeway/imagej-js-env-demo")
+      if (parts.length === 2) {
+        const owner = parts[0];
+        const repo = parts[1];
+        // List branches for this repo
+        return Array.from(this.repos.keys())
+          .filter(mountPath => mountPath.startsWith(`${owner}/${repo}/`))
+          .map(mountPath => {
+            const p = mountPath.split('/');
+            return p[2]; // return branch name
+          });
+      }
+
+      return [];
     }
 
+    console.log('[listDirectory] repoInfo:', repoInfo);
     const cacheKey = `${repoInfo.owner}/${repoInfo.repo}/${repoInfo.branch}/${repoInfo.filePath}`;
 
     // Check cache first
     if (this.directoryCache.has(cacheKey)) {
+      console.log('[listDirectory] Returning cached result for:', cacheKey);
       return this.directoryCache.get(cacheKey);
     }
 
+    // Try to use index.list file first (avoids GitHub API calls)
     try {
-      const url = `https://api.github.com/repos/${repoInfo.owner}/${repoInfo.repo}/contents/${repoInfo.filePath}?ref=${repoInfo.branch}`;
-      const response = await fetch(url);
+      const indexListPath = `${path}/index.list`;
+      console.log('[listDirectory] Checking for index.list at:', indexListPath);
 
-      if (!response.ok) {
-        throw new Error(`GitHub API error: ${response.status}`);
+      const indexContent = await this.getFileContent(indexListPath);
+      if (indexContent) {
+        // Parse index.list - it's a text file with one entry per line
+        const text = new TextDecoder().decode(indexContent);
+        const entries = text.split('\n')
+          .map(line => line.trim())
+          .filter(line => line.length > 0); // Remove empty lines
+
+        console.log('[listDirectory] Using index.list with', entries.length, 'entries');
+
+        // Cache the result
+        this.directoryCache.set(cacheKey, entries);
+        return entries;
       }
-
-      const data = await response.json();
-
-      if (!Array.isArray(data)) {
-        throw new Error('Not a directory');
-      }
-
-      const entries = data.map(item => item.name);
-
-      // Cache the result
-      this.directoryCache.set(cacheKey, entries);
-
-      return entries;
-    } catch (err) {
-      console.error('Error listing GitHub directory:', cacheKey, err);
-      throw err;
+    } catch (indexErr) {
+      // index.list doesn't exist or couldn't be read
+      console.warn('[listDirectory] No index.list found at:', `${path}/index.list`);
+      console.warn('[listDirectory] Directory listing requires index.list file to avoid GitHub API calls');
+      console.warn('[listDirectory] See INDEX_LIST_README.md for how to create index.list files');
     }
+
+    // NO fallback to GitHub API - return empty array
+    // This forces users to provide index.list files for directories
+    console.log('[listDirectory] Returning empty array (no index.list)');
+    return [];
   }
 
   async getFileInfo(path) {
     const repoInfo = this.parseRepoFromPath(path);
     if (!repoInfo) return null;
 
-    try {
-      const url = `https://api.github.com/repos/${repoInfo.owner}/${repoInfo.repo}/contents/${repoInfo.filePath}?ref=${repoInfo.branch}`;
-      const response = await fetch(url);
+    const cacheKey = `${repoInfo.owner}/${repoInfo.repo}/${repoInfo.branch}/${repoInfo.filePath}`;
 
-      if (!response.ok) {
+    // Check positive cache first (file exists)
+    if (this.fileInfoCache.has(cacheKey)) {
+      return this.fileInfoCache.get(cacheKey);
+    }
+
+    // Check negative cache (file doesn't exist) - cache for 60 seconds
+    if (this.negativeCache.has(cacheKey)) {
+      const cachedTime = this.negativeCache.get(cacheKey);
+      if (Date.now() - cachedTime < 60000) {
         return null;
       }
+      this.negativeCache.delete(cacheKey);
+    }
 
-      const data = await response.json();
-
-      if (Array.isArray(data)) {
-        // It's a directory
-        return {
+    // NO GitHub API - try to determine file vs directory heuristically
+    try {
+      // Check if it's likely a directory by checking for index.list
+      if (!repoInfo.filePath || repoInfo.filePath === '') {
+        // Root of repo is a directory
+        const info = {
           type: 'directory',
           size: 0
         };
+        this.fileInfoCache.set(cacheKey, info);
+        return info;
       }
 
-      // It's a file
-      return {
+      // If path doesn't have an extension, might be a directory
+      // Check for index.list to confirm
+      const hasExtension = /\.[^/.]+$/.test(repoInfo.filePath);
+      if (!hasExtension) {
+        try {
+          const indexListPath = `${path}/index.list`;
+          const indexContent = await this.getFileContent(indexListPath);
+          if (indexContent) {
+            // Has index.list, so it's a directory
+            const info = {
+              type: 'directory',
+              size: 0
+            };
+            this.fileInfoCache.set(cacheKey, info);
+            return info;
+          }
+        } catch (e) {
+          // No index.list, assume directory anyway
+        }
+
+        const info = {
+          type: 'directory',
+          size: 0
+        };
+        this.fileInfoCache.set(cacheKey, info);
+        return info;
+      }
+
+      // Has extension, assume it's a file
+      // We'll verify when actually reading it
+      const info = {
         type: 'file',
-        size: data.size,
-        downloadUrl: data.download_url || `https://raw.githubusercontent.com/${repoInfo.owner}/${repoInfo.repo}/${repoInfo.branch}/${repoInfo.filePath}`
+        size: 0, // Unknown size without API call
+        downloadUrl: `https://raw.githubusercontent.com/${repoInfo.owner}/${repoInfo.repo}/${repoInfo.branch}/${repoInfo.filePath}`
       };
+
+      // Cache the positive result
+      this.fileInfoCache.set(cacheKey, info);
+      return info;
     } catch (err) {
       console.error('Error getting GitHub file info:', path, err);
+      // Cache network errors as negative results
+      this.negativeCache.set(cacheKey, Date.now());
       return null;
     }
   }
@@ -1305,31 +1380,56 @@ function githubMakeFileData(mp, path, mode, uid, gid, cb) {
     }
 
     if (mode === "r") {
-        // Read mode - fetch file from GitHub
-        window.githubFS.getFileContent(githubPath).then(data => {
-            if (!data) {
-                console.error('[githubMakeFileData] getFileContent returned null for:', githubPath);
+        // Read mode - need to check if it's a file or directory first
+        window.githubFS.getFileInfo(githubPath).then(info => {
+            if (!info) {
+                console.error('[githubMakeFileData] getFileInfo returned null for:', githubPath);
                 return cb(null);
             }
 
-            const fileData = new CheerpJFileData(
-                mp,
-                path,
-                data.length,
-                Math.floor(Math.random() * 1000000),
-                CheerpJFileData.S_IFREG | 0o444, // Read-only
-                Math.floor(Date.now() / 1000),
-                uid,
-                gid
-            );
+            // If it's a directory, create a directory file descriptor
+            if (info.type === 'directory') {
+                console.log('[githubMakeFileData] creating directory for:', githubPath);
+                const fileData = new CheerpJFileData(
+                    mp,
+                    path,
+                    0,
+                    Math.floor(Math.random() * 1000000),
+                    CheerpJFileData.S_IFDIR | 0o777,
+                    Math.floor(Date.now() / 1000),
+                    uid,
+                    gid
+                );
+                fileData.mount = mp.inodeOps;
+                return cb(fileData);
+            }
 
-            // Store the file data
-            fileData.data = data;
+            // It's a file - fetch the content
+            return window.githubFS.getFileContent(githubPath).then(data => {
+                if (!data) {
+                    console.error('[githubMakeFileData] getFileContent returned null for:', githubPath);
+                    return cb(null);
+                }
 
-            // Use GitHub read function
-            fileData.mount = mp.inodeOps;
+                const fileData = new CheerpJFileData(
+                    mp,
+                    path,
+                    data.length,
+                    Math.floor(Math.random() * 1000000),
+                    CheerpJFileData.S_IFREG | 0o444, // Read-only
+                    Math.floor(Date.now() / 1000),
+                    uid,
+                    gid
+                );
 
-            return cb(fileData);
+                // Store the file data
+                fileData.data = data;
+
+                // Use GitHub read function
+                fileData.mount = mp.inodeOps;
+
+                return cb(fileData);
+            });
         }).catch(err => {
             console.error('Error fetching GitHub file:', err);
             return cb(null);

@@ -408,21 +408,22 @@ async function parseAndMountGitHub() {
         return;
     }
 
-    // Parse mount parameter format: github:owner/repo or github:owner/repo@branch
+    // Parse mount parameter format: github:owner/repo@branch (branch is required now)
     if (mountParam.startsWith('github:')) {
         const repoSpec = mountParam.substring('github:'.length);
         const [repoPath, branch] = repoSpec.split('@');
         const [owner, repo] = repoPath.split('/');
 
-        if (!owner || !repo) {
-            console.error('Invalid GitHub mount format. Use: ?mount=github:owner/repo or ?mount=github:owner/repo@branch');
+        if (!owner || !repo || !branch) {
+            console.error('Invalid GitHub mount format. Branch is required! Use: ?mount=github:owner/repo@branch');
+            console.error('Example: ?mount=github:oeway/imagej-js-env-demo@main');
             return;
         }
 
         try {
-            console.log(`Mounting GitHub repository: ${owner}/${repo}${branch ? `@${branch}` : ''}`);
+            console.log(`Mounting GitHub repository: ${owner}/${repo}@${branch}`);
             await window.githubFS.mountRepo(owner, repo, branch);
-            console.log(`Successfully mounted ${owner}/${repo} at /github/${owner}/${repo}`);
+            console.log(`Successfully mounted ${owner}/${repo}@${branch} at /github/${owner}/${repo}/${branch}`);
 
             // Update test button text
             const testBtnText = document.getElementById('testBtnText');
