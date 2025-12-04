@@ -1,4 +1,5 @@
 # Dependencies
+lib/ImageJ2/
 ImageJ-1.*/
 node_modules/
 package-lock.json
