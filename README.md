@@ -4,6 +4,9 @@
 
 ImageJ.JS brings the full power of ImageJ to the web, enabling professional image analysis on any device with a modern browser. Originally created during a hackathon in Dresden and evolved through the ImJoy project, ImageJ.JS now serves **1,000-1,500 unique users daily** for scientific image analysis, education, and research.
 
+**This is an improved version over our previous version served at https://ij.imjoy.io, the new version is now available at https://ij.aicell.io**
+
+
 ![ImageJ.JS Screenshot](static/imagej.js-screenshot.png)
 
 ---
@@ -52,7 +55,7 @@ Unlike other web apps that force you to upload files, ImageJ.JS can access your 
 Create a shareable link that loads ImageJ with your custom plugins pre-installed:
 
 ```
-https://ij.imjoy.io/?mount=github:yourname/yourplugins@main&plugins.dir=/github/yourname/yourplugins@main/plugins
+https://ij.aicell.io/?mount=github:yourname/yourplugins@main&plugins.dir=/github/yourname/yourplugins@main/plugins
 ```
 
 Anyone who opens this link gets ImageJ with your plugins ready to use!
@@ -86,7 +89,7 @@ Don't want to mount folders? Just drag files or folders from your computer direc
 Process images directly from public GitHub repositories without downloading:
 
 ```
-https://ij.imjoy.io/?mount=github:owner/repo@main
+https://ij.aicell.io/?mount=github:owner/repo@main
 ```
 
 Files appear at `/github/owner/repo/` in ImageJ's file dialogs.
@@ -120,7 +123,7 @@ Files appear at `/github/owner/repo/` in ImageJ's file dialogs.
 
 ### Example 1: Teaching a Microscopy Course
 ```
-https://ij.imjoy.io/?mount=github:university/microscopy-course@2024&plugins.dir=/github/university/microscopy-course@2024/plugins
+https://ij.aicell.io/?mount=github:university/microscopy-course@2024&plugins.dir=/github/university/microscopy-course@2024/plugins
 ```
 - Repository contains sample images and custom plugins for exercises
 - Students click the link and immediately have ImageJ ready
@@ -129,7 +132,7 @@ https://ij.imjoy.io/?mount=github:university/microscopy-course@2024&plugins.dir=
 
 ### Example 2: Lab Image Analysis
 ```
-https://ij.imjoy.io/
+https://ij.aicell.io/
 ```
 1. Mount your lab's shared network folder (Chrome/Edge)
 2. Process images with full file system integration
@@ -138,7 +141,7 @@ https://ij.imjoy.io/
 
 ### Example 3: Conference Demonstration
 ```
-https://ij.imjoy.io/?mount=github:yourlab/paper-2024@main&plugins.dir=/github/yourlab/paper-2024@main/plugins
+https://ij.aicell.io/?mount=github:yourlab/paper-2024@main&plugins.dir=/github/yourlab/paper-2024@main/plugins
 ```
 - Share this URL in your presentation
 - Audience can reproduce your analysis during the talk
@@ -151,14 +154,14 @@ https://ij.imjoy.io/?mount=github:yourlab/paper-2024@main&plugins.dir=/github/yo
 
 | Feature | Description | Browser Support |
 |---------|-------------|-----------------|
-| **Native Folder Access** | Read/write files directly from your computer | Chrome, Edge |
 | **Drag & Drop** | Drop files/folders into browser to process | All browsers |
 | **GitHub Integration** | Access files and plugins from GitHub repos | All browsers |
 | **Plugin Support** | Load any ImageJ/Fiji plugin without modification | All browsers |
 | **AI Assistant Integration** | Connect to ChatGPT, Claude, etc. via MCP | All browsers |
-| **Large Files** | No file size limits with mounted folders | Chrome, Edge |
+| **Large Files** | No file size limits with mounted folders | All browsers |
 | **Mobile Support** | Full ImageJ interface on tablets/iPads | All browsers |
 | **Offline Capable** | IndexedDB storage for offline work | All browsers |
+| **Native Folder Access** | Read/write files directly from your computer | Chrome, Edge |
 
 ---
 
@@ -218,7 +221,7 @@ Deep integration with CheerpJ internals:
 ## 🚦 Getting Started
 
 ### Quick Start (Users)
-1. Visit **https://ij.imjoy.io/** (or run locally)
+1. Visit **https://ij.aicell.io/** (or run locally)
 2. ImageJ loads automatically
 3. Start analyzing images!
 
@@ -227,7 +230,7 @@ Deep integration with CheerpJ internals:
 2. Add `index.list` files ([see guide](imagej-examples/README.md#step-2-generate-indexlist-files))
 3. Share this URL:
    ```
-   https://ij.imjoy.io/?mount=github:you/repo@main&plugins.dir=/github/you/repo@main/plugins
+   https://ij.aicell.io/?mount=github:you/repo@main&plugins.dir=/github/you/repo@main/plugins
    ```
 
 ### Quick Start (Developers)
@@ -266,8 +269,6 @@ open http://localhost:8000
 
 ### Blog Posts
 - [**Original Journey: CheerpJ 3 to 4.x**](https://aicell.io/post/improving-imagej.js/) - Early development story
-- [**GitHub File System Design**](INDEX_LIST_V2_FORMAT.md) - `index.list` specification
-- [**HEAD Request Optimization**](HEAD_REQUEST_OPTIMIZATION.md) - Zero API architecture
 
 ---
 
