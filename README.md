@@ -82,6 +82,7 @@ Connect ImageJ.JS to AI assistants (ChatGPT, Claude, etc.) via the **Model Conte
 4. AI generates and runs the macro automatically
 5. View results and refine as needed
 
+
 ### 5. **Drag and Drop Files**
 Don't want to mount folders? Just drag files or folders from your computer directly into the browser window. They'll be available instantly at `/local/` for processing.
 
@@ -95,6 +96,17 @@ https://ij.aicell.io/?mount=github:owner/repo@main
 Files appear at `/github/owner/repo/` in ImageJ's file dialogs.
 
 **Perfect for:** Shared datasets, collaborative projects, public image databases, reproducible research
+
+### 7. **Export and Import ROIs as GeoJSON**
+Seamlessly convert ImageJ ROIs to/from standard GeoJSON format:
+- 📤 **Export ROIs** - Convert any ImageJ ROI (rectangle, polygon, ellipse, etc.) to GeoJSON
+- 📥 **Import ROIs** - Load ROIs from GeoJSON into ImageJ and ROI Manager
+- 🔄 **Interoperability** - Integrate with web mapping tools, QuPath, spatial databases
+- 🤖 **AI Integration** - Let AI assistants create and modify ROIs using standard formats
+
+**Supported geometry types:** Point, MultiPoint, LineString, Polygon, MultiPolygon, GeometryCollection
+
+[**Learn more about ROI ↔ GeoJSON conversion →**](ROI_GEOJSON_CONVERSION.md)
 
 ---
 
@@ -158,6 +170,7 @@ https://ij.aicell.io/?mount=github:yourlab/paper-2024@main&plugins.dir=/github/y
 | **GitHub Integration** | Access files and plugins from GitHub repos | All browsers |
 | **Plugin Support** | Load any ImageJ/Fiji plugin without modification | All browsers |
 | **AI Assistant Integration** | Connect to ChatGPT, Claude, etc. via MCP | All browsers |
+| **ROI ↔ GeoJSON** | Export/import ROIs in standard GeoJSON format | All browsers |
 | **Large Files** | No file size limits with mounted folders | All browsers |
 | **Mobile Support** | Full ImageJ interface on tablets/iPads | All browsers |
 | **Offline Capable** | IndexedDB storage for offline work | All browsers |
@@ -201,11 +214,13 @@ Rich API for AI assistants and remote control:
 - `saveExample(path, content)` - Contribute new examples
 
 **ROI & Analysis Tools:**
-- `getRois()` - Get ROIs as GeoJSON FeatureCollection
-- `getResultsTable()` - Extract measurement tables
-- `readFiles(pattern)` - List and read files
+- `getRoisAsGeoJson()` - Export ROIs as GeoJSON FeatureCollection
+- `setRoisFromGeoJson()` - Import ROIs from GeoJSON format
+- `getTextFromTable()` - Extract measurement tables as text
+- `listFiles(pattern)` - List and read files from virtual file system
 
 [**See full MCP API documentation →**](imagej-examples/USAGE.md)
+[**ROI ↔ GeoJSON Conversion Guide →**](ROI_GEOJSON_CONVERSION.md)
 
 #### 4. CheerpJ Internal Patching
 Deep integration with CheerpJ internals:
@@ -259,6 +274,7 @@ open http://localhost:8000
 ### User Guides
 - [**Plugin Repository Setup**](imagej-examples/README.md#-hosting-your-own-plugin-repository) - Host plugins on GitHub
 - [**Knowledge Base Examples**](imagej-examples/README.md) - Working code examples
+- [**ROI ↔ GeoJSON Conversion**](ROI_GEOJSON_CONVERSION.md) - Export/import ROIs in standard format
 - [**Browser Compatibility**](#browser-compatibility) - What works where
 
 ### Developer Guides
@@ -695,7 +711,7 @@ imagej.js2/
 - MCP service registration
 - Remote macro execution
 - Screenshot capture
-- ROI GeoJSON conversion
+- ROI ↔ GeoJSON bidirectional conversion
 - Knowledge base tools
 - Results table extraction
 

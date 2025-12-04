@@ -695,6 +695,91 @@ COMMON PATTERNS FOR JAVASCRIPT-JAVA INTERACTION:
                 }
             }
         }
+    },
+
+    setRoisFromGeoJson: {
+        name: "setRoisFromGeoJson",
+        description: "Set ROIs from GeoJSON format. Converts GeoJSON features to ImageJ ROIs and adds them to the ROI Manager and/or sets them on the active image.",
+        parameters: {
+            type: "object",
+            properties: {
+                geojson: {
+                    type: "object",
+                    description: "GeoJSON FeatureCollection or single Feature containing ROI geometries"
+                },
+                target: {
+                    type: "string",
+                    enum: ["current", "manager", "both"],
+                    description: "Where to add ROIs: 'current' sets last ROI on active image, 'manager' adds all to ROI Manager, 'both' does both",
+                    default: "both"
+                },
+                clearExisting: {
+                    type: "boolean",
+                    description: "Whether to clear existing ROIs in ROI Manager before adding new ones",
+                    default: false
+                }
+            },
+            required: ["geojson"]
+        },
+        returns: {
+            type: "object",
+            properties: {
+                success: {
+                    type: "boolean",
+                    description: "Whether ROIs were set successfully"
+                },
+                count: {
+                    type: "integer",
+                    description: "Number of ROIs created"
+                },
+                error: {
+                    type: "string",
+                    description: "Error message if setting failed"
+                }
+            }
+        }
+    },
+
+    getSummary: {
+        name: "getSummary",
+        description: "Get a comprehensive summary of the current ImageJ state and environment for AI agents to understand the context. Returns information about version, open windows, images, ROIs, tables, logs, and mounted file systems.",
+        parameters: {
+            type: "object",
+            properties: {
+                includeLog: {
+                    type: "boolean",
+                    description: "Include recent log entries (last 20 lines)",
+                    default: true
+                },
+                includeFileSystem: {
+                    type: "boolean",
+                    description: "Include information about mounted file systems",
+                    default: true
+                }
+            },
+            required: []
+        },
+        returns: {
+            type: "object",
+            properties: {
+                success: {
+                    type: "boolean",
+                    description: "Whether the summary was retrieved successfully"
+                },
+                summary: {
+                    type: "string",
+                    description: "Human-readable text summary of the current ImageJ state"
+                },
+                data: {
+                    type: "object",
+                    description: "Structured data about the ImageJ state"
+                },
+                error: {
+                    type: "string",
+                    description: "Error message if summary retrieval failed"
+                }
+            }
+        }
     }
 };
 
@@ -1126,6 +1211,236 @@ async function floatPolygonToGeoJson(floatPolygon, closePolygon = true) {
         console.error('Error converting FloatPolygon:', error);
         return null;
     }
+}
+
+// Helper function to convert GeoJSON geometry to ImageJ ROI
+async function geoJsonToRoi(feature) {
+    try {
+        if (!feature || !feature.geometry) {
+            throw new Error('Invalid feature: missing geometry');
+        }
+
+        const geometry = feature.geometry;
+        const properties = feature.properties || {};
+        const name = properties.name || 'Unnamed';
+
+        // Get ROI classes
+        const Roi = await window.lib.ij.gui.Roi;
+        const PointRoi = await window.lib.ij.gui.PointRoi;
+        const Line = await window.lib.ij.gui.Line;
+        const PolygonRoi = await window.lib.ij.gui.PolygonRoi;
+        const OvalRoi = await window.lib.ij.gui.OvalRoi;
+        const ShapeRoi = await window.lib.ij.gui.ShapeRoi;
+
+        let roi = null;
+
+        switch (geometry.type) {
+            case 'Point': {
+                // Single point
+                const [x, y] = geometry.coordinates;
+                const xPoints = [x];
+                const yPoints = [y];
+                roi = await new PointRoi(xPoints, yPoints, 1);
+                break;
+            }
+
+            case 'MultiPoint': {
+                // Multiple points
+                const coordinates = geometry.coordinates;
+                const xPoints = coordinates.map(coord => coord[0]);
+                const yPoints = coordinates.map(coord => coord[1]);
+                roi = await new PointRoi(xPoints, yPoints, coordinates.length);
+                break;
+            }
+
+            case 'LineString': {
+                // Line or polyline
+                const coordinates = geometry.coordinates;
+                if (coordinates.length === 2) {
+                    // Simple line
+                    const [x1, y1] = coordinates[0];
+                    const [x2, y2] = coordinates[1];
+                    roi = await new Line(x1, y1, x2, y2);
+                } else {
+                    // Polyline
+                    const xPoints = coordinates.map(coord => coord[0]);
+                    const yPoints = coordinates.map(coord => coord[1]);
+                    const nPoints = coordinates.length;
+                    roi = await new PolygonRoi(xPoints, yPoints, nPoints, Roi.POLYLINE);
+                }
+                break;
+            }
+
+            case 'Polygon': {
+                // Polygon (first ring is exterior, rest are holes - we'll use first ring only for now)
+                const rings = geometry.coordinates;
+                if (rings.length === 0) {
+                    throw new Error('Polygon has no rings');
+                }
+
+                const exteriorRing = rings[0];
+                // Remove last point if it's a duplicate of the first (GeoJSON spec requires closing)
+                const coordinates = exteriorRing.slice(0, -1);
+
+                const xPoints = coordinates.map(coord => coord[0]);
+                const yPoints = coordinates.map(coord => coord[1]);
+                const nPoints = coordinates.length;
+
+                // Check if it's a rectangle (4 points with right angles)
+                if (nPoints === 4) {
+                    const minX = Math.min(...xPoints);
+                    const maxX = Math.max(...xPoints);
+                    const minY = Math.min(...yPoints);
+                    const maxY = Math.max(...yPoints);
+
+                    // Check if all points lie on the rectangle edges
+                    const isRect = xPoints.every((x, i) =>
+                        (x === minX || x === maxX) && (yPoints[i] === minY || yPoints[i] === maxY)
+                    );
+
+                    if (isRect && properties.shape !== 'ellipse') {
+                        // Create rectangle ROI
+                        roi = await new Roi(minX, minY, maxX - minX, maxY - minY);
+                    } else {
+                        // Create polygon ROI
+                        roi = await new PolygonRoi(xPoints, yPoints, nPoints, Roi.POLYGON);
+                    }
+                } else if (properties.shape === 'ellipse') {
+                    // Create oval ROI from bounding box
+                    const minX = Math.min(...xPoints);
+                    const maxX = Math.max(...xPoints);
+                    const minY = Math.min(...yPoints);
+                    const maxY = Math.max(...yPoints);
+                    roi = await new OvalRoi(minX, minY, maxX - minX, maxY - minY);
+                } else {
+                    // Create polygon ROI
+                    roi = await new PolygonRoi(xPoints, yPoints, nPoints, Roi.POLYGON);
+                }
+                break;
+            }
+
+            case 'MultiPolygon': {
+                // Multiple polygons - combine into ShapeRoi
+                const polygons = geometry.coordinates;
+                const rois = [];
+
+                for (const polygonRings of polygons) {
+                    if (polygonRings.length === 0) continue;
+
+                    const exteriorRing = polygonRings[0];
+                    const coordinates = exteriorRing.slice(0, -1);
+
+                    const xPoints = coordinates.map(coord => coord[0]);
+                    const yPoints = coordinates.map(coord => coord[1]);
+                    const nPoints = coordinates.length;
+
+                    const polygonRoi = await new PolygonRoi(xPoints, yPoints, nPoints, Roi.POLYGON);
+                    rois.push(polygonRoi);
+                }
+
+                if (rois.length === 1) {
+                    roi = rois[0];
+                } else if (rois.length > 1) {
+                    // Combine using ShapeRoi
+                    roi = await new ShapeRoi(rois[0]);
+                    for (let i = 1; i < rois.length; i++) {
+                        const shapeRoi = await new ShapeRoi(rois[i]);
+                        roi = await roi.or(shapeRoi);
+                    }
+                }
+                break;
+            }
+
+            case 'GeometryCollection': {
+                // Multiple geometries - convert each and combine
+                const geometries = geometry.geometries;
+                const rois = [];
+
+                for (const geom of geometries) {
+                    const subFeature = { type: 'Feature', geometry: geom, properties: {} };
+                    const subRoi = await geoJsonToRoi(subFeature);
+                    if (subRoi) {
+                        rois.push(subRoi);
+                    }
+                }
+
+                if (rois.length === 1) {
+                    roi = rois[0];
+                } else if (rois.length > 1) {
+                    // Combine using ShapeRoi
+                    roi = await new ShapeRoi(rois[0]);
+                    for (let i = 1; i < rois.length; i++) {
+                        const shapeRoi = await new ShapeRoi(rois[i]);
+                        roi = await roi.or(shapeRoi);
+                    }
+                }
+                break;
+            }
+
+            default:
+                throw new Error(`Unsupported geometry type: ${geometry.type}`);
+        }
+
+        if (roi) {
+            // Set ROI name
+            await roi.setName(name);
+
+            // Set ROI color if specified in properties
+            if (properties.strokeColor) {
+                try {
+                    const Color = await window.lib.java.awt.Color;
+                    // Parse color (supports hex colors like "#FF0000" or rgb like "rgb(255,0,0)")
+                    const color = parseColor(properties.strokeColor);
+                    if (color) {
+                        const javaColor = await new Color(color.r, color.g, color.b);
+                        await roi.setStrokeColor(javaColor);
+                    }
+                } catch (colorError) {
+                    console.warn('Failed to set ROI color:', colorError);
+                }
+            }
+        }
+
+        return roi;
+
+    } catch (error) {
+        console.error('Error converting GeoJSON to ROI:', error);
+        throw error;
+    }
+}
+
+// Helper function to parse color strings
+function parseColor(colorStr) {
+    if (!colorStr) return null;
+
+    // Handle hex colors (#RRGGBB or #RGB)
+    if (colorStr.startsWith('#')) {
+        const hex = colorStr.substring(1);
+        if (hex.length === 3) {
+            // #RGB -> #RRGGBB
+            const r = parseInt(hex[0] + hex[0], 16);
+            const g = parseInt(hex[1] + hex[1], 16);
+            const b = parseInt(hex[2] + hex[2], 16);
+            return { r, g, b };
+        } else if (hex.length === 6) {
+            const r = parseInt(hex.substring(0, 2), 16);
+            const g = parseInt(hex.substring(2, 4), 16);
+            const b = parseInt(hex.substring(4, 6), 16);
+            return { r, g, b };
+        }
+    }
+
+    // Handle rgb(r, g, b) format
+    const rgbMatch = colorStr.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/);
+    if (rgbMatch) {
+        return {
+            r: parseInt(rgbMatch[1]),
+            g: parseInt(rgbMatch[2]),
+            b: parseInt(rgbMatch[3])
+        };
+    }
+
+    return null;
 }
 
 // Update UI status
@@ -2240,6 +2555,457 @@ async function connectToHypha() {
                     }
                 },
                 { __schema__: schemas.getRoisAsGeoJson }
+            ),
+
+            // Set ROIs from GeoJSON
+            setRoisFromGeoJson: Object.assign(
+                async ({ geojson, target = 'both', clearExisting = false }, context = null) => {
+                    console.log('🌐 Remote call: setRoisFromGeoJson(target=' + target + ', clearExisting=' + clearExisting + ')');
+
+                    try {
+                        const IJ = window.IJClass || window.IJ;
+                        if (!IJ) throw new Error('ImageJ not initialized');
+
+                        await IJ.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+                        await IJ.log('🌐 Remote API Call: setRoisFromGeoJson()');
+                        await IJ.log('Target: ' + target + ', Clear existing: ' + clearExisting);
+                        await IJ.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+
+                        // Parse GeoJSON
+                        let features = [];
+                        if (geojson.type === 'FeatureCollection') {
+                            features = geojson.features || [];
+                        } else if (geojson.type === 'Feature') {
+                            features = [geojson];
+                        } else {
+                            throw new Error('Invalid GeoJSON: must be FeatureCollection or Feature');
+                        }
+
+                        if (features.length === 0) {
+                            await IJ.log('⚠️  No features in GeoJSON');
+                            return {
+                                success: true,
+                                count: 0
+                            };
+                        }
+
+                        await IJ.log(`Converting ${features.length} GeoJSON feature(s) to ROIs...`);
+
+                        // Convert GeoJSON features to ROIs
+                        const rois = [];
+                        for (let i = 0; i < features.length; i++) {
+                            try {
+                                const roi = await geoJsonToRoi(features[i]);
+                                if (roi) {
+                                    rois.push(roi);
+                                    const roiName = await roi.getName();
+                                    await IJ.log(`  ✓ Converted: ${roiName}`);
+                                } else {
+                                    await IJ.log(`  ✗ Failed to convert feature ${i + 1}`);
+                                }
+                            } catch (convError) {
+                                console.error(`Error converting feature ${i}:`, convError);
+                                await IJ.log(`  ✗ Error converting feature ${i + 1}: ${convError.message}`);
+                            }
+                        }
+
+                        if (rois.length === 0) {
+                            throw new Error('Failed to convert any features to ROIs');
+                        }
+
+                        await IJ.log(`✓ Successfully converted ${rois.length} ROI(s)`);
+
+                        // Add ROIs to ROI Manager if requested
+                        if (target === 'manager' || target === 'both') {
+                            const RoiManager = await window.lib.ij.plugin.frame.RoiManager;
+                            let rm = await RoiManager.getInstance();
+
+                            // Create ROI Manager if it doesn't exist
+                            if (!rm) {
+                                await IJ.log('Creating ROI Manager...');
+                                rm = await new RoiManager();
+                            }
+
+                            // Clear existing ROIs if requested
+                            if (clearExisting) {
+                                const count = await rm.getCount();
+                                if (count > 0) {
+                                    await IJ.log(`Clearing ${count} existing ROI(s) from ROI Manager...`);
+                                    await rm.runCommand('Delete');
+                                }
+                            }
+
+                            // Add ROIs to manager
+                            await IJ.log('Adding ROIs to ROI Manager...');
+                            for (const roi of rois) {
+                                await rm.addRoi(roi);
+                            }
+
+                            await IJ.log(`✓ Added ${rois.length} ROI(s) to ROI Manager`);
+                        }
+
+                        // Set last ROI on active image if requested
+                        if (target === 'current' || target === 'both') {
+                            try {
+                                const imp = await IJ.getImage();
+                                if (imp) {
+                                    // Set the last ROI on the image
+                                    const lastRoi = rois[rois.length - 1];
+                                    await imp.setRoi(lastRoi);
+                                    const roiName = await lastRoi.getName();
+                                    await IJ.log(`✓ Set ROI on active image: ${roiName}`);
+                                } else {
+                                    await IJ.log('⚠️  No active image to set ROI on');
+                                }
+                            } catch (imgError) {
+                                console.error('Error setting ROI on image:', imgError);
+                                await IJ.log(`⚠️  Could not set ROI on image: ${imgError.message}`);
+                            }
+                        }
+
+                        console.log(`✓ Set ${rois.length} ROI(s) from GeoJSON`);
+                        await IJ.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+                        await IJ.log(`✓ Complete: ${rois.length} ROI(s) loaded from GeoJSON`);
+
+                        return {
+                            success: true,
+                            count: rois.length
+                        };
+
+                    } catch (error) {
+                        console.error('✗ Error setting ROIs from GeoJSON:', error);
+                        const IJ = window.IJClass || window.IJ;
+                        if (IJ) {
+                            await IJ.log('✗ Error setting ROIs: ' + error.message);
+                        }
+                        return {
+                            success: false,
+                            error: error.message || error.toString(),
+                            count: 0
+                        };
+                    }
+                },
+                { __schema__: schemas.setRoisFromGeoJson }
+            ),
+
+            // Get comprehensive summary of ImageJ state
+            getSummary: Object.assign(
+                async ({ includeLog = true, includeFileSystem = true }, context = null) => {
+                    console.log('🌐 Remote call: getSummary()');
+
+                    try {
+                        const IJ = window.IJClass || window.IJ;
+                        if (!IJ) {
+                            return {
+                                success: false,
+                                error: 'ImageJ not initialized',
+                                summary: 'ImageJ is not ready. Please wait for ImageJ to initialize.',
+                                data: { ready: false }
+                            };
+                        }
+
+                        const data = {};
+                        const summaryLines = [];
+
+                        // ===== VERSION & ENVIRONMENT =====
+                        summaryLines.push('=== ImageJ.JS Environment ===');
+                        data.version = 'ImageJ 1.54r (via CheerpJ 4.2 in browser)';
+                        data.environment = 'Browser-based (WebAssembly/JavaScript)';
+                        summaryLines.push(`Version: ${data.version}`);
+                        summaryLines.push(`Environment: ${data.environment}`);
+                        summaryLines.push('');
+
+                        // ===== OPEN IMAGES =====
+                        summaryLines.push('=== Open Images ===');
+                        try {
+                            const WindowManager = await window.lib.ij.WindowManager;
+                            const imageCount = await WindowManager.getImageCount();
+                            data.imageCount = imageCount;
+
+                            if (imageCount === 0) {
+                                summaryLines.push('No images currently open.');
+                                data.images = [];
+                            } else {
+                                summaryLines.push(`Total images open: ${imageCount}`);
+                                const images = [];
+                                const imageIDs = await WindowManager.getIDList();
+
+                                if (imageIDs) {
+                                    for (let i = 0; i < imageCount; i++) {
+                                        const id = await imageIDs[i];
+                                        const imp = await WindowManager.getImage(id);
+                                        if (imp) {
+                                            const title = await imp.getTitle();
+                                            const width = await imp.getWidth();
+                                            const height = await imp.getHeight();
+                                            const bitDepth = await imp.getBitDepth();
+                                            const slices = await imp.getNSlices();
+
+                                            let type = '';
+                                            if (bitDepth === 8) type = '8-bit';
+                                            else if (bitDepth === 16) type = '16-bit';
+                                            else if (bitDepth === 24) type = 'RGB';
+                                            else if (bitDepth === 32) type = '32-bit';
+
+                                            const imageInfo = {
+                                                id,
+                                                title,
+                                                width,
+                                                height,
+                                                type,
+                                                slices
+                                            };
+                                            images.push(imageInfo);
+
+                                            summaryLines.push(`  ${i + 1}. "${title}" - ${width}x${height} ${type}${slices > 1 ? `, ${slices} slices` : ''}`);
+                                        }
+                                    }
+                                }
+                                data.images = images;
+
+                                // Active image
+                                try {
+                                    const activeImp = await IJ.getImage();
+                                    if (activeImp) {
+                                        const activeTitle = await activeImp.getTitle();
+                                        data.activeImage = activeTitle;
+                                        summaryLines.push(`  Active: "${activeTitle}"`);
+                                    }
+                                } catch (e) {
+                                    data.activeImage = null;
+                                }
+                            }
+                        } catch (e) {
+                            summaryLines.push('Error checking images: ' + e.message);
+                            data.imageCount = 0;
+                            data.images = [];
+                        }
+                        summaryLines.push('');
+
+                        // ===== ROI INFORMATION =====
+                        summaryLines.push('=== ROI (Regions of Interest) ===');
+                        try {
+                            // Current ROI on active image
+                            let hasCurrentRoi = false;
+                            try {
+                                const imp = await IJ.getImage();
+                                if (imp) {
+                                    const roi = await imp.getRoi();
+                                    if (roi) {
+                                        hasCurrentRoi = true;
+                                        const roiType = await roi.getTypeAsString();
+                                        const roiName = await roi.getName();
+                                        data.currentRoi = { type: roiType, name: roiName || 'Unnamed' };
+                                        summaryLines.push(`Current ROI: ${roiType}${roiName ? ` ("${roiName}")` : ''}`);
+                                    }
+                                }
+                            } catch (e) {
+                                // No current ROI
+                            }
+
+                            if (!hasCurrentRoi) {
+                                summaryLines.push('No ROI selected on active image.');
+                                data.currentRoi = null;
+                            }
+
+                            // ROI Manager
+                            const RoiManager = await window.lib.ij.plugin.frame.RoiManager;
+                            const rm = await RoiManager.getInstance();
+
+                            if (rm) {
+                                const roiCount = await rm.getCount();
+                                data.roiManagerCount = roiCount;
+                                summaryLines.push(`ROI Manager: ${roiCount} ROI(s) stored`);
+
+                                if (roiCount > 0 && roiCount <= 10) {
+                                    // List ROIs if not too many
+                                    const rois = [];
+                                    for (let i = 0; i < roiCount; i++) {
+                                        const roi = await rm.getRoi(i);
+                                        const roiName = await roi.getName();
+                                        const roiType = await roi.getTypeAsString();
+                                        rois.push({ name: roiName || `ROI ${i + 1}`, type: roiType });
+                                        summaryLines.push(`  ${i + 1}. ${roiName || `ROI ${i + 1}`} (${roiType})`);
+                                    }
+                                    data.roiManagerRois = rois;
+                                } else if (roiCount > 10) {
+                                    summaryLines.push('  (Too many to list individually)');
+                                }
+                            } else {
+                                summaryLines.push('ROI Manager: Not open');
+                                data.roiManagerCount = 0;
+                            }
+                        } catch (e) {
+                            summaryLines.push('Error checking ROIs: ' + e.message);
+                            data.currentRoi = null;
+                            data.roiManagerCount = 0;
+                        }
+                        summaryLines.push('');
+
+                        // ===== OPEN WINDOWS & TABLES =====
+                        summaryLines.push('=== Open Windows & Tables ===');
+                        try {
+                            const WindowManager = await window.lib.ij.WindowManager;
+                            const windowList = await WindowManager.getWindowList();
+
+                            if (windowList && (await windowList.length) > 0) {
+                                const windowCount = await windowList.length;
+                                data.openWindows = [];
+                                summaryLines.push(`Open windows: ${windowCount}`);
+
+                                for (let i = 0; i < Math.min(windowCount, 20); i++) {
+                                    const window = await windowList[i];
+                                    const title = await window.getTitle();
+                                    data.openWindows.push(title);
+
+                                    // Check if it's a table
+                                    const TextWindow = await window.lib.ij.text.TextWindow;
+                                    if (window instanceof TextWindow) {
+                                        summaryLines.push(`  - "${title}" (Table/Text Window)`);
+                                    } else {
+                                        summaryLines.push(`  - "${title}"`);
+                                    }
+                                }
+
+                                if (windowCount > 20) {
+                                    summaryLines.push(`  ... and ${windowCount - 20} more`);
+                                }
+                            } else {
+                                summaryLines.push('No additional windows open.');
+                                data.openWindows = [];
+                            }
+
+                            // Check for Results table specifically
+                            const ResultsTable = await window.lib.ij.measure.ResultsTable;
+                            const rt = await ResultsTable.getResultsTable();
+                            if (rt) {
+                                const rowCount = await rt.size();
+                                data.resultsTableRows = rowCount;
+                                summaryLines.push(`Results table: ${rowCount} row(s)`);
+                            } else {
+                                data.resultsTableRows = 0;
+                            }
+                        } catch (e) {
+                            summaryLines.push('Error checking windows: ' + e.message);
+                            data.openWindows = [];
+                            data.resultsTableRows = 0;
+                        }
+                        summaryLines.push('');
+
+                        // ===== FILE SYSTEMS =====
+                        if (includeFileSystem) {
+                            summaryLines.push('=== Mounted File Systems ===');
+                            data.fileSystems = {};
+
+                            // Native FS (mounted folder)
+                            if (window.nativeFS && window.nativeFS.handle) {
+                                try {
+                                    const dirName = await window.nativeFS.handle.name;
+                                    data.fileSystems.native = { mounted: true, name: dirName };
+                                    summaryLines.push(`✓ Native folder mounted: "${dirName}" at /files/`);
+                                } catch (e) {
+                                    data.fileSystems.native = { mounted: false };
+                                    summaryLines.push('✗ Native folder: Not mounted');
+                                }
+                            } else {
+                                data.fileSystems.native = { mounted: false };
+                                summaryLines.push('✗ Native folder: Not mounted (Chrome/Edge only)');
+                            }
+
+                            // Local FS (drag & drop)
+                            if (window.localFS) {
+                                const fileCount = window.localFS.files ? window.localFS.files.size : 0;
+                                const dirCount = window.localFS.directories ? window.localFS.directories.size : 0;
+                                data.fileSystems.local = { fileCount, dirCount };
+                                if (fileCount > 0 || dirCount > 0) {
+                                    summaryLines.push(`✓ Local files (drag & drop): ${fileCount} file(s), ${dirCount} folder(s) at /local/`);
+                                } else {
+                                    summaryLines.push('○ Local files: Empty (drag & drop files to add)');
+                                }
+                            } else {
+                                data.fileSystems.local = { fileCount: 0, dirCount: 0 };
+                                summaryLines.push('○ Local files: Not initialized');
+                            }
+
+                            // GitHub FS
+                            if (window.githubFS && window.githubFS.mountedRepos && window.githubFS.mountedRepos.size > 0) {
+                                const repos = Array.from(window.githubFS.mountedRepos.keys());
+                                data.fileSystems.github = { mounted: true, repos };
+                                summaryLines.push(`✓ GitHub repos mounted: ${repos.length}`);
+                                repos.forEach(repo => {
+                                    summaryLines.push(`  - ${repo} at /github/${repo}/`);
+                                });
+                            } else {
+                                data.fileSystems.github = { mounted: false, repos: [] };
+                                summaryLines.push('○ GitHub repos: None mounted');
+                            }
+                            summaryLines.push('');
+                        }
+
+                        // ===== LOG (recent entries) =====
+                        if (includeLog) {
+                            summaryLines.push('=== Recent Log Entries (last 20 lines) ===');
+                            try {
+                                const logContent = await IJ.getLog() || '';
+                                if (logContent) {
+                                    const logLines = logContent.split('\n').filter(line => line.trim());
+                                    const recentLines = logLines.slice(-20);
+                                    data.logLineCount = logLines.length;
+                                    data.recentLog = recentLines.join('\n');
+
+                                    if (recentLines.length > 0) {
+                                        recentLines.forEach(line => {
+                                            summaryLines.push(`  ${line}`);
+                                        });
+                                    } else {
+                                        summaryLines.push('Log is empty.');
+                                    }
+
+                                    if (logLines.length > 20) {
+                                        summaryLines.push(`  ... (${logLines.length - 20} earlier lines not shown)`);
+                                    }
+                                } else {
+                                    summaryLines.push('Log is empty.');
+                                    data.logLineCount = 0;
+                                    data.recentLog = '';
+                                }
+                            } catch (e) {
+                                summaryLines.push('Error reading log: ' + e.message);
+                                data.logLineCount = 0;
+                                data.recentLog = '';
+                            }
+                            summaryLines.push('');
+                        }
+
+                        // ===== ADDITIONAL INFO =====
+                        summaryLines.push('=== Additional Information ===');
+                        summaryLines.push('Available commands: Use searchCommands() to find ImageJ commands');
+                        summaryLines.push('Code examples: Use listExamples() or searchExamples() for working code');
+                        summaryLines.push('JavaScript access: Use executeJavaScript() for direct Java API access');
+                        summaryLines.push('');
+
+                        // Build summary text
+                        const summary = summaryLines.join('\n');
+
+                        console.log('✓ Summary generated successfully');
+
+                        return {
+                            success: true,
+                            summary: summary,
+                            data: data
+                        };
+
+                    } catch (error) {
+                        console.error('✗ Error getting summary:', error);
+                        return {
+                            success: false,
+                            error: error.message || error.toString(),
+                            summary: 'Failed to generate summary: ' + error.message,
+                            data: {}
+                        };
+                    }
+                },
+                { __schema__: schemas.getSummary }
             )
         });
 
@@ -2319,4 +3085,4 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // Export for external use
-export { connectToHypha, disconnectFromHypha, hyphaServer, connectedService, roiToGeoJson, floatPolygonToGeoJson };
+export { connectToHypha, disconnectFromHypha, hyphaServer, connectedService, roiToGeoJson, floatPolygonToGeoJson, geoJsonToRoi };
