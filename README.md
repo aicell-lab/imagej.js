@@ -4,7 +4,9 @@
 
 ImageJ.JS brings the full power of ImageJ to the web, enabling professional image analysis on any device with a modern browser. Originally created during a hackathon in Dresden and evolved through the ImJoy project, ImageJ.JS now serves **1,000-1,500 unique users daily** for scientific image analysis, education, and research.
 
-**This is an improved version over our previous version served at https://ij.imjoy.io, the new version is now available at https://ij.aicell.io**
+**The new version is now available at https://ij.aicell.io**
+
+If you want to try our previous version: https://ij.imjoy.io
 
 
 ![ImageJ.JS Screenshot](static/imagej.js-screenshot.png)
