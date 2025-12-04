@@ -322,7 +322,7 @@ open http://localhost:8000
 - ✅ Real-time file system integration
 
 ### Known Limitations
-- ⚠️ **Performance**: Slightly slower than desktop due to WebAssembly overhead
+- ⚠️ **Performance**: Worse than desktop due to WebAssembly overhead and also it only run in a single thread (although it appears that multi-thread in java can run through the cheerpj emulation)
 - ⚠️ **Multi-threading**: Limited by browser security (no shared memory)
 - ⚠️ **Native libraries**: Plugins requiring native code may not work
 - ⚠️ **GitHub rate limits**: Repositories without `index.list` files hit API limits
