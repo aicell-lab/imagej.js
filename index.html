@@ -336,7 +336,7 @@
 <!-- Test Button -->
 <div class="fixed bottom-4 right-4 z-50">
   <button id="testRoiBtn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg shadow-lg transition-colors duration-200">
-    <span id="testBtnText">Test ROI→GeoJSON</span>
+    <span id="testBtnText">Test ROI↔GeoJSON</span>
   </button>
 </div>
 
@@ -624,10 +624,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            console.log('🧪 Testing ROI to GeoJSON conversion...');
+            console.log('🧪 Testing ROI ↔ GeoJSON conversion...');
 
             await IJClass.log('========================================');
-            await IJClass.log('🧪 TEST: ROI → GeoJSON Conversion');
+            await IJClass.log('🧪 TEST: ROI ↔ GeoJSON Round-trip');
             await IJClass.log('========================================');
 
             // Get current ROI from active image
@@ -671,12 +671,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 await IJClass.log('ROI Manager not available');
             }
 
-            // Import the conversion function from hypha-imagej-service.js
-            const { roiToGeoJson } = await import('./hypha-imagej-service.js');
+            // Import the conversion functions from hypha-imagej-service.js
+            const { roiToGeoJson, geoJsonToRoi } = await import('./hypha-imagej-service.js');
 
             if (hasCurrentRoi || roiManagerCount > 0) {
                 await IJClass.log('');
-                await IJClass.log('Converting ROIs to GeoJSON...');
+                await IJClass.log('PART 1: Converting ROIs → GeoJSON');
+                await IJClass.log('─────────────────────────────────────');
 
                 // Get GeoJSON
                 const features = [];
@@ -721,10 +722,57 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.log(JSON.stringify(geojson, null, 2));
 
                 await IJClass.log('');
-                await IJClass.log(`✓ Total: ${features.length} ROI(s) converted`);
-                await IJClass.log('📋 GeoJSON printed to browser console');
+                await IJClass.log(`✓ Exported ${features.length} ROI(s) to GeoJSON`);
+                await IJClass.log('📋 GeoJSON printed to browser console (F12)');
+
+                // PART 2: Test reverse conversion
                 await IJClass.log('');
-                await IJClass.log('Open browser DevTools (F12) to see the full GeoJSON output');
+                await IJClass.log('PART 2: Converting GeoJSON → ROI');
+                await IJClass.log('─────────────────────────────────────');
+                await IJClass.log('Converting GeoJSON back to ROIs...');
+
+                // Clear ROI Manager
+                try {
+                    const RoiManager = await window.lib.ij.plugin.frame.RoiManager;
+                    let rm = await RoiManager.getInstance();
+                    if (!rm) {
+                        rm = await new RoiManager();
+                        await IJClass.log('Created new ROI Manager');
+                    }
+                    const count = await rm.getCount();
+                    if (count > 0) {
+                        await rm.runCommand('Delete');
+                        await IJClass.log(`Cleared ${count} existing ROI(s)`);
+                    }
+
+                    // Convert GeoJSON back to ROIs
+                    let convertedCount = 0;
+                    for (const feature of geojson.features) {
+                        try {
+                            const roi = await geoJsonToRoi(feature);
+                            if (roi) {
+                                // Rename to indicate it's from GeoJSON
+                                const originalName = await roi.getName();
+                                await roi.setName(`[GeoJSON] ${originalName}`);
+
+                                // Add to ROI Manager
+                                await rm.addRoi(roi);
+                                convertedCount++;
+                                await IJClass.log(`  ✓ Imported: ${originalName}`);
+                            }
+                        } catch (convError) {
+                            await IJClass.log(`  ✗ Failed to convert feature: ${convError.message}`);
+                        }
+                    }
+
+                    await IJClass.log('');
+                    await IJClass.log(`✓ Imported ${convertedCount} ROI(s) back from GeoJSON`);
+                    await IJClass.log('Check ROI Manager to see the round-trip results!');
+
+                } catch (rmError) {
+                    await IJClass.log(`⚠️  Error with ROI Manager: ${rmError.message}`);
+                }
+
             } else {
                 await IJClass.log('');
                 await IJClass.log('⚠️  No ROIs found!');
@@ -740,7 +788,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         } catch (err) {
             console.error('Test error:', err);
-            await IJClass.log('✗ Error: ' + err.message);
+            if (IJClass) {
+                await IJClass.log('✗ Error: ' + err.message);
+            }
             alert('Error: ' + (err.message || err.toString()));
         }
     });
