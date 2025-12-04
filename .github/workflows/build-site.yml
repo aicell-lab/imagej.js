@@ -35,6 +35,7 @@ jobs:
         cp index.html dist/
         cp hypha-imagej-service.js dist/
         cp utils.js dist/
+        cp CNAME dist/
         cp -r lib dist/
 
     - name: Deploy to GitHub Pages
