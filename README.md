@@ -359,7 +359,7 @@ We welcome contributions to make ImageJ.JS better!
 
 ### Technology Stack
 - [**CheerpJ**](https://cheerpj.com/) - WebAssembly JVM compiler
-- [**ImageJ**](https://imagej.net/) - The foundational image analysis software
+- [**ImageJ**](https://imagej.net/ij/) - The foundational image analysis software, developed and maintained mainly by Wayne Rasband.
 - [**Hypha**](https://github.com/amun-ai/hypha) - Model Context Protocol server
 - [**ImJoy**](https://imjoy.io/) - The project that evolved this tool
 
