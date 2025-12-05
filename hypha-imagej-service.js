@@ -1498,6 +1498,15 @@ function updateStatus(status, text, serviceUrl = null) {
             // Convert to MCP URL and store
             const mcpUrl = convertToMcpUrl(serviceUrl);
             copyBtn.dataset.serviceUrl = mcpUrl;
+
+            // Track MCP URL creation in Google Analytics
+            if (typeof gtag !== 'undefined') {
+                gtag('event', 'mcp_url_created', {
+                    'event_category': 'MCP',
+                    'event_label': 'MCP URL Created',
+                    'service_url': serviceUrl
+                });
+            }
         } else {
             connectBtn.classList.remove('hidden');
             copyBtn.classList.add('hidden');
@@ -3067,6 +3076,15 @@ document.addEventListener('DOMContentLoaded', () => {
             if (serviceUrl) {
                 try {
                     await navigator.clipboard.writeText(serviceUrl);
+
+                    // Track MCP URL copy in Google Analytics
+                    if (typeof gtag !== 'undefined') {
+                        gtag('event', 'mcp_url_copied', {
+                            'event_category': 'MCP',
+                            'event_label': 'MCP URL Copied to Clipboard',
+                            'value': 1
+                        });
+                    }
 
                     // Show feedback
                     const originalText = copyMcpBtn.querySelector('span').textContent;
