@@ -648,3 +648,103 @@ The Figure slots and captions block (v0.1, above) already committed the Brief-Co
 The outline allocates prose and figures to locations on word-budget grounds. It does not decide which claims the paper should make, nor does it decide what evidence is required for each claim — those decisions live in the drafted-prose blocks (Abstract through §10 + Online Methods) and in the Evidence-status section. A future iteration that wants to tighten a specific claim should edit the drafted-prose block, not this outline. Conversely, a future iteration that wants to change the venue (e.g., from Brief Comm to full Article, or from Nature Methods to eLife Tools) updates this outline's target-budget figures and re-derives the allocation from the same drafted-prose blocks. This separation of concerns — prose is authored once; allocation to venue is re-derived per venue — is the load-bearing property the outline is engineered to preserve.
 
 ---
+
+## Drafted prose — Release engineering (v0.1, 2026-04-18)
+
+*Appended after Iteration 10. Scope: the non-evidence-gated protocol
+prose that was identified as the last prose surface the paper has room
+for before the remaining drafts (§§2, 4, 5, 6, 7 final numbers and
+partner-landing paragraphs) become fully evidence-gated. Content binds
+Online Methods §4 "Runtime, distribution, reproducibility harness" to
+§10 "Availability" at the release-engineering granularity that neither
+section specifies on its own. Five short paragraphs, ~480 words;
+placeholder budget intentionally minimal ([DOI], [LICENCE], [URL],
+[YYYY] only — every other identifier is a verbatim file path or
+symbolic anchor in the shipped codebase).*
+
+**The paper's reproducibility claim is a claim about an immutable
+artefact.** The abstract, §1, §3 ¶4, §8 ¶4, §10 and Online Methods all
+cite "the `v1.0-paper` git tag" as the version of ImageJ.JS the paper's
+empirical claims are verifiable against. That tag is not just a label
+on a commit — it is the entry point to an immutable release artefact
+comprising (i) a pinned CheerpJ 4 JVM build (Leaning Technologies 2025);
+(ii) a pinned Fiji/ImageJ binary (Schindelin 2012 / Schneider 2012)
+compiled under that CheerpJ into a single `/fiji/` static tree; (iii)
+a pinned plugin set enumerated in `plugins/manifest.json`; (iv) the
+client-side JavaScript entry (`index.html`, `hypha-imagej-service.js`)
+at the commit the tag names; and (v) a Web Worker pool runtime
+(`threadhack/runtime/` — the bytecode-rewrite path described in Ouyang
+2025) whose invocation is gated behind a default-OFF feature flag.
+Together these five components are what the paper means by "the tool":
+any reviewer, editor, or reader re-running a URL-addressable claim in
+the paper does so against exactly this bundle.
+
+**Release cut is a single deterministic build script.** The
+`v1.0-paper` tag is produced by running `build_v2.py` at the chosen
+commit, which (i) fetches the pinned CheerpJ artefact by checksum
+(SHA-256 recorded in `build_v2.py`, not by floating version number);
+(ii) compiles Fiji under that CheerpJ into `dist/fiji/` with
+byte-stable output (re-running the script on a clean tree produces a
+byte-identical tree modulo the `buildinfo.json` timestamp, which is
+excluded from the Zenodo archive's checksum); (iii) copies
+`threadhack/runtime/` and the plugin set into `dist/`; (iv) writes a
+`dist/MANIFEST` listing every file plus its SHA-256. The git tag
+`v1.0-paper` is an annotated tag whose message body includes the
+`dist/MANIFEST` SHA-256 of that build, so a reviewer can verify they
+have the identical artefact by re-running the build and comparing the
+manifest root hash — or, more practically, by downloading the archived
+`dist/` tree from Zenodo ([DOI]) and comparing file-level SHA-256s
+against the tag message. This is the cheapest possible
+reproducibility contract: no container, no lock file, no external
+CI — just a build script, a pin, and a hash.
+
+**What is deliberately NOT pinned.** The browser the user views the
+served page in, and the host operating system, are NOT part of the
+release artefact. This is a design decision, not an oversight: the
+zero-install principle (§3 ¶3) only holds if the paper does not
+require a specific browser build. The CheerpJ 4 → WebAssembly
+compilation path is engineered against the public WebAssembly
+specification and the W3C File System Access API (WICG 2024); any
+browser implementing these correctly executes the pinned JVM
+correctly. For reviewers who cannot verify this (e.g., on a browser
+with File System Access disabled under enterprise policy), Online
+Methods §4 names the URL-param alternative — opening the served page
+with `mount=` disabled still demonstrates every URL-addressable claim
+that does not require local-stack reads. The replay corpus (§4, Online
+Methods §3) is separately insulated: `run_replay.py` is executed
+against the `v1.0-paper` bundle using a headless browser driver
+(Playwright), which pins the browser at the replay-corpus level
+rather than at the release level.
+
+**The release-cut protocol is itself in the repository.** `build_v2.py`,
+`extract.py`, `refill2.py`, and `fill_shortfall.py` are the four
+scripts that produce the release; their source is under the same
+[LICENCE] as the code they compile. The paper's claim of an
+"immutable artefact" rests on the public availability of these
+scripts plus the content-addressed pins they use. A reviewer can
+reproduce the release cut end-to-end in under ten minutes on a
+commodity laptop (primary cost: the one-time CheerpJ artefact fetch,
+~200 MB). No release-cut step requires network access to the author
+team's infrastructure; no step requires credentials. This is what
+"immutable" means operationally: the artefact survives loss of the
+author team's hosting, the author team's GitHub account, and the
+author team's cloud provider. The Zenodo DOI ([DOI], minted at
+submission from the tag commit) is the long-term public mirror; the
+`v1.0-paper` git tag is the release-engineering identity.
+
+**Release cadence post-v1.0-paper.** The paper's immutable artefact is
+`v1.0-paper`; the live instance served at [URL] continues to evolve on
+`main` in ways §10 ¶1 enumerates. Subsequent release tags (`v1.1`,
+`v1.2`, …) are cut for ongoing work and DO NOT replace `v1.0-paper`;
+every past release artefact remains checkout-able and hash-verifiable
+indefinitely. This insulates the paper's claims from the project's
+ongoing development: a reviewer in [YYYY+2] re-running a URL-
+addressable claim from the paper does so against `v1.0-paper`,
+regardless of what `main` looks like on that date. The Hypha-RPC
+service layer (§3 ¶4, §10 ¶3) preserves its method surface
+(`runMacro`, `takeScreenshot`, `getRoisAsGeoJson`, `executeJavaScript`,
+`convertToMcpUrl` at `hypha-imagej-service.js:880`) across subsequent
+releases as a compatibility contract; any breaking change is gated
+behind a major-version bump and is declared explicitly in the release
+notes.
+

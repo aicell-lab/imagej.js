@@ -167,6 +167,28 @@
   other sections keep the old form. When a reference is finalised, update
   both the References entry AND every row of the map AND the in-prose
   citation in each referenced block, in one pass. Do not let the map drift.
+- **Release engineering is the Methods ↔ Availability binding at release-
+  artefact granularity.** Iteration 11 (2026-04-18) added
+  `preprint.md §"Drafted prose — Release engineering (v0.1)"` and the
+  corresponding `<section class="release-eng" id="release-eng">` in the
+  HTML render, inserted between Online Methods and References. This closes
+  a three-way binding that Online Methods §4 ("how we pinned it") and §10
+  Availability ("where it's archived") could not close on their own. The
+  prose names the five pinned components (CheerpJ JVM, Fiji binary, plugin
+  manifest, JS entry, Web Worker pool runtime), the `build_v2.py` →
+  `dist/MANIFEST` SHA-256 contract, the deliberately-NOT-pinned set
+  (browser + host OS, with `mount=`-disabled and Playwright fallbacks
+  named), and the post-`v1.0-paper` release cadence (`v1.1`, `v1.2`, …
+  never replace `v1.0-paper`; Hypha-RPC method-surface compatibility
+  contract across releases). The HTML render uses a 5-row pin table
+  (Component / Pin site / Contribution) so future pinned-component
+  changes update one row rather than rewrite the prose — the same
+  row-discipline as References entries and the Supp outline allocation
+  table. Future release iterations must preserve the Methods §4 ↔
+  Release eng ↔ §10 three-way binding in any edit pass: every artefact
+  named in §Release engineering must be nameable from either Methods §4
+  or §10; no release-engineering contract may be introduced that is not
+  reachable from the reviewer-facing Methods + Availability surfaces.
 
 ---
 
@@ -1192,3 +1214,163 @@
   HTML on disk is sufficient — svamp serves from disk. No
   `svamp serve` re-invocation is needed. This confirms the pattern
   from Iteration 8 / 9 and should remain the norm through submission.
+
+---
+
+## 2026-04-18 — Iteration 11: Release engineering prose (v0.1) + HTML render refresh (v0.4)
+
+### What was implemented
+
+- **Drafted §Release engineering (v0.1)** at
+  `preprint.md §"Drafted prose — Release engineering (v0.1, 2026-04-18)"` —
+  five paragraphs, ~480 words, the last non-evidence-gated prose surface
+  identified in Iteration 10's learnings. Content binds Online Methods §4
+  "Runtime, distribution, reproducibility harness" to §10 "Availability"
+  at the release-engineering granularity neither section specifies on
+  its own. Structure:
+  1. **The reproducibility claim is a claim about an immutable artefact.**
+     Enumerates the five components of the `v1.0-paper` release bundle:
+     pinned CheerpJ 4 JVM (Leaning Technologies 2025); pinned Fiji/ImageJ
+     binary (Schindelin 2012 / Schneider 2012); pinned plugin set per
+     `plugins/manifest.json`; JS entry at the tagged commit; Web Worker
+     pool runtime under `threadhack/runtime/` (default-OFF flag).
+  2. **Release cut is a single deterministic build script.** `build_v2.py`
+     fetches CheerpJ by SHA-256; byte-stable Fiji compile; `dist/MANIFEST`
+     file-level SHA-256 table; `v1.0-paper` annotated tag message carries
+     the manifest root hash. Zenodo archive (`[DOI]`) is the long-term
+     public mirror.
+  3. **What is deliberately NOT pinned.** Browser + host OS intentionally
+     outside the artefact (zero-install principle §3 ¶3 requires this).
+     Fallback: `mount=`-disabled URL-param path for enterprise browsers;
+     Playwright pins the browser at replay-corpus level via
+     `run_replay.py`, not at release level.
+  4. **The release-cut protocol is itself in the repository.** `build_v2.py`
+     + `extract.py` + `refill2.py` + `fill_shortfall.py` under `[LICENCE]`;
+     ~10 minutes end-to-end on a commodity laptop; no author-infrastructure
+     dependency. Immutability operationally = survives loss of hosting,
+     GitHub account, cloud provider.
+  5. **Release cadence post-`v1.0-paper`.** Subsequent tags (`v1.1`, `v1.2`,
+     …) DO NOT replace `v1.0-paper`; every past release stays
+     hash-verifiable indefinitely. Hypha-RPC method-surface compatibility
+     contract (`runMacro` / `takeScreenshot` / `getRoisAsGeoJson` /
+     `executeJavaScript` / `convertToMcpUrl:880`) across subsequent
+     releases; breaking changes gated behind major-version bumps.
+- **HTML render refreshed to v0.4.** `manuscript_html/index.html` now
+  includes a new `<section class="release-eng" id="release-eng">`
+  inserted between Online Methods and References (ordering reflects
+  the prose binding: Methods says how, Release engineering says what
+  is pinned, §10 says where it's archived). Distinct CSS styling with
+  a blue left border, a sans-serif lede, a structured pin-table
+  (Component / Pin site / Contribution) for the 5-component bundle
+  enumeration, and a `.rel-note` callout block for the reviewer-
+  accessible fallback. Version strings bumped v0.3 → v0.4 in five
+  places (article-meta published line; status-chip draft; status-chip
+  status; sidebar article-info `Draft version`; footer rendered-from
+  line). Sidebar Evidence-status now lists `Release engineering` as
+  the 11th Ready-block. ToC gains `Release engineering` entry
+  between `Online Methods` and `References`. Sidebar gains a
+  `View the release-engineering contract ↓` callout next to the
+  existing Cover-letter + Supp-outline callouts. Status-chip
+  promotes from "9 prose blocks v0.1 (+ supplementary outline);
+  3 pillars evidence-gated" to "10 prose blocks v0.1 (+ release
+  engineering); 3 pillars evidence-gated".
+- **Re-served via svamp.** Same mount name `manuscript`, same URL
+  `https://static-serve-0bc5cde8.svc.hypha.aicell.io/manuscript/`.
+  Post-edit HTTP HEAD → `200`, `content-length: 135459` (up from
+  125,600), `last-modified: Sat, 18 Apr 2026 12:19:11 GMT`. The
+  string "release-eng" appears 18× in the rendered page (section
+  id + ToC anchor + sidebar callout + 15 intra-document anchors);
+  "Release engineering" appears 5× (ToC + section H2 + sidebar
+  Ready list + status chip + callout); "v0.4" appears 4× (meta
+  line + draft chip + sidebar + footer); zero residual "v0.3"
+  occurrences. HTML parses well-formed (Python html.parser:
+  zero unclosed tags, zero mismatched tags).
+
+### Files changed
+
+- `preprint.md` — appended Release engineering v0.1 block after the
+  Supplementary material outline. No existing prose or scaffolding
+  modified. File is now 750 lines / ~17,600 words.
+- `manuscript_html/index.html` — added `section.release-eng` CSS
+  block (~70 lines), inserted a new `<section>` between Online
+  Methods and References with a 5-row pin table, a `.rel-note`
+  callout block, and five body paragraphs. Added ToC entry;
+  bumped version strings in five places; added sidebar callout.
+  File is now 135,459 bytes (up from 125,600) / 1,485 lines.
+- `.svamp/d9a68491-c46b-4e04-9b30-6294d0bbf071/ralph-progress.md` —
+  this entry; added one pattern bullet at the top of the
+  Patterns block.
+
+### Learnings for future iterations
+
+- **Release engineering is the prose-side counterpart to §10's
+  Availability promise.** §10 says the artefacts are shipped;
+  Online Methods §4 says they are pinned; Release engineering
+  says *what being pinned operationally means* — the five
+  components, the SHA-256 contract, the browser+OS non-pinning
+  decision, the post-`v1.0-paper` cadence contract. Reviewers
+  who want to audit reproducibility read these three surfaces as
+  a triple. Future edits to any of the three must preserve the
+  Methods §4 ↔ Release eng ↔ §10 binding — the same twin-binding
+  discipline that Methods ↔ Availability established, now extended
+  to a three-way binding.
+- **Pin-table format is the right primitive for release-engineering
+  prose.** The 5-row Component / Pin-site / Contribution table in
+  the HTML is deliberately structured to survive revision: a new
+  pinned component gets one row; a de-pinned component's row is
+  removed; no prose paragraph reorg is needed. Future release
+  iterations (post-submission `v1.1`, `v1.2` tags that change the
+  pinned plugin set or the CheerpJ version) update the table
+  in place rather than rewriting the prose. This parallels the
+  References-entry discipline (add a row, not rewrite the section).
+- **Highest-value next iteration without new evidence:
+  placeholder-propagation script.** Still the dominant outstanding
+  engineering task. The count of placeholders across five surfaces
+  (preprint.md, manuscript_html/index.html, References cross-
+  reference map, Supp outline, Release engineering) has grown
+  again with this iteration. `[LICENCE]`, `[DOI]`, `[URL]`,
+  `[YYYY+2]`, `[YYYY]`, `[DAU]`, `[48]%`, `[20]%`, `[X]`, `[Y]`,
+  `[Z]`, `[N]`, `[Y1–Y2]`, `[VOL:PAGES]` all now appear in the
+  Release engineering block too. A small regex-over-file script
+  is now the unambiguous first-priority engineering primitive
+  before the first evidence-landing pass. This has been
+  first-priority for four iterations running; it needs to be a
+  dedicated engineering iteration.
+- **Second-highest: reviewer-response dry run.** Now that the
+  full prose is drafted across Abstract / §§1, 3, 8, 9, 10 /
+  Online Methods / Cover letter / References / Figure slots /
+  Supp outline / Release engineering, a dry-run of anticipated
+  reviewer objections drawn from the existing Risks table at
+  `preprint.md:190–203` is feasible as ~200-word responses
+  per objection. Label it clearly as a dry-run — real reviewer
+  comments will differ, and the pattern bullet about NOT
+  drafting response-to-reviewer prose before submission still
+  stands. The dry-run is a different artefact: a pre-submission
+  sanity check of the paper's defensibility, not a substitute
+  for real response prose.
+- **Third-highest: §10 ↔ Methods §4 ↔ Release engineering
+  three-way cross-check pass.** Read the three surfaces together
+  and verify every artefact named in Release engineering
+  (`build_v2.py`, `plugins/manifest.json`, `dist/MANIFEST`,
+  `threadhack/runtime/`, the `v1.0-paper` tag message body)
+  is either named in §10 or nameable from it. Release
+  engineering's `dist/MANIFEST` and `dist/fiji/` tree are new
+  named artefacts not yet in §10; a future iteration should
+  either promote them to §10 (if they are reviewer-facing) or
+  explicitly note in Release engineering that they are
+  intermediate build products not directly shipped. Leave this
+  until after the placeholder-propagation script.
+- **Framing containment re-verified across the v0.4 render.**
+  Release engineering body mentions CheerpJ, Fiji, WebAssembly,
+  Hypha-RPC, MCP — no AI method. Consistent with the Iteration-6
+  containment discipline. The release-engineering prose is a
+  reproducibility contract, not a methodology comparison;
+  containment holds naturally from the genre.
+- **Served URL is stable across re-renders (Iteration 8 / 9 / 10
+  / 11).** Mount is in place under the name `manuscript`
+  (registered 2026-04-18 11:54); re-saving the HTML on disk is
+  sufficient — svamp serves from disk. No `svamp serve`
+  re-invocation is needed. This pattern now holds across four
+  re-render iterations and should be treated as the stable norm
+  through submission.
+
