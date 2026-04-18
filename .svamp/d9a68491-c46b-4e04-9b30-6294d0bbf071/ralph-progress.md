@@ -38,6 +38,23 @@
   real partnership. The block also records the Brief-Comm condensation path (collapse Figs
   3–6 into one multi-panel "field evidence" figure) so the venue-reconciliation decision is
   mechanical, not editorial.
+- **Online Methods twin-binds to §10 Availability.** The Online-Methods
+  subsection order (Iteration-9, 2026-04-18) was chosen to parallel §10
+  paragraph structure: every Methods subsection names at least one §10
+  artefact (`survey_production_v2.csv`, `longtail_tasks.md`,
+  `replay/<candidate>/`, `hypha-imagej-service.js`, `collab/`, the
+  `v1.0-paper` git tag, Zenodo DOI), and every §10 artefact appears in
+  at least one Methods subsection. This twin-binding is the Methods-side
+  equivalent of the References cross-reference map: it prevents the
+  symmetric failure modes (*a Methods subsection promises an instrument
+  that §10 does not ship*; *§10 ships an artefact that no Methods
+  subsection explains how to re-execute*). Any future edit to Methods or
+  §10 must preserve the binding in one pass — edit both surfaces in the
+  same iteration. At submission-pass condensation, if a Methods subsection
+  collapses to one sentence under venue constraints, the §10 artefact
+  it binds to must also be demoted to its supplementary pointer; if a
+  §10 artefact is de-scoped, the corresponding Methods subsection must be
+  removed, not just edited down.
 - **Manuscript HTML rendering is served out-of-tree.** Iteration 8 generated
   `manuscript_html/index.html` — a Nature Methods-styled, self-contained HTML rendering of
   the drafted prose assembled into paper order (Abstract → §§1–10 → References → Cover
@@ -850,3 +867,156 @@
   must be re-verified at the HTML level — the render is not a second author
   and will not re-introduce retired framings unless someone edits the
   working doc to do so.
+---
+
+## 2026-04-18 — Iteration 9: Online Methods prose (v0.1) + HTML render refresh (v0.2)
+
+### What was implemented
+
+- **Drafted §Online Methods (v0.1)** at `preprint.md §"Drafted prose — Online
+  Methods (v0.1, 2026-04-18)"` — eight subsections, ~1,600 words, structured
+  as Nature Methods conventionally places its Methods block:
+  1. **Regime survey of 200 recent microscopy papers.** Pre-registered
+     stratification (nine subdomains × five years; 14 journals; bioRxiv
+     proxy ≤ 15 %); three independent axes (A, B, C) replacing "images per
+     condition"; strict small-data iff `Scale_biological=small ∧ HIL∈{through,
+     verified} ∧ Scale_quant≠large` — deliberately stricter than the
+     pilot's. LLM-assisted extraction via `claude-opus-4-7`, with extractor
+     version recorded per row; IRR targets κ≥0.7 / ICC≥0.8; 10 % dual
+     extraction; regex-only baseline as a floor; 11 % `not-classifiable`
+     residual reported explicitly, not redistributed.
+  2. **Long-tail foundation-model benchmark (30 tasks).** Seven inclusion
+     criteria fixed before evaluation; five task groups; public-dataset
+     preference with non-public fallback declared. Zero-shot evaluation (no
+     fine-tuning, no prompt engineering) at author-recommended configurations
+     for SAM / Cellpose-generalist / StarDist-versatile / CellSAM. Pre-registered
+     IoU≥0.7 success threshold; MVB 15-of-30 subset pre-registered as Brief
+     Comm sufficient. Two MVB tasks deliberately include DL successes — the
+     benchmark is framed as a regime-fit instrument, not a uniform DL-failure
+     filter.
+  3. **Deterministic replay corpus.** Per-candidate spec: `macro.*` +
+     `INPUTS.json` (upstream URL + SHA-256 + date) + `run_replay.py` +
+     `outputs/` + `MATCH_REPORT.md`. Three separate axes (ACQUIRE / EXECUTE /
+     MATCH) reported independently; legacy Pass/Partial/Fail kept only as
+     a summary. Two Week-1 findings preserved as reportable at corpus level
+     (bundle inconsistency, cross-version drift in core Fiji primitives).
+  4. **Runtime, distribution, reproducibility harness.** Pinned CheerpJ JVM
+     + Fiji build + plugin set at `v1.0-paper` git tag; URL-param schema
+     documented; Hypha-RPC method surface enumerated (`runMacro`,
+     `takeScreenshot`, `getRoisAsGeoJson`, `executeJavaScript`); MCP endpoint
+     via `convertToMcpUrl` at `hypha-imagej-service.js:880`; CI harness
+     re-executes replay and benchmark against the pin.
+  5. **Field-deployment protocols.** Six pre-registered protocol items
+     (Hypha-authenticated identity; per-session event log; no image
+     egress; pre/post concept-check for teaching; session audit log for
+     clinical; driver/observer for collaboration). Partner institutions
+     and enrolment counts intentionally deferred to submission.
+  6. **Statistics.** No inferential statistics; Wilson-score CI at α = 0.05
+     for regime-share point estimates (computed at submission on 200 rows,
+     not on the 80-row interim); Cohen's κ / ICC(2,1) for IRR; per-task
+     mean IoU and IoU≥0.7 success counts for the benchmark.
+  7. **Limitations of the survey, benchmark, and replay.** Open-access
+     sampling bias; 11 % `not-classifiable` residual as extraction ceiling;
+     benchmark is a regime-fit instrument not a DL-method competition; replay
+     corpus is bounded by the public-data constraint.
+  8. **Data, code, and protocol availability.** Cross-referenced with §10;
+     states that any main-text claim not audited against a named artefact
+     in this Methods or §10 is an error and should be flagged as such.
+- **HTML render refreshed to v0.2.** `manuscript_html/index.html` now includes
+  a new `<section class="methods" id="methods">` between §10 and References,
+  with a Methods-specific CSS block (smaller sans-serif subsection heads,
+  14.5 px body, `.methods-lede` summary strip). ToC gains an "Online Methods"
+  entry; sidebar article-info and evidence-status blocks updated to reference
+  v0.2 and the new prose block; status-chip promotes from "7 prose blocks
+  v0.1" to "8 prose blocks v0.1 (incl. Online Methods)"; footer timestamp
+  annotated "adds Online Methods".
+- **Re-served via svamp.** Same mount name `manuscript`; same URL
+  `https://static-serve-0bc5cde8.svc.hypha.aicell.io/manuscript/`. Post-edit
+  HTTP HEAD → `200`, `content-length: 104874`, `last-modified` updated.
+  `Online Methods` string appears 8× in the rendered page
+  (heading + ToC + status-chip + sidebar + `methods-lede` + section link
+  references — exactly where they are expected).
+
+### Files changed
+
+- `preprint.md` — appended Online Methods v0.1 block after the Figure slots
+  block. No existing prose or scaffolding modified. File is now ~630 lines /
+  ~14,300 words.
+- `manuscript_html/index.html` — added `section.methods` CSS block,
+  inserted Online Methods `<section>` between §10 and References, added
+  ToC entry, bumped version / status / chips / sidebar / footer strings to
+  v0.2. File is now 104,874 bytes (up from 86,673).
+- `.svamp/d9a68491-c46b-4e04-9b30-6294d0bbf071/ralph-progress.md` — this entry.
+
+### Learnings for future iterations
+
+- **Online Methods is a genuinely non-evidence-gated prose block.** The
+  instruments (`survey_schema.md`, `longtail_tasks.md`, `replay/<candidate>/`)
+  are the methodology; their *values* are evidence-gated, their *protocols*
+  are not. This iteration extracts the protocols to prose. Future iterations
+  can do the same for one further non-evidence-gated thing: the v1.0-paper
+  git-tag release-engineering protocol (what is pinned, what is not,
+  how releases are cut, what the "immutable artefact" actually means in
+  CheerpJ terms). That is the last non-evidence-gated prose surface the
+  paper has room for before all remaining drafts are evidence-gated.
+- **Methods subsection order mirrors §10 Availability.** The subsection
+  headings of the Methods block were chosen to parallel §10 Availability's
+  paragraph structure. A reviewer can read them as a pair: Methods says
+  *how we did it*, §10 says *where the artefact is shipped*. Drift between
+  the two is the same class of bug the cross-reference map protects against
+  for References; a future iteration should add a small check that every
+  Methods subsection binds to at least one §10 artefact, and vice versa.
+- **Methods section length tests the Brief-Comm vs full-Article venue
+  decision.** At ~1,600 words, the Methods block alone exceeds the
+  Brief-Comm main-text target (~1,500 words). For a Brief Comm, most of
+  Methods would move to Supplementary Methods; for a full Article, Methods
+  belongs in the main body. This is the first prose block whose length
+  forces the venue decision. The supplementary-material outline that
+  Iteration-6/7 flagged as next-highest priority should be done in the
+  iteration *immediately after* this one: the Methods subsections are now
+  the concrete content the outline has to allocate.
+- **HTML re-render pattern holds.** Edit `preprint.md`, then edit
+  `manuscript_html/index.html` in the same iteration, add a CSS block if
+  the new section needs distinct styling, bump version strings in four
+  places (status chip, article-meta, sidebar dt, footer), add ToC entry,
+  re-test with `curl -sI`. `svamp serve` replaces the mount in place so
+  the URL is stable. Do not re-invoke `svamp serve` if the mount name is
+  unchanged — the existing mount is authoritative.
+- **Added pattern candidate (not yet promoted to Patterns block): "Methods
+  ↔ Availability twin-binding".** Every Methods subsection should name at
+  least one §10 Availability artefact; every §10 artefact should appear in
+  at least one Methods subsection. Currently this is an observation; if
+  a future iteration confirms the binding holds under submission-pass
+  condensation, promote to the Patterns block at the top of this file.
+- **DO NOT draft pillar-specific Methods prose ahead of evidence.** The
+  Field-deployment protocols subsection intentionally names protocol
+  items without partner institutions, enrolments, or IRB numbers. It is
+  tempting to draft named-institution Methods prose — resist until
+  partnership MoUs are signed. This iteration holds the discipline;
+  future ones must too.
+- **Highest-value next iteration: supplementary-material outline.** Now
+  that the Methods block exists, the Brief-Comm vs full-Article venue
+  decision has concrete content to allocate. A single iteration should
+  produce a table mapping each drafted-prose paragraph (Abstract, §1, §3,
+  §4, §8, §9, §10, Methods subsections 1–8) to either (main-body, kept),
+  (main-body, compressed), or (supplementary, with in-body pointer). The
+  figure allocation from Iteration-8's venue-reconciliation block is the
+  anchor; Methods subsections are the variable. After this is done, the
+  submission-pass condensation is mechanical, not editorial.
+- **Second-highest: placeholder-propagation script.** The count of
+  placeholders across three surfaces (preprint.md, manuscript_html/index.html,
+  References cross-reference map) has grown with this iteration.
+  `[N]`, `[Y1-Y2]`, `[X]`, `[Y]/30`, `[Z]/30`, `[48]%`, `[48]%`, `[20]%`,
+  `[DAU]`, `[YYYY]`, `[URL]`, `[URL/github]`, `[LICENCE]`, `[DOI]`,
+  `[VOL:PAGES]` all now appear in Methods as well. A small script over the
+  three files — listing placeholders, per-surface occurrences, and per-section
+  occurrence — is the right engineering primitive before the first
+  evidence-landing pass.
+- **Framing containment re-verified across the Methods render.** Methods
+  subsections use `deep-learning` and `DL method` language only in the
+  long-tail benchmark subsection, and the language there is "regime-fit
+  instrument, not DL-method competition". No new substantive AI claim is
+  introduced. The Iteration-6 containment discipline (AI discussion lives
+  substantively only in §8; glanced only in §9 / Cover letter) remains
+  intact — Methods describes the benchmark as a measurement tool, not a
+  methods comparison.
