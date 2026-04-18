@@ -64,6 +64,20 @@
   commitment — is the inverse of the usual Availability-section temptation to list
   capabilities for marketing. Future availability, data-availability, or
   reproducibility-checklist passes should follow the same binding rule.
+- **§9 = methodology-research argument, not a summary.** The §9 draft (2026-04-18)
+  deliberately introduces one new move that appears nowhere else in the paper:
+  it proposes two evaluative criteria — *regime fit* and *regime correctness* —
+  as a vocabulary methodology review currently lacks for scoring tool papers
+  whose contribution is not algorithmic novelty. Discussion sections in tool
+  papers tend to degrade into a summary of the preceding evidence; §9's role is
+  the opposite: to *extract a procedural argument* that the evidence warrants
+  but does not itself state. Future Discussion-style prose (response to
+  reviewers, editorial letters after real reviews land, conference talks)
+  should continue to treat the discussion section as the place where the
+  paper's evidence is translated into an argument *about the literature*,
+  not rehearsed against it. AI stays contained to §8 — §9 mentions agentic
+  bioimage only to note that the human-centred substrate is a prerequisite
+  for agentic work that takes data-governance seriously; no new AI claim.
 
 ---
 
@@ -419,4 +433,111 @@
   work; avoid overshooting and banking two prose drafts on the same
   commit. The progress-file discipline is one-draft-per-iteration so
   that a failure in one does not contaminate the previous.
+---
+
+## 2026-04-18 — Iteration 6: drafted §9 Discussion implications (v0.1)
+
+### What was implemented
+
+- Drafted `preprint.md §"Drafted prose — §9 Discussion implications (v0.1,
+  2026-04-18)"` — five paragraphs, ~620 words, distinct in argument shape from
+  §8. Where §8 characterises regimes and the composability seam, §9 extracts
+  the methodology-research implication: that bioimage-methodology review
+  currently lacks an evaluative vocabulary for tool papers whose contribution
+  is regime-serving rather than algorithmically novel.
+- Structure:
+  1. **What the preceding sections jointly claim.** §§2–8 collectively assert
+     that tooling for the small-data, human-centred majority has been
+     implicitly treated as solved. The cost has been paid by the users of the
+     literature, not its authors.
+  2. **Procedural implication for tool-paper review.** Proposes *regime fit*
+     and *regime correctness* as two criteria the current review vocabulary
+     lacks. Explicit: this does *not* displace algorithmic-novelty papers; it
+     asks that regime-serving papers be accepted as a distinct first-class
+     category.
+  3. **Re-reading §3 design decisions as proposals for what those criteria
+     could look like.** Continuity → regime fit. Zero install → regime
+     correctness. URL + pinned runtime + Hypha-RPC verifier → reproducibility-
+     under-regime. Each mapped to a property a reviewer could score.
+  4. **Boundary with agentic bioimage (§8 already scoped).** First-class
+     human-centred substrate is a *prerequisite* for agentic work that takes
+     data-governance and reproducibility seriously. Companion paper cited
+     (Ouyang et al., in preparation). "Regime, not ranking" reused as the
+     frame — preserves containment with §8.
+  5. **Regime measurement as a methodology contribution.** The 200-paper
+     survey, 30-task long-tail benchmark, and [N]-replay corpus are
+     re-usable instruments, not one-off warrants. Any subsequent tool-paper
+     author claiming to serve this regime can falsify or refine them. Closes
+     on adoption of the evaluative vocabulary as the desired outcome.
+- Added one pattern at top of progress file: **§9 = methodology-research
+  argument, not a summary**. Documents (a) that §9's one new move is the
+  regime-fit / regime-correctness evaluative vocabulary, (b) that Discussion
+  prose must extract an argument about the literature rather than rehearse
+  against it, (c) that AI containment is preserved — §9 mentions agentic
+  bioimage only as a prerequisite-consumer of the human-centred substrate.
+
+### Files changed
+
+- `preprint.md` — appended §9 drafted-prose block (after §10 v0.1 in file
+  order; final layout places §9 between §8 and §10). File is now 357 lines /
+  ~9,254 words. No existing content modified.
+- `.svamp/d9a68491-c46b-4e04-9b30-6294d0bbf071/ralph-progress.md` — appended
+  this entry; added one pattern bullet at the top.
+
+### Learnings for future iterations
+
+- **The "big seven" prose drafts are now complete at v0.1.** v0.5 Abstract,
+  §1 Introduction, §3 Design principles, §8 Limits-and-complementarity, §9
+  Discussion implications, §10 Availability, and the Cover letter to NM are
+  all publication-readable. The paper has end-to-end framing prose for every
+  section whose argument does not depend on unlanded evidence. Remaining
+  drafts are all either (a) evidence-gated (§2 survey final numbers; §4
+  replay scale-up; §5 teaching; §6 clinical; §7 collaboration demos) or (b)
+  secondary-pass consolidation.
+- **Highest-value next iteration without new evidence: title lock +
+  consistency pass.** The cover letter v0.1 uses title candidate 1 ("Small
+  data, human hands: …"). `preprint.md:19–25` lists three candidates. A
+  single small iteration should (i) decide which candidate to lock, (ii)
+  edit §19–25 to reflect the decision, (iii) sweep all drafted-prose blocks
+  (Abstract, §1, Cover letter) for any phrase that implicitly favours a
+  different candidate, (iv) verify the title claim is defensible against
+  the evidence already in place. Small scope, high-return consistency
+  payoff before any external reader sees the paper.
+- **Second-highest: bracket-reconciliation tooling.** Seven drafted blocks
+  now share the placeholder set [48]%, [48]%, [20]%, [X], [Y], [Z], [N],
+  [Y1–Y2], [DAU], [YYYY], [URL], [URL/github], [LICENCE], [DOI]. Writing
+  a small script (regex-over-file) that (a) lists every bracketed
+  placeholder and the sections that reference it, (b) flags any
+  inconsistency (e.g., [48]% in Abstract vs a different number in §1),
+  and (c) supports a single-pass resolve-everywhere operation when evidence
+  lands, would prevent the single largest class of drift bug at revision
+  time. This is engineering effort, not writing effort — appropriate for
+  a dedicated iteration.
+- **Third-highest: supplementary-material outline.** None of the seven
+  drafted blocks yet specifies what lives in main body vs supplementary.
+  Brief Communication constraints (~1500 words main, 3 figures main, 1
+  supplementary video) will force hard choices. A single iteration
+  mapping "which drafted-prose paragraph goes to main body, which collapses
+  to one sentence with a supplementary pointer" should precede the
+  submission-pass condensation — otherwise the final trim will be
+  arbitrary.
+- **Do NOT draft §§2, 4, 5, 6, 7 prose yet.** Every iteration since §3 has
+  re-affirmed this discipline: drafting ahead of evidence bakes in numbers
+  that will change. The temptation grows as the prose pool grows; resist
+  it. The remaining un-drafted sections are un-drafted *by design*, not
+  by omission.
+- **Do NOT rewrite the Risks table into response-to-reviewer prose.** The
+  Risks table (preprint.md:190–203) is scaffolding for *anticipated*
+  objections. Real reviewer comments will differ substantively. Pre-drafting
+  response prose wastes effort and anchors the author team to objections
+  reviewers may not raise. This is the same discipline as "do not draft
+  evidence-gated sections" — applied to post-review work.
+- **Framing containment now holds across seven drafted blocks.** AI is
+  mentioned substantively only in §8 and glancingly in §9 (as a
+  prerequisite-consumer argument) and in the Cover letter (as a regime
+  stance, using the §8 language). Abstract, §1, §3, §10 contain no
+  substantive AI discussion. This is correct per the locked framing and
+  must be preserved in any future edit pass. If a future iteration is
+  tempted to "balance" §1 or §3 with an AI paragraph, the answer is no:
+  containment is load-bearing.
 ---
