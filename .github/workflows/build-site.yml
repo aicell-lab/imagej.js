@@ -40,6 +40,7 @@ jobs:
         # threadhack drop-in runtime — loader.js is referenced from index.html
         mkdir -p dist/threadhack
         cp -r threadhack/runtime dist/threadhack/
+        cp -r threadhack/viv-loader dist/threadhack/ 2>/dev/null || true
         cp threadhack/parallel-tool.jar dist/threadhack/ 2>/dev/null || true
         cp threadhack/s2-worker.js     dist/threadhack/ 2>/dev/null || true
         cp threadhack/threadspawn-sample.jar dist/threadhack/ 2>/dev/null || true

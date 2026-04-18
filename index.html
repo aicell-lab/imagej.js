@@ -966,8 +966,12 @@ try {
 } catch (err) {
     console.error('Failed to load ImageJ:', err);
 }
- 
+
 </script>
+
+<!-- OME-TIFF / OME-Zarr URL loader. Activated by ?load=<url>. -->
+<script type="module" src="threadhack/viv-loader/ome-loader.js"></script>
+
 <div id="container"></div>
 </body>
 </html>
