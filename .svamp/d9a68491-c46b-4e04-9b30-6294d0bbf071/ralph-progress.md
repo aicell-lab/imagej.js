@@ -2,6 +2,33 @@
 
 ## Patterns
 
+- **Biologist-voice copy-edit of already-drafted v0.1 prose is a legitimate
+  iteration kind distinct from body-prose promotion, narrative-scaffolding
+  addition, and scorecard recomputation.** Iteration 23 (2026-04-18) did not
+  add a new surface, did not land new evidence, and did not promote a
+  structurally-weaker block to structural-commitment — it re-voiced already-
+  structural-commitment prose (Abstract v0.5 → v0.6; §1 Introduction v0.1 →
+  v0.2) for the biologist reader the paper explicitly targets. Three rules
+  govern this iteration kind: (i) **zero new claims, zero new citations,
+  zero new placeholders** — every sentence of v_{n+1} must preserve the
+  assertion of its v_n counterpart, so a claim-diff across the two blocks
+  is empty and the placeholder-inventory is unchanged; (ii) **surface-level
+  edits only** — the scope of the re-voicing is sentence reordering, verb
+  substitution (e.g., "Routine foundation-model solutions degrade" →
+  "Foundation-model segmenters degrade"), concrete-before-abstract
+  reordering, and title-echo placement — *not* paragraph rearrangement,
+  *not* argument rebalancing, *not* citation reordering; (iii) **the
+  biologist-voice chain must be inspected as a whole, not block-by-block**
+  — after the pass the reader's first-contact sequence (Key Points →
+  Abstract → §1 → Box 1 → §2 → Fig 1) reads without editorial-voice seams,
+  and the rendered surface transitions cleanly from one biologist-voiced
+  block to the next. If any rule is violated the pass is not a copy-edit
+  but a latent rewrite and must be landed as its own iteration with a
+  scorecard re-computation. Future biologist-voice passes for §§3/5/6/7/8
+  (body sections whose v0.1 prose also carries editorial-voice phrasings)
+  should follow the same three rules; do not bundle a biologist-voice pass
+  with a content edit in the same iteration.
+
 - **Top-of-article "Key Points" bench-biologist summary is a third biologist-
   facing surface distinct from both the body-inline narrative-scaffolding
   Boxes and the appendix-region editorial-machinery scorecards.** Iteration 22
@@ -3642,5 +3669,199 @@
   but the Abstract + §1 + §2 prose could still be tightened for the
   biologist voice the Key Points panel establishes. This remains a
   candidate for a future iteration.
+
+---
+
+
+## 2026-04-18 — Iteration 23: Biologist-voice copy-edit of Abstract + §1 (HTML render v0.16)
+
+### What was implemented
+
+- **Drafted Abstract v0.6 (~260 words, claim-preserving biologist-voice
+  rewrite of v0.5)** in `preprint.md §"Drafted prose — Abstract (v0.6,
+  biologist-voice rewrite 2026-04-18)"`, positioned after the Key Points
+  v0.1 block. v0.6 opens "Biologists work at human scale" with three
+  concrete biologist-scale scenes (13–27 cells; a handful of embryos; a
+  dozen slides) leading the editorial argument, splits the single-sentence
+  tool description into a two-sentence "what it is" + "what it centres"
+  pair so the biologist reader can parse delivery (browser, no install,
+  client-side) separately from design (interpretable classical algorithms,
+  any device), and closes with the locked title echo "**Small data, human
+  hands**" verbatim. Every number, citation, and placeholder is preserved
+  from v0.5 — the claim-diff is empty; the placeholder-inventory is
+  unchanged.
+
+- **Drafted §1 Introduction v0.2 (~680 words, claim-preserving biologist-
+  voice promotion of v0.1)** in `preprint.md §"Drafted prose — §1
+  Introduction (v0.2, biologist-voice promotion 2026-04-18)"`, positioned
+  after the Abstract v0.6 block. v0.2 preserves the four-paragraph
+  structure and every claim/citation/placeholder of v0.1; changes are
+  local: ¶1 opens with biologist-scale scenes (adding a field-ecology
+  phone-photograph scene drawn from the §3/Box 1 use-case catalogue —
+  not a new citation, an illustrative case that §3/Box 1 already
+  covers), re-orders sentences so concrete observations precede abstract
+  argument, and rephrases "This is the working scale of most biology —
+  not a data-collection failure, but the nature of careful,
+  hypothesis-driven science" (identical to Abstract v0.5's corresponding
+  sentence, propagated into §1); ¶2 tightens "We first measure the gap"
+  → "We measured the gap directly" and "Routine foundation-model
+  solutions degrade sharply outside their training distribution" →
+  "Foundation-model segmenters degrade sharply outside their training
+  distribution"; ¶3 re-threads with "In this regime, human biologists
+  still out-perform current AI systems" so the paragraph-chaining across
+  §1 ¶¶2–3 is anchored by the shared phrase "in this regime"; ¶4 de-
+  personalises the contribution list ("We contribute" → "The paper
+  contributes") for parallelism with Brief Communication voice, and
+  replaces the (interior) parenthesised failure-mode clause with an
+  em-dashed equivalent that flows better in biologist voice. Word count
+  unchanged from v0.1 at ~680 words.
+
+- **HTML render v0.16 replaces Abstract `<p>` (§"abstract") and §1's four
+  `<p>` elements** with the v0.6 / v0.2 prose. The `[Lord et al. 2024]`
+  in-text link is retained where it appears in the original; one new
+  `<a href="#ref-lord2024">` link is added to the Abstract opening
+  sentence (pointing at an already-existing id on the page, so no
+  anchor-integrity regression). The reader's first-contact sequence
+  now reads Key Points → Abstract v0.6 → §1 v0.2 → Box 1 → §2 → Fig 1
+  without editorial-voice seams. No new element, no new id, no new
+  `<aside>`, no new CSS — this iteration modifies existing prose only.
+
+- **Version bumps v0.15 → v0.16** in all four places (article-meta line
+  under Published, draft chip, sidebar Draft version dd, footer
+  rendered-from div). Status chip extended with iteration-23 narrative;
+  sidebar Ready (prose v0.1) list promoted — "Abstract v0.6 (biologist-
+  voice rewrite, iter 23)" bolded at the head, "§1 v0.2 (biologist-voice
+  promotion, iter 23)" bolded third.
+
+- **Readiness dashboard synchronised in-pass.** Banner augmented with
+  "Abstract v0.5 → v0.6 + §1 v0.1 → v0.2 biologist-voice copy-edit of the
+  biologist reader's first-contact sequence iteration 23". Prose-block
+  coverage row's count remains 19/19 (no new block) with "Abstract v0.6 +
+  §1 v0.2 biologist-voice iter 23" chip appended and the source-column
+  paragraph extended to record the pass.
+
+- **HTML well-formed check passes.** Custom `html.parser`-based validator
+  reports zero tag issues. File grew 382,898 → 385,113 bytes (+2,215
+  bytes: ~1.2 KB of Abstract prose delta + ~1.0 KB of §1 prose delta).
+
+- **Served URL confirmed stable.** Mount `manuscript` continues to serve
+  from disk. HTTP HEAD against
+  `https://static-serve-0bc5cde8.svc.hypha.aicell.io/manuscript/` → `200`,
+  `content-length: 385113` exactly matching `wc -c` on disk.
+
+- **Biologist-voice spot-check live.** `curl … | grep -o "Biologists work
+  at human scale"` returns two matches (Abstract + Key Points). `curl … |
+  grep -o "Small data, human hands"` returns five matches (title + Key
+  Points bullet 5 + Abstract closing + Cover letter + footer section
+  headings).
+
+- **Re-registered svamp session link** with v0.16 label:
+  `svamp session set-link "https://static-serve-0bc5cde8.svc.hypha.aicell.io/manuscript/" "Manuscript draft v0.16 (Nature Methods) — biologist-voice copy-edit of Abstract + §1"`.
+
+### Files changed
+
+- `preprint.md` — appended two "Drafted prose" blocks (Abstract v0.6 and
+  §1 Introduction v0.2) after the Key Points v0.1 block. No existing
+  content modified. File grew ~60 lines.
+- `manuscript_html/index.html` — replaced the Abstract `<p>` element's
+  inner prose and §1's four `<p>` elements' inner prose with v0.6 and
+  v0.2 text, respectively; bumped version strings v0.15 → v0.16 in four
+  places; extended status chip with iteration-23 narrative; promoted
+  Abstract and §1 entries in the sidebar Ready list; synchronised
+  readiness dashboard (prose-coverage row source-column extended,
+  banner augmented with iter-23 narrative); rewrote sidebar Draft
+  version dd rationale paragraph and footer rendered-from div to
+  describe the iter-23 biologist-voice pass. File grew 382,898 →
+  385,113 bytes (+2,215 bytes).
+- `.svamp/d9a68491-c46b-4e04-9b30-6294d0bbf071/config.json` —
+  `session_link` updated by `svamp session set-link` with v0.16 label.
+- `.svamp/d9a68491-c46b-4e04-9b30-6294d0bbf071/ralph-progress.md` —
+  this entry; added one new Patterns bullet at the top (biologist-voice
+  copy-edit as a fifth iteration kind distinct from body-prose
+  promotion, narrative-scaffolding addition, regression fix, and
+  scorecard recomputation).
+
+### Learnings for future iterations
+
+- **Iteration kind (iter 23) was pure biologist-voice copy-edit.** Kind
+  is catalogued as the fifth distinct iteration kind: (1) body-prose
+  promotion (e.g., §§5/6/7 iter 18, §4 iter 19); (2) figure/visual pass
+  (iter 17); (3) scorecard recomputation (various); (4) narrative-
+  scaffolding addition (Box 1 iter 20, Box 2 iter 21, Key Points iter
+  22); (5) biologist-voice copy-edit of already-drafted v0.1 prose (this
+  iteration). Iteration 21 also contained a regression-fix sub-kind; if
+  that is counted separately, (6) is regression fix. Future iterations
+  should name their kind explicitly.
+
+- **Claim-preservation discipline held strictly.** Every claim, citation,
+  and placeholder of Abstract v0.5 and §1 v0.1 is present in v0.6 and
+  v0.2. A claim-diff operation across the two blocks would return an
+  empty set. The only surface-level deltas are sentence order, verb
+  substitution, concrete-before-abstract reordering, paragraph opening
+  clauses ("We measured the gap directly" vs "We first measure the
+  gap"; "In this regime, …" vs "Human biologists still out-perform …
+  in this regime"), and the addition of the title-echo "**Small data,
+  human hands**" at the close of the Abstract — which already appears as
+  the paper's locked title and so is not a new phrase. Placeholder
+  inventory count unchanged from v0.15.
+
+- **Body prose remains AI-free outside §8.** The biologist-voice rewrite
+  did not introduce AI-adjacent language; the Abstract v0.6 references
+  to SAM, Cellpose-generalist, StarDist, and CellSAM are the identical
+  references from v0.5 retained verbatim. The "AI stays contained to
+  §8" pattern is preserved at v0.16.
+
+- **Placeholder-inventory discipline holds (fifth application).** Like
+  iterations 19 (§4 prose), 20 (Box 1), 21 (Box 2), and 22 (Key Points),
+  iteration 23 adds zero new placeholders. All `[48]%`, `[20]%`, `[N]`,
+  `[Y1–Y2]`, `[DAU]`, `[YYYY]`, `[X]`, `[7]%`, `[30]` placeholders in
+  v0.6 / v0.2 are identical tokens to v0.5 / v0.1. The placeholder-
+  inventory-shared-with-body-prose rule now has five applications.
+
+- **No scorecard re-computation required.** Because the iteration did
+  not change any claim, no Gate state shifts; dry-run defensibility,
+  submission packet, reporting summary, readiness, and research-briefing
+  scorecards all remain valid at v0.16. The prose-coverage row's count
+  is unchanged at 19/19 (no new block).
+
+- **The biologist-first-contact chain now reads seamlessly.** Key Points
+  (iter 22, burgundy `.key-points` block, biologist voice by construction)
+  → Abstract v0.6 (biologist voice, iter 23) → §1 v0.2 (biologist voice,
+  iter 23) → Box 1 (iter 20, blue `.nm-box`, biologist voice by
+  construction, three working-day vignettes) → §2 (iter 18 biologist-voice
+  rewrite, already inspects in biologist voice) → Fig 1. A reader
+  scrolling through the first ~2,400 rendered lines of the article
+  never hits an editorial-voice seam. This chain is the
+  publication-ready biologist reader path.
+
+- **Highest-value next iteration without new evidence: Bibliographic
+  verification pass (Gate H), still deferred from iterations 16–22.**
+  Still ~35 `[VOL:PAGES, DOI]` placeholders in References v0.1 remain
+  unresolved; a focused single-pass verification against Crossref /
+  DOI.org / journal records resolves Gate H and drops the placeholder-
+  inventory count significantly.
+
+- **Second-highest next iteration without new evidence: biologist-voice
+  copy-edit pass across §3 Design principles + §8 Limits (the next two
+  body sections whose v0.1 prose still carries editorial-voice
+  phrasings).** §3 ¶1 opens "The design of ImageJ.JS is governed by a
+  single premise derived from §2" — editorial voice. §8 ¶1 opens "The
+  argument of this paper is that small-data, human-centred bioimage
+  analysis is a distinct regime" — editorial voice. Both would benefit
+  from the same claim-preserving biologist-voice rewrite that Abstract
+  and §1 received in this iteration. Note, per the new Patterns bullet,
+  these should land as their own iterations; do not bundle multiple
+  sections into a single biologist-voice pass.
+
+- **Third-highest next iteration: tools/validate_manuscript.py (anchor-
+  integrity + visual-rendering validator).** The iter-22 learning
+  still applies — Key Points introduced 14 internal anchors, iter 23
+  added one more (Abstract → `#ref-lord2024`), and the CSS-scoping
+  regression from iter 20–21 was discoverable only by visual
+  inspection. A single `python tools/validate_manuscript.py` that
+  linted anchor integrity (every `<a href="#…">` points at an existing
+  id) and rendered-page geometry (no overlapping absolutely-positioned
+  asides; no sticky elements above body sections they shouldn't pin
+  over) would pre-empt two catalogued regression classes.
 
 ---
