@@ -2424,3 +2424,76 @@ Every sentence of v0.2 preserves the assertion of its v0.1 counterpart. Per-para
 **Biologist-voice programme — §4 extension note.** With iter 31, the biologist-voice chain now reads Key Points → Abstract v0.6 → §1 v0.2 → Box 1 → §2 v0.2 → Fig 1 → Box 2 → §3 v0.2 → Fig 2 → **§4 v0.2** → Fig 3 → §§5–7 → Fig 4–6 → §8 v0.2 → Fig 7 → Cover letter v0.2 → Research Briefing v0.2 — the paper's complete argumentative spine (§§1–8) plus both editor-facing surfaces in publication-ready biologist voice. The prior iter-27/iter-30 statement that the programme was "complete" was overclaiming: §4 prose had landed at v0.1 (iter 19) as structural-commitment but had not received the biologist-voice pass that §§1/2/3/8 received at iters 23/24/25/27. Iter 31 closes this gap. Remaining surfaces in editorial voice by genre design: §9 Discussion implications (methodology-community reflection); §10 Availability (fixed-format availability statement); §§5/6/7 (partner-evidence-gated structural-commitment prose at iter 18, scheduled for biologist-voice at Gate G partner landings); Online Methods (Methods genre); Research Briefing SEG 4 AUTHOR-GATED + SEG 5 EDITORIAL + Key references + Figure suggestion (genre-determined voices preserved per the iter-29 rule); Submission packet (catalogue form); Reporting Summary (question form); Reviewer-response dry run (reviewer-simulation form); Readiness dashboard (scorecard form).
 
 ---
+
+## Drafted prose — References (v0.2, Gate H bibliographic verification 2026-04-18)
+
+**Scope.** Eight of the 15 author-verifiable references in v0.1 promoted from `[VOL:PAGES, DOI]`-style placeholders to Crossref-verified metadata. Seven references remain author- or evidence-gated (software URLs, in-preparation preprints, partner-signoff figshare entries). This is the first **bibliographic-resolution iteration kind** — an eighth iteration kind distinct from all seven prior iteration kinds catalogued in the progress log, because it is the first pass *expected* to reduce the `placeholder-value` span count rather than preserve it.
+
+**Verification method.** Crossref REST API (`https://api.crossref.org/works?query.bibliographic=...`) was queried once per reference for the top candidate, cross-checked against title, author list, and year. DOIs returned by Crossref were adopted as the authoritative record. Two references required year corrections where the Crossref-returned year differed from the v0.1 entry — these were adopted as factual-correctness fixes, since the scientific claim each reference anchors is unchanged.
+
+### Resolved references (8)
+
+1. **ref-lord2024 (SuperPlots).** Lord SJ, Velle KB, Mullins RD, Fritz-Laylin LK. SuperPlots: Communicating reproducibility and variability in cell biology. *Journal of Cell Biology* **219**, e202001064 (**2020**). `doi:10.1083/jcb.202001064`.
+   - *Year correction 2024 → 2020.* The SuperPlots paper is a 2020 publication; the "(2024)" in v0.1 was a typo. The scientific claim the reference anchors ("13–27 cells per condition across three biological replicates") is the central SuperPlots finding and is unchanged.
+   - *Body-prose cross-ref updates.* Display text "Lord et al. 2024" → "Lord et al. 2020" in Abstract ¶1, Key Points bullet 1, §2 lead ¶, §2 ¶2, §3 ¶3, and Cover letter ¶2 (6 positions). Anchor id `ref-lord2024` preserved as an opaque HTML identifier — renaming it would break cross-references in 5 places without benefit.
+
+2. **ref-ma2024.** Ma J, He Y, Li F, Han L, You C, Wang B. Segment anything in medical images. *Nature Communications* **15**, 654 (2024). `doi:10.1038/s41467-024-44824-z`.
+
+3. **ref-archit2024 (micro-SAM).** Archit A, Freckmann L, Nair S *et al.* Segment Anything for Microscopy. *Nature Methods* **22**, 579–591 (**2025**). `doi:10.1038/s41592-024-02580-4`.
+   - *Year correction 2024 → 2025.* Published in the March 2025 issue; the "(2024)" in v0.1 was likely an "accepted 2024" confusion. The scientific claim (foundation-model segmenters degrade on long-tail biomedical imagery) is unchanged.
+   - *Body-prose cross-ref updates.* Display text "Archit et al. 2024" → "Archit et al. 2025" in §2 ¶2 and §3 ¶3 (2 positions). Anchor id `ref-archit2024` preserved.
+
+4. **ref-kirillov2023 (SAM).** Kirillov A, Mintun E, Ravi N *et al.* Segment Anything. *Proceedings of the IEEE/CVF International Conference on Computer Vision (ICCV)* 3992–4003 (2023). `doi:10.1109/ICCV51070.2023.00371`. arXiv:2304.02643.
+
+5. **ref-stringer2025 (Cellpose3).** Stringer C, Pachitariu M. Cellpose3: one-click image restoration for improved cellular segmentation. *Nature Methods* **22**, 592–599 (2025). `doi:10.1038/s41592-025-02595-5`.
+   - *Title update.* v0.1 title "Cellpose3: generalizable and improved cellular segmentation" replaced with Crossref-canonical title "Cellpose3: one-click image restoration for improved cellular segmentation". The citation refers to the same paper; the published title differs from the v0.1 draft rendering.
+
+6. **ref-schmidt2018 (StarDist).** Schmidt U, Weigert M, Broaddus C, Myers G. Cell Detection with Star-Convex Polygons. In *Medical Image Computing and Computer-Assisted Intervention — MICCAI 2018*, Lecture Notes in Computer Science **11071**, 265–273 (2018). `doi:10.1007/978-3-030-00934-2_30`. arXiv:1806.03535.
+
+7. **ref-israel2025 (CellSAM).** Israel U, Marks M, Dilip R *et al.* A foundation model for cell segmentation. *Nature Methods* **22**, 2585–2593 (2025). `doi:10.1038/s41592-025-02879-w`.
+
+8. **ref-deepimagej2021 (DeepImageJ).** Gómez-de-Mariscal E, García-López-de-Haro C, Ouyang W *et al.* DeepImageJ: A user-friendly environment to run deep learning models in ImageJ. *Nature Methods* **18**, 1192–1195 (2021). `doi:10.1038/s41592-021-01262-9`. Volume and page range already correct in v0.1; iter 32 adds the clickable DOI hyperlink.
+
+### Unresolved — author- or evidence-gated (7)
+
+- **ref-mri2020 (BIOP/MRI Wound Healing macro).** figshare / `dev.mri.cnrs.fr` DOI resolves at partner sign-off (Gate G).
+- **ref-royer2024 (Omega).** Royer LA *et al.* Omega — LLM-driven image analysis for napari. Not yet indexed in Crossref; likely bioRxiv preprint. Resolves at author correspondence.
+- **ref-naparimcp2025.** napari-mcp: software release; URL + commit hash resolve at submission.
+- **ref-bioimageagent2026.** Authors to be announced; arXiv-id + DOI resolve when the preprint lands.
+- **ref-chen2026 (CellVoyager).** Not yet indexed in Crossref; resolves when the paper lands.
+- **ref-ouyangcompanion.** Companion paper in preparation; resolves at companion-paper submission.
+- **ref-cheerpj.** Leaning Technologies product release; URL + archived-snapshot resolve at submission.
+- **ref-fsa (File System Access API).** W3C editor's draft; URL + date-accessed resolve at submission.
+
+### Rationale — why bibliographic-resolution is a distinct iteration kind
+
+Three properties distinguish this iteration kind from the seven prior:
+
+1. **The `placeholder-value` span count is expected to drop.** Every resolved reference converts one `<span class="placeholder-value">[VOL:PAGES, DOI]</span>` into plain inline text plus a clickable `<a class="ref-doi">` hyperlink. Net: 195 → 187 spans (−8), 326 → 318 bracketed tokens (−8 from the reference list; net +7 from editorial-machinery documentation of the resolution).
+
+2. **Factual-correctness fixes against an authoritative external record are allowed.** The iter-23 claim-preservation discipline is suspended *by design* for bibliographic-resolution iterations, because the Crossref record is the source of truth for bibliographic metadata. Year corrections (Lord 2024 → 2020; Archit 2024 → 2025) are factual-correctness fixes, not scientific-claim changes — the papers being cited are the same papers, and the scientific claims they anchor are unchanged.
+
+3. **Every rendered DOI is a clickable hyperlink.** The `<a class="ref-doi" href="https://doi.org/..."></a>` markup gives a reviewer or copy-editor a one-click audit path from the rendered reference to the journal record. This is a publication-readiness prerequisite Nature Methods copy-editing would otherwise perform at typesetting; landing it at authoring time means the reference list is reviewer-auditable now.
+
+### Invariants preserved
+
+- **Anchor id stability.** Every reference `id="ref-..."` attribute is preserved as an opaque HTML identifier. `ref-lord2024` remains `ref-lord2024` (not renamed to `ref-lord2020`) so no body-prose cross-reference breaks. The display text is the only surface that carries the year.
+- **Scientific claim stability.** Every empirical claim, figure cross-reference, named mechanism, and argumentative step of v0.24 is preserved in v0.25. The body paragraphs in Abstract, Key Points, §§1/2/3/8, Box 1, Cover letter, Research Briefing, and the argumentative cross-refs between them are unchanged; only bibliographic metadata within the reference list and the matching year-display in cross-ref anchors is updated.
+- **Gates D–G, I unchanged.** This iteration resolves Gate H only. Gate D (regime-survey rows 81–200 + IRR), Gate E (long-tail benchmark runs), Gate F (replay-corpus scale-up), Gate G (partner landings §§5/6/7), and Gate I (author sign-off) are all unchanged.
+- **Validator regression guard.** `python3 tools/validate_manuscript.py` PASS on v0.25: 0 HTML errors · 177 anchors / 49 unique / 77 ids / 0 broken · 187 `placeholder-value` spans / 325 bracketed tokens · 0 scope violations.
+
+### What resolves at Gate I (author sign-off)
+
+- Final author list + affiliations for §11 Correspondence
+- Final Competing Interests statement
+- Final CRediT taxonomy
+- Final acknowledgements
+- Final suggested reviewers
+
+### What resolves at Gate G (partner landings)
+
+- §§5/6/7 partner-specific figures, quotes, IRB numbers, course enrolments (Figs 4/5/6)
+- ref-mri2020 figshare DOI
+- The seven remaining author- or evidence-gated references listed above, for those whose authors are partners on this paper
+
+---

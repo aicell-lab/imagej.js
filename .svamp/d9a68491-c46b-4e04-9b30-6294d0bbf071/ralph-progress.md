@@ -2,6 +2,42 @@
 
 ## Patterns
 
+- **Bibliographic-resolution is a distinct iteration kind.** Iteration 32
+  (2026-04-18) was the first pass to resolve placeholder references against
+  an external authoritative record (Crossref). Eight of the 15 author-
+  verifiable references in v0.1 landed Crossref-verified metadata
+  (`[VOL:PAGES, DOI]` → real volume/pages + clickable `<a class="ref-doi">`
+  DOI hyperlink); the `placeholder-value` span count dropped 195 → 187
+  (−8, one per resolved ref). This iteration kind is **the first expected
+  to reduce the `placeholder-value` span count rather than preserve it**,
+  distinguishing it from every prior iteration kind where claim-preservation
+  discipline held the count invariant. Three rules govern bibliographic-
+  resolution iterations: (i) **the iter-23 claim-preservation discipline is
+  suspended by design** — year corrections, title updates, author-list
+  completions are allowed when the Crossref record differs from v0.1,
+  because Crossref is the authoritative source of bibliographic metadata
+  (e.g., iter 32 corrected Lord 2024 → Lord 2020 SuperPlots and Archit
+  2024 → Archit 2025 micro-SAM against the Crossref record); the
+  *scientific* claims the references anchor (e.g., "13–27 cells per
+  condition", "foundation models degrade on long-tail biomedical imagery")
+  are strictly preserved; (ii) **anchor id stability** — `<li id="ref-X">`
+  identifiers are preserved as opaque HTML strings even when the year
+  changes (e.g., `ref-lord2024` stays `ref-lord2024` after the year
+  correction) to avoid breaking body-prose cross-references; only the
+  display text of `<a href="#ref-X">[Author Year]</a>` is updated; (iii)
+  **every resolved DOI is a clickable hyperlink** — `<a class="ref-doi"
+  href="https://doi.org/...">` markup gives a reviewer or copy-editor a
+  one-click audit path from rendered reference to journal record, which
+  is the publication-readiness prerequisite Nature Methods copy-editing
+  would otherwise perform at typesetting. Unresolvable references
+  (product URLs, W3C drafts, in-preparation preprints, partner-gated
+  figshare entries) stay as placeholders with explicit author- or
+  evidence-gated scorecard status. Future bibliographic-resolution
+  iterations (e.g., when in-prep preprints like Royer 2024 Omega, Chen
+  2026 CellVoyager, BioImage-Agent 2026 land on Crossref) follow the
+  same three rules and drop the `placeholder-value` span count by one
+  span per resolved reference.
+
 - **Engineering-infrastructure iteration is a distinct iteration kind.**
   Iteration 28 (2026-04-18) landed `tools/validate_manuscript.py` — a
   200-line Python 3 stdlib-only regression guard — without touching any
@@ -4717,5 +4753,56 @@
 - **Third-highest: draft `<figure>` schematics for Box 1 / Box 2.** Box 1 and Box 2 are biologist-facing pull-out boxes iters 20/21 added; they carry no figure. Adding a schematic-illustration `<figure>` to each would close a visible scaffolding-symmetry asymmetry (every body section has a figure; the boxes do not). Not evidence-gated — any schematic would suffice — and is the last easy UX-quality lift before evidence-gated Gate-G partner landings. The figure would need to respect the iter-20 Box 1 rule (no new claim, number, or citation), which constrains the schematic to visualising the three vignettes already named.
 
 - **Fourth-highest: per-§N prose-block checklist in the readiness dashboard.** The iter-31 gap (§4 structural-commitment at v0.1 but not biologist-voiced while chain summaries claimed §§1–8 complete) would have been caught earlier by a per-section checklist in the readiness dashboard rather than a single prose-coverage numeric count (23 / 23). A dashboard row that tracks per-§ biologist-voice status (v0.1 structural / v0.2 biologist-voiced / pending Gate G) would make the gap visible at a glance. This is a dashboard-expansion iteration, lightweight, and complements the iter-28 validator (which cannot check prose voice, only HTML structure).
+
+---
+
+## 2026-04-18 — Iteration 32: References v0.1 → v0.2 · Gate H bibliographic verification (HTML render v0.25) — first bibliographic-resolution iteration
+
+### What was implemented
+
+- **Eight of 15 author-verifiable references resolved** against Crossref REST API (`https://api.crossref.org/works?query.bibliographic=...`), each promoted from `<span class="placeholder-value">[VOL:PAGES, DOI]</span>` to real volume/pages + clickable `<a class="ref-doi" href="https://doi.org/...">` hyperlink:
+  1. `ref-lord2024` (SuperPlots): *J Cell Biol* 219, e202001064 (**2020**), `doi:10.1083/jcb.202001064` — **year corrected 2024 → 2020** against Crossref record; "13–27 cells" scientific claim unchanged.
+  2. `ref-ma2024` (SAM-medical): *Nat Commun* 15, 654 (2024), `doi:10.1038/s41467-024-44824-z`.
+  3. `ref-archit2024` (micro-SAM): *Nat Methods* 22, 579–591 (**2025**), `doi:10.1038/s41592-024-02580-4` — **year corrected 2024 → 2025**.
+  4. `ref-kirillov2023` (SAM): ICCV 3992–4003 (2023), `doi:10.1109/ICCV51070.2023.00371`.
+  5. `ref-stringer2025` (Cellpose3): *Nat Methods* 22, 592–599 (2025), `doi:10.1038/s41592-025-02595-5` — title promoted to Crossref-canonical "Cellpose3: one-click image restoration for improved cellular segmentation".
+  6. `ref-schmidt2018` (StarDist): MICCAI LNCS 11071, 265–273 (2018), `doi:10.1007/978-3-030-00934-2_30`.
+  7. `ref-israel2025` (CellSAM): *Nat Methods* 22, 2585–2593 (2025), `doi:10.1038/s41592-025-02879-w`.
+  8. `ref-deepimagej2021` (DeepImageJ): *Nat Methods* 18, 1192–1195 (2021), `doi:10.1038/s41592-021-01262-9`.
+- **Seven references remain author- or evidence-gated** (Royer Omega, Chen CellVoyager, Ouyang companion paper: in-prep; BioImage-Agent, napari-mcp: preprint/software author-gated; CheerpJ, File System Access API: product/W3C URL fields at submission; BIOP/MRI Wound Healing: partner-signoff figshare).
+- **Body-prose cross-ref display text updated** for the two year corrections: "[Lord et al. 2024]" → "[Lord et al. 2020]" in 6 positions (Abstract ¶1, Key Points bullet 1, §2 lead, §2 ¶2, §3 ¶3, Cover letter ¶2); "[Archit et al. 2024]" → "[Archit et al. 2025]" in 2 positions (§2 ¶2, §3 ¶3). Anchor ids `ref-lord2024` and `ref-archit2024` preserved as opaque HTML identifiers so no cross-ref breaks.
+- **References-verification scorecard row promoted** from `0 / ~35` PENDING to `8 / 15` RESOLVED (Gate H closure, iter 32) + `7 / 15` author- or evidence-gated. Prose-block coverage row bumped 24 / 24 → 25 / 25 with a `<span class="status-met">References v0.2 Gate-H 8/15 resolved iter 32</span>` chip.
+- **HTML render v0.24 → v0.25** — version strings bumped in four canonical places (published-line line 1723; status-chip line 1742; sidebar Article-info Draft-version dd line 4111; footer Rendered-from div line 4172). Article-meta dd and footer div rewritten with iter-32-leading descriptions; v0.24 baseline content wrapped as `<!-- v0.24 baseline (preserved): ... -->` inline HTML comments; iter-29-style sibling-comment structure at the `<!-- v0.24 --><!-- v0.23 -->` transition (closing `.)` rewritten to `. -->`).
+- **Sidebar Ready-list entry added** for `<strong>References v0.2 (Gate H bibliographic verification, iter 32)</strong>`. Regression-guard dd entry updated with the new v0.25 counts (187 spans down from 195 at v0.24).
+- **Readiness banner extended** with an iter-32 clause documenting the eight resolved references (one-line each with DOI), the seven author-/evidence-gated remainder, and the scorecard row promotion.
+- **`preprint.md`** — appended one "Drafted prose — References (v0.2, Gate H bibliographic verification 2026-04-18)" block as the 35th Drafted-prose block. Block includes (i) verification method (Crossref REST API), (ii) list of 8 resolved refs with full metadata and year-correction provenance, (iii) list of 7 unresolved refs with author-/evidence-gated category, (iv) rationale for why bibliographic-resolution is a distinct iteration kind, (v) invariants preserved (anchor-id stability, scientific-claim stability, Gates D–G/I unchanged, validator PASS), (vi) what resolves at Gate I (author sign-off) and Gate G (partner landings).
+- **All four validator checks PASS** via `python3 tools/validate_manuscript.py` at the tail of the iteration. Counts: 0 HTML errors · 177 anchors / 49 unique / 77 ids / 0 broken · **187** `placeholder-value` spans (down from 195 at v0.24, −8 as expected) · 325 bracketed tokens · 0 scope violations · Overall PASS.
+- **Disk size 437,452 → 450,480 bytes** (+13,028 bytes: +~2,800 bytes for the 8 resolved reference entries with DOI hyperlinks; +~4,500 bytes for the iter-32 dd/footer/banner descriptions; +~5,700 bytes for v0.24 baseline content preserved as inline HTML comments). `wc -c` on disk and `content-length` on served URL match exactly at 450,480.
+- **Served URL confirmed stable.** `curl -sI https://static-serve-0bc5cde8.svc.hypha.aicell.io/manuscript/` returns `HTTP/2 200` with `content-length: 450480`. `curl … | grep -c "v0.25"` returns `4` — four canonical version-string locations.
+
+### Files changed
+
+- `manuscript_html/index.html` — 8 reference entries updated with Crossref-verified metadata + clickable DOI hyperlinks; body-prose cross-ref display text updated for 2 year corrections (6 Lord + 2 Archit = 8 positions); References-verification scorecard row promoted from PENDING → RESOLVED; Prose-block coverage row bumped 24/24 → 25/25; sidebar Ready-list entry added; regression-guard dd updated with new v0.25 counts; readiness banner extended with iter-32 clause; version strings bumped v0.24 → v0.25 in 4 canonical places; article-meta dd and footer div rewritten with iter-32-leading descriptions (v0.24 baseline preserved as inline HTML comments). File grew 437,452 → 450,480 bytes.
+- `preprint.md` — appended one "Drafted prose — References (v0.2, Gate H bibliographic verification 2026-04-18)" block as the 35th Drafted-prose block. File grew 2426 → 2499 lines.
+- `.svamp/d9a68491-c46b-4e04-9b30-6294d0bbf071/config.json` — `session_link` updated by `svamp session set-link` with v0.25 label.
+- `.svamp/d9a68491-c46b-4e04-9b30-6294d0bbf071/ralph-progress.md` — this entry; one new Patterns bullet added at the top of the Patterns block (Bibliographic-resolution is a distinct iteration kind).
+
+### Learnings for future iterations
+
+- **Eighth iteration kind catalogued.** The seven prior iteration kinds (body-prose promotion, structural-commitment, biologist-voice copy-edit, narrative-scaffolding addition, editorial-machinery scorecard synchronisation, working-doc ↔ rendered-surface agreement repair, engineering-infrastructure) all held the claim-preservation invariant (`placeholder-value` span count unchanged). The bibliographic-resolution iteration kind is the first to *reduce* the span count by design — one span per resolved reference. Future iterations that work against external authoritative records (Crossref DOI, OME-TIFF metadata, IRB approval numbers, partner-institution names) fit the same kind.
+
+- **Year corrections against Crossref are factual-correctness fixes, not scientific-claim changes.** The iter-23 claim-preservation discipline protects the *scientific* claims (empirical findings, mechanism descriptions, argumentative steps) from silent drift. It does not protect bibliographic *metadata* (year, volume, page range, title spelling) from correction against an authoritative external record. When the rendered reference entry says "Lord et al. 2024" but the Crossref record for the SuperPlots DOI says "Lord et al. 2020", the Crossref record wins and the display text is updated. The "13–27 cells" claim is unchanged — it is the same finding from the same paper.
+
+- **Anchor id stability is a critical discipline.** Renaming `ref-lord2024` → `ref-lord2020` would have broken cross-references in 5 body-prose positions without benefit. HTML ids are opaque identifiers; the display text `[Lord et al. 2020]` carries the year for the reader. Future bibliographic-resolution iterations should follow this rule: update display text where the year is visible; preserve anchor ids as-is.
+
+- **The validator's placeholder-inventory check is now diagnostic rather than regression-guard.** iter 28 introduced `tools/validate_manuscript.py` as a regression guard — the 195-span baseline was expected to hold across biologist-voice and engineering-infrastructure iterations. iter 32 is the first iteration where the baseline is expected to *drop*, and it drops to 187. The validator correctly surfaces this as "placeholder-value spans=187"; a future iteration that reads this count as a regression would mis-read. Recommended usage update: the validator reports the span count, and the author records the current iteration's expected baseline in the progress log entry. Future bibliographic-resolution iterations will continue to drop the count as in-prep preprints (Royer, Chen, Ouyang companion, BioImage-Agent) land on Crossref.
+
+- **Highest-value next iteration without new evidence: draft `tools/propagate_placeholders.py`.** With Gate H bibliographic verification closed for the 8 author-verifiable references, the next-highest-value next iteration (from the iter-31 recommendation ladder) is now the placeholder-propagation script. The script takes a resolution dict `{'[48]%': 'X%', '[N]': 'N', ...}` and propagates resolved values across all 25 Drafted-prose blocks + the HTML render in one pass, with the iter-28 validator as a post-propagation regression check (0 HTML errors; no new broken anchors; `placeholder-value` span count drops by one span per propagated resolution). Drafting it now, before Gate D/E/F/G evidence lands, makes the evidence-landing iteration itself a mechanical step rather than 25 careful manual edits. Follows the iter-28 engineering-infrastructure iteration-kind rules; the script would be the *second* application of that iteration kind.
+
+- **Second-highest next iteration without new evidence: `<figure>` schematics for Box 1 / Box 2.** Box 1 and Box 2 are biologist-facing pull-out boxes iters 20/21 added; they carry no figure. Adding a schematic-illustration `<figure>` to each would close a visible scaffolding-symmetry asymmetry. Not evidence-gated. Easy UX-quality lift.
+
+- **Third-highest: per-§N prose-block checklist in the readiness dashboard.** The iter-31 gap (§4 structural-commitment at v0.1 but not biologist-voiced while chain summaries claimed §§1–8 complete) would have been caught earlier by a per-section checklist. A dashboard row tracking per-§ biologist-voice status (v0.1 structural / v0.2 biologist-voiced / pending Gate G) would make the gap visible at a glance.
+
+- **Fourth-highest: bibliographic re-check of the 7 unresolved references.** A periodic re-query against Crossref for the 7 unresolved references (Royer Omega, Chen CellVoyager, Ouyang companion, BioImage-Agent, napari-mcp, CheerpJ, FSA) would catch them at publication. Each resolution drops the `placeholder-value` span count by one span. When all 7 resolve, the References section will have zero `placeholder-value` spans — the Gate H closure invariant. This is the natural pair to the Gate I author-sign-off iteration.
 
 ---
