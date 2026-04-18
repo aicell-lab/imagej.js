@@ -1,0 +1,76 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>SAB POC — zero-copy pixel share across workers</title>
+<!-- To work, serve with:
+     Cross-Origin-Opener-Policy: same-origin
+     Cross-Origin-Embedder-Policy: require-corp
+-->
+<style>body{font:13px ui-monospace,Menlo,monospace;padding:16px} pre{background:#111;color:#eee;padding:10px;white-space:pre-wrap;max-height:500px;overflow:auto}</style>
+</head>
+<body>
+<h2>SAB POC — SharedArrayBuffer + Atomics across 4 workers</h2>
+<button id="run">Run</button>
+<pre id="out"></pre>
+<script>
+const out = document.getElementById("out");
+const log = (m) => out.textContent += "\n" + m;
+
+document.getElementById("run").onclick = async () => {
+  out.textContent = "";
+  if (typeof SharedArrayBuffer !== "function") {
+    log("❌ SharedArrayBuffer is unavailable — check COOP/COEP headers.");
+    return;
+  }
+  log("✅ crossOriginIsolated = " + self.crossOriginIsolated);
+
+  // 1 MB of bytes, shared
+  const SIZE = 1 << 20;
+  const sab = new SharedArrayBuffer(SIZE);
+  const view = new Uint8Array(sab);
+
+  // Main writes a ramp pattern
+  for (let i = 0; i < SIZE; i++) view[i] = i & 0xff;
+  log("main: wrote ramp pattern to " + SIZE + " bytes in SAB");
+
+  // Atomics control int32 — workers signal completion
+  const ctrlSab = new SharedArrayBuffer(16);
+  const ctrl = new Int32Array(ctrlSab);  // ctrl[0] = done count
+
+  const N_WORKERS = 4;
+  const CHUNK = SIZE / N_WORKERS;
+
+  const workers = [];
+  const t0 = performance.now();
+  for (let i = 0; i < N_WORKERS; i++) {
+    const w = new Worker("poc-worker.js", { name: `w${i}` });
+    w.postMessage({ sab, ctrlSab, offset: i * CHUNK, length: CHUNK, workerId: i });
+    workers.push(w);
+  }
+
+  // Wait for all workers via Atomics.wait
+  while (true) {
+    const done = Atomics.load(ctrl, 0);
+    if (done >= N_WORKERS) break;
+    // Atomics.wait with a short timeout; main thread cannot wait indefinitely on main
+    await new Promise(r => setTimeout(r, 10));
+  }
+  const elapsed = performance.now() - t0;
+  log(`all ${N_WORKERS} workers done in ${elapsed.toFixed(1)}ms`);
+
+  // Verify workers each wrote their signature
+  let correct = 0;
+  for (let i = 0; i < N_WORKERS; i++) {
+    const off = i * CHUNK;
+    if (view[off] === (0xA0 + i)) correct++;
+  }
+  log(`main: verified ${correct}/${N_WORKERS} worker writes visible WITHOUT postMessage copy`);
+
+  // Cleanup
+  workers.forEach(w => w.terminate());
+  log("\n✅ SAB cross-worker zero-copy sharing works (if correct == N_WORKERS).");
+};
+</script>
+</body>
+</html>

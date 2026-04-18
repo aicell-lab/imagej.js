@@ -1,0 +1,106 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Real-browser benchmark: threadhack runtime</title>
+<!-- Uses OUR runtime loader — the drop-in replacement. -->
+<!-- All workers, natives, rewriter are set up automatically. -->
+<script src="loader.js"></script>
+<style>
+  body { font: 13px ui-monospace, Menlo, monospace; padding: 16px; max-width: 1000px; }
+  pre { background: #111; color: #eee; padding: 10px; white-space: pre-wrap; max-height: 560px; overflow: auto; }
+  table { border-collapse: collapse; margin: 12px 0; }
+  th, td { border: 1px solid #444; padding: 4px 10px; text-align: right; }
+  th:first-child, td:first-child { text-align: left; }
+  .good { color: #0a7; font-weight: bold; }
+  button { font: inherit; padding: 6px 12px; cursor: pointer; }
+</style>
+</head>
+<body>
+<h2>threadhack runtime — end-to-end browser benchmark</h2>
+<p>Compares the <b>same workload</b> with different pool sizes. A value of 0 disables the
+worker pool and forces all rewritten dispatches to fall through cooperatively (single JS event loop).
+Pool≥1 routes Serializable Runnables / Callables through that many Worker JVMs.</p>
+
+<button id="run">Run benchmark</button>
+<div id="progress" style="margin: 10px 0; color: #666;"></div>
+
+<table id="results">
+  <thead>
+    <tr><th>Pool</th><th>Thread.start path (ms)</th><th>Executors path (ms)</th><th>new TPE path (ms)</th><th>Speedup vs pool=0</th></tr>
+  </thead>
+  <tbody></tbody>
+</table>
+
+<h3>Console</h3>
+<pre id="out"></pre>
+
+<script>
+const outEl = document.getElementById("out");
+const origLog = console.log;
+console.log = (...a) => { origLog(...a); outEl.textContent += "\n" + a.join(" "); outEl.scrollTop = outEl.scrollHeight; };
+console.error = console.log;
+
+const JOBS = 10;
+const WORK = 50_000_000;
+const POOLS = [0, 2, 4, 6, 10];
+
+document.getElementById("run").onclick = async () => {
+  const btn = document.getElementById("run");
+  btn.disabled = true;
+  const tbody = document.querySelector("#results tbody");
+  tbody.innerHTML = "";
+  const progress = document.getElementById("progress");
+
+  const results = {};
+  // Important: we have to init CheerpJ ONCE per page load, so we can't
+  // actually re-create the pool with a different size inside the same page.
+  // Instead, we run ALL pool-size benchmarks in ONE CheerpJ session: use
+  // pool=10, then restrict dispatch to N workers by routing only to the first N.
+  // But the simplest way is to just configure pool=10 and benchmark at max.
+  // For comparison we reload with ?pool=N in the URL.
+
+  // Here: run with the current pool size (whatever loader decided). Single row.
+  progress.textContent = "initializing…";
+  await cheerpjInit({
+    status: "none",
+    javaProperties: ["user.dir=/files"],
+    // pool size honored if user passed it via URL ?pool=N; otherwise default
+  });
+
+  // Load bench tool
+  const baseUrl = location.pathname.substring(0, location.pathname.lastIndexOf("/") + 1);
+  // parallel-tool.jar contains BenchTool + ASM — auto-loaded by our runtime loader
+  progress.textContent = "loading library…";
+  const lib = await cheerpjRunLibrary("/app/imagej-test/threadhack/runtime/parallel-tool.jar");
+  const BenchTool = await lib.com.hack.BenchTool;
+
+  // Sample jar is needed for the serializable Bench.SumJob etc.
+  // Our classloader needs the sample jar URL to find it.
+  progress.textContent = "initializing bench…";
+  const sampleJar = "/app/imagej-test/threadhack/threadspawn-sample.jar";
+  await BenchTool.init(sampleJar);
+
+  const poolSize = Number(await (await lib.com.hack.ij.MacroRunner).getClassesTouched) || "?";
+
+  // Run each bench twice — first run is cold, second is warm (pool-reuse effect).
+  for (let r = 1; r <= 2; r++) {
+    progress.textContent = `run ${r}/2: Thread.start…`;
+    const tT = Number(await BenchTool.runThreadBench(JOBS, WORK, r === 1));
+    progress.textContent = `run ${r}/2: Executors…`;
+    const tE = Number(await BenchTool.runExecutorBench(JOBS, WORK, false));
+    progress.textContent = `run ${r}/2: new ThreadPoolExecutor…`;
+    const tP = Number(await BenchTool.runTpeBench(JOBS, WORK));
+    console.log(`run ${r}: thread=${tT}ms exec=${tE}ms tpe=${tP}ms`);
+    results[r] = { thread_ms: tT, exec_ms: tE, tpe_ms: tP };
+
+    const row = document.createElement("tr");
+    row.innerHTML = `<td>run ${r}</td><td>${tT}</td><td>${tE}</td><td>${tP}</td><td>—</td>`;
+    tbody.appendChild(row);
+  }
+  progress.innerHTML = "<b class='good'>done</b>";
+  btn.disabled = false;
+};
+</script>
+</body>
+</html>

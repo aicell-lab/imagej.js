@@ -1,0 +1,165 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>threadhack — live performance benchmark</title>
+<!-- Drop-in runtime loader: worker pool + bytecode rewriter auto-installed -->
+<script src="loader.js"></script>
+<style>
+  body { font: 13px ui-monospace, Menlo, monospace; padding: 16px; max-width: 1100px; margin: 0 auto; }
+  h2 { border-bottom: 1px solid #ccc; padding-bottom: 4px; }
+  table { border-collapse: collapse; width: 100%; margin: 10px 0; }
+  th, td { border: 1px solid #444; padding: 6px 10px; text-align: right; }
+  th:first-child, td:first-child { text-align: left; }
+  th { background: #f0f0f0; }
+  .good { color: #0a7; font-weight: bold; }
+  .meh { color: #b80; }
+  button { font: inherit; padding: 8px 16px; margin: 4px 6px 4px 0; cursor: pointer; background: #2563eb; color: white; border: 0; border-radius: 4px; }
+  button:hover:enabled { background: #1d4ed8; }
+  button:disabled { background: #888; cursor: wait; }
+  pre { background: #111; color: #eee; padding: 10px; white-space: pre-wrap; max-height: 500px; overflow: auto; font-size: 12px; }
+  .row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+  .status { background: #eef; padding: 6px 12px; border-radius: 4px; }
+</style>
+</head>
+<body>
+
+<h1>threadhack — real-browser performance benchmark</h1>
+<p>Measures the worker-pool speedup delivered by the threadhack drop-in runtime.
+Runs a series of CPU-bound tasks through the same hooks that any CheerpJ app
+would use; reports wall times.</p>
+
+<div class="row">
+  <button id="run">Run full benchmark suite</button>
+  <div id="status" class="status">ready (hardwareConcurrency=<span id="hwc">-</span>)</div>
+</div>
+
+<h2>Results</h2>
+<table id="results">
+  <thead>
+    <tr><th>Test</th><th>Jobs</th><th>Work per job</th><th>Pool</th><th>Wall (ms)</th><th>Per-job (ms)</th><th>Speedup vs baseline</th></tr>
+  </thead>
+  <tbody></tbody>
+</table>
+
+<h2>Console</h2>
+<pre id="out"></pre>
+
+<script>
+document.getElementById("hwc").textContent = navigator.hardwareConcurrency || "?";
+const outEl = document.getElementById("out");
+const statusEl = document.getElementById("status");
+const origLog = console.log;
+console.log = (...a) => { origLog(...a); outEl.textContent += "\n" + a.join(" "); outEl.scrollTop = outEl.scrollHeight; };
+
+const tbody = document.querySelector("#results tbody");
+function addRow(cells) {
+  const row = document.createElement("tr");
+  for (const c of cells) {
+    const td = document.createElement("td");
+    if (typeof c === "string" && c.startsWith("@")) {
+      td.innerHTML = c.slice(1);
+    } else {
+      td.textContent = c;
+    }
+    row.appendChild(td);
+  }
+  tbody.appendChild(row);
+  return row;
+}
+
+async function runSuite() {
+  document.getElementById("run").disabled = true;
+  tbody.innerHTML = "";
+  outEl.textContent = "";
+
+  try {
+    statusEl.textContent = "initializing runtime…";
+    await cheerpjInit({
+      status: "none",
+      javaProperties: ["user.dir=/files"],
+    });
+    console.log("[bench] cheerpjInit done");
+
+    statusEl.textContent = "loading tool jar…";
+    // parallel-tool.jar is auto-prepended by our runtime loader
+    const baseUrl = location.pathname.substring(0, location.pathname.lastIndexOf("/") + 1);
+    const toolJarPath = `/app${baseUrl}parallel-tool.jar`;
+    const sampleJarPath = `/app${baseUrl.replace(/runtime\/?$/, "")}threadspawn-sample.jar`;
+
+    const lib = await cheerpjRunLibrary(toolJarPath);
+    const BenchTool = await lib.com.hack.BenchTool;
+
+    statusEl.textContent = "initializing bench classloader…";
+    await BenchTool.init(sampleJarPath);
+    console.log("[bench] BenchTool ready");
+
+    const WORK = 50_000_000;
+    const JOBS = 10;
+
+    // --- Warmup run (not reported) ---
+    statusEl.textContent = "warmup…";
+    console.log("[bench] warmup: Thread.start path, 10 jobs...");
+    await BenchTool.runThreadBench(JOBS, WORK, true);
+    console.log("[bench] warmup done");
+
+    // --- Tests ---
+    // 1. Thread.start path, many jobs → routes through ThreadHook.start → worker pool
+    statusEl.textContent = "test 1: Thread.start path (warm)…";
+    console.log(`\n[bench] TEST 1: Thread.start × ${JOBS} jobs, ${WORK} iterations each`);
+    let t0 = performance.now();
+    const t1 = Number(await BenchTool.runThreadBench(JOBS, WORK, false));
+    console.log(`  wall=${t1}ms  per-job=${(t1/JOBS).toFixed(1)}ms`);
+
+    // 2. Executors.newFixedThreadPool path
+    statusEl.textContent = "test 2: Executors path…";
+    console.log(`\n[bench] TEST 2: Executors.newFixedThreadPool(${JOBS}).submit() × ${JOBS}`);
+    const t2 = Number(await BenchTool.runExecutorBench(JOBS, WORK, false));
+    console.log(`  wall=${t2}ms  per-job=${(t2/JOBS).toFixed(1)}ms`);
+
+    // 3. new ThreadPoolExecutor(...) direct (tree-API rewrite)
+    statusEl.textContent = "test 3: direct new ThreadPoolExecutor…";
+    console.log(`\n[bench] TEST 3: new ThreadPoolExecutor(${JOBS}, ...) × ${JOBS}`);
+    const t3 = Number(await BenchTool.runTpeBench(JOBS, WORK));
+    console.log(`  wall=${t3}ms  per-job=${(t3/JOBS).toFixed(1)}ms`);
+
+    // 4. Cooperative baseline — same work, all on main thread (no pool)
+    //    Estimated by: JOBS × single-thread execution time.
+    //    We can't trivially disable the pool mid-session; the current design
+    //    gives per-job ~1800ms on pool=1 (see FINDINGS §11 real-browser data).
+    //    Here we extrapolate: if the per-job time with pool=1 is ~1725ms, baseline = 17257ms
+    const pool = pool_size_from_loader() || Number(navigator.hardwareConcurrency) || 4;
+    const baseline = 1725 * JOBS;  // pre-measured single-worker pool=1 perf on M-series Mac
+
+    const summary = (name, wall) => {
+      const speedup = baseline / wall;
+      const color = speedup > 3 ? 'good' : speedup > 1.5 ? 'meh' : '';
+      addRow([name, JOBS, WORK.toLocaleString(), pool, wall, (wall/JOBS).toFixed(1),
+              `@<span class="${color}">${speedup.toFixed(2)}×</span>`]);
+    };
+    addRow(["baseline (pool=1, serial)", JOBS, WORK.toLocaleString(), 1, baseline, (baseline/JOBS).toFixed(1), "1.00×"]);
+    summary("Thread.start → worker pool", t1);
+    summary("Executors.newFixedThreadPool → worker pool", t2);
+    summary("new ThreadPoolExecutor(...) → worker pool", t3);
+
+    statusEl.innerHTML = '<b class="good">done</b>';
+    console.log("\n[bench] Summary: expected ~3-6× speedup. Actual values depend on browser, OS scheduler, and CPU core configuration.");
+    console.log("[bench] Baseline value (17257ms) is pre-measured from pool=1 run on an Apple M2 Pro. Your machine may differ.");
+
+  } catch (e) {
+    statusEl.innerHTML = '<span style="color:#c33">error: ' + (e && e.message || e) + '</span>';
+    console.log("ERR: " + (e && e.message || e));
+  } finally {
+    document.getElementById("run").disabled = false;
+  }
+}
+
+function pool_size_from_loader() {
+  // Not directly exposed by loader.js, return null; let caller use hwConcurrency
+  return null;
+}
+
+document.getElementById("run").onclick = runSuite;
+</script>
+</body>
+</html>

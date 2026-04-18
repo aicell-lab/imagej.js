@@ -1,0 +1,149 @@
+// ============================================================
+//  threadhack drop-in runtime for CheerpJ 4.2
+//  ============================================================
+//  Swap `<script src="https://cjrtnc.leaningtech.com/4.2/loader.js">`
+//  for `<script src="…/runtime/loader.js">` and any CheerpJ app
+//  auto-gains a worker pool + bytecode rewriter. No other changes.
+// ============================================================
+
+(function () {
+  // Capture OUR URL in the outer scope (document.currentScript works here
+  // because we haven't used document.write yet).
+  var ourScriptEl = document.currentScript;
+  var ourUrl = (ourScriptEl && ourScriptEl.src) ? ourScriptEl.src : '';
+  var base = ourUrl ? ourUrl.substring(0, ourUrl.lastIndexOf('/') + 1) : '/';
+
+  // Stash for the inline wrapper to read
+  window.__threadhackBase__ = base;
+
+  // Pull in the stock CheerpJ loader SYNCHRONOUSLY so cheerpjInit is defined
+  // before the app's <script type="module"> block runs.
+  document.write('<script src="https://cjrtnc.leaningtech.com/4.2/loader.js"><\/script>');
+
+  // Inline wrapper — runs synchronously after the stock loader finishes parsing.
+  document.write('<script>' + `
+(function () {
+  'use strict';
+
+  var base = window.__threadhackBase__;
+  var TOOL_JAR_URL_ABS = base + 'parallel-tool.jar';
+  var WORKER_URL       = base + 's2-worker.js';
+
+  // Path CheerpJ can see via /app/ — i.e. pathname part relative to origin
+  var toolJarPath;
+  try {
+    var u = new URL(TOOL_JAR_URL_ABS, location.href);
+    toolJarPath = '/app' + u.pathname;
+  } catch (_) {
+    toolJarPath = '/app/' + TOOL_JAR_URL_ABS.replace(/^.*?\\/\\//, '').replace(/^[^/]+/, '');
+  }
+
+  console.log('[threadhack-runtime] base=' + base);
+  console.log('[threadhack-runtime] TOOL_JAR=' + TOOL_JAR_URL_ABS + ' → ' + toolJarPath);
+  console.log('[threadhack-runtime] WORKER=' + WORKER_URL);
+
+  // Worker pool + natives ---------------------------------------------------
+  var pool = [];
+  var nextWorker = 0, nextHandle = 1;
+  var pending = new Map();
+  var handleResults = new Map();
+
+  async function spawnPool(n) {
+    var t0 = performance.now();
+    for (var i = 0; i < n; i++) {
+      var w = new Worker(WORKER_URL + '?cb=' + Date.now() + '_' + i, { name: 'w' + i });
+      w.__name = 'w' + i;
+      var readyP = new Promise(function (res) { w._res = res; });
+      w.onmessage = function (e) {
+        var d = e.data;
+        if (d.kind === 'ready') { w._res(); }
+        else if (d.kind === 'log') { /* quiet */ }
+        else if (d.kind === 'done' || d.kind === 'error') {
+          var p = pending.get(d.id); if (!p) return;
+          pending.delete(d.id);
+          d.kind === 'error' ? p.reject(new Error(d.err)) : p.resolve(d);
+        }
+      };
+      pool.push(w);
+      await readyP;
+    }
+    console.log('[threadhack-runtime] ' + n + ' workers ready in ' + (performance.now() - t0).toFixed(0) + 'ms');
+  }
+
+  var threadHookNatives = {
+    Java_com_hack_ThreadHook_nativeWorkerAvailable: async function () {
+      return pool.length > 0;
+    },
+    Java_com_hack_ThreadHook_nativeDispatch: async function (lib, bytes, className) {
+      var handle = nextHandle++;
+      var buf = new Uint8Array(bytes).buffer.slice(0);
+      var w = pool[nextWorker++ % pool.length];
+      var resultPromise = new Promise(function (resolve, reject) {
+        pending.set(handle, { resolve: resolve, reject: reject });
+      });
+      w.postMessage({ kind: 'run', id: handle, bytes: buf }, [buf]);
+      handleResults.set(Number(handle), resultPromise);
+      return handle;
+    },
+    Java_com_hack_ThreadHook_nativeAwait: async function (lib, handle) {
+      var key = Number(handle);
+      var p = handleResults.get(key); handleResults.delete(key);
+      if (!p) throw new Error('no such handle: ' + handle);
+      var r = await p;
+      return new Int8Array(r.resultBuf);
+    }
+  };
+
+  // Wrap cheerpjInit --------------------------------------------------------
+  if (typeof cheerpjInit !== 'function') {
+    console.error('[threadhack-runtime] stock cheerpjInit not defined — stock loader failed?');
+    return;
+  }
+  var realInit = cheerpjInit;
+  var DEFAULT_POOL = Math.max(2, Math.min(10, (navigator.hardwareConcurrency || 4)));
+
+  self.cheerpjInit = async function (opts) {
+    opts = Object.assign({}, opts || {});
+    var poolSize = opts.threadhackPool !== undefined ? opts.threadhackPool : DEFAULT_POOL;
+    delete opts.threadhackPool;
+    opts.natives = Object.assign({}, threadHookNatives, opts.natives || {});
+
+    // Install our classloader as the system classloader so plugin jars
+    // loaded by ImageJ's internal PluginClassLoader (and any child
+    // classloader) delegate to us and get bytecode-rewritten.
+    var existingProps = opts.javaProperties || [];
+    var hasSysCl = existingProps.some(function (p) { return /^java\\.system\\.class\\.loader=/.test(p); });
+    opts.javaProperties = existingProps.concat(hasSysCl ? [] : ['java.system.class.loader=com.hack.ParallelClassLoader']);
+
+    // Pre-warm cheerpj CDN cache
+    try {
+      await Promise.all([
+        'https://cjrtnc.leaningtech.com/4.2/cj3.js',
+        'https://cjrtnc.leaningtech.com/4.2/cj3.wasm'
+      ].map(function (u) { return fetch(u, { cache: 'force-cache' }).then(function (r) { return r.arrayBuffer(); }); }));
+    } catch (_) {}
+
+    var res = await realInit(opts);
+
+    if (poolSize > 0) {
+      try { await spawnPool(poolSize); } catch (e) { console.error('[threadhack-runtime] pool failed: ' + e); }
+    }
+
+    // Wrap cheerpjRunLibrary NOW (it's only defined after realInit returns).
+    if (typeof self.cheerpjRunLibrary === 'function' && !self.cheerpjRunLibrary.__thWrapped) {
+      var orig = self.cheerpjRunLibrary;
+      self.cheerpjRunLibrary = function (cp) {
+        var newCp = (typeof cp === 'string' && cp.indexOf('parallel-tool.jar') === -1)
+          ? (toolJarPath + ':' + cp) : cp;
+        console.log('[threadhack-runtime] cheerpjRunLibrary: ' + cp + ' → ' + newCp);
+        return orig.apply(this, [newCp].concat(Array.prototype.slice.call(arguments, 1)));
+      };
+      self.cheerpjRunLibrary.__thWrapped = true;
+    }
+    return res;
+  };
+
+  console.log('[threadhack-runtime] ready. Call cheerpjInit(...) as usual. Pool default=' + DEFAULT_POOL + '.');
+})();
+` + '<\/script>');
+})();

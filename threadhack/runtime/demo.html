@@ -1,0 +1,96 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>threadhack drop-in runtime demo</title>
+<!-- ============================================================ -->
+<!-- The ONE script-src change that any CheerpJ app needs to make. -->
+<!-- Replaces https://cjrtnc.leaningtech.com/4.2/loader.js          -->
+<!-- with our drop-in that adds a Web Worker pool + bytecode       -->
+<!-- rewriter transparently. No other changes anywhere.            -->
+<!-- ============================================================ -->
+<script src="loader.js"></script>
+<style>
+  body { font: 13px ui-monospace, Menlo, monospace; padding: 16px; max-width: 1000px; }
+  pre { background: #111; color: #eee; padding: 10px; white-space: pre-wrap; max-height: 500px; overflow: auto; }
+  button { font: inherit; padding: 6px 12px; margin: 4px 6px 4px 0; cursor: pointer; }
+  .good { color: #0a7; font-weight: bold; }
+</style>
+</head>
+<body>
+<h2>threadhack drop-in runtime — zero CheerpJ-app code changes</h2>
+<p>This page includes only one tag: <code>&lt;script src="loader.js"&gt;</code>.
+It defines <code>cheerpjInit</code> as usual. When called, the wrapper spawns
+a worker pool, pre-loads the bytecode-rewriting tool jar, and installs natives.
+Any Java code using the standard concurrency APIs (Thread.start, Executors, etc.)
+now parallelizes through the pool — with zero changes to the app or its plugins.</p>
+
+<button id="boot">Run demo</button>
+<pre id="out">(click run)</pre>
+
+<script>
+const out = document.getElementById("out");
+const origLog = console.log;
+console.log = (...a) => { origLog(...a); out.textContent += "\n" + a.join(" "); };
+console.error = console.log;
+
+document.getElementById("boot").onclick = async () => {
+  try {
+    out.textContent = "initializing…";
+    const t0 = performance.now();
+    // Standard CheerpJ init — no special opts. Our wrapper injects pool + natives.
+    await cheerpjInit({
+      status: "none",
+      // NOT headless — ImageJ's IJ.init() needs AWT for menu construction
+      javaProperties: ["user.dir=/files"],
+    });
+    // Minimal virtual display so AWT menu init doesn't throw HeadlessException
+    var disp = document.createElement("div");
+    disp.style.cssText = "position:fixed;left:-10000px;top:-10000px;width:400px;height:300px;";
+    document.body.appendChild(disp);
+    cheerpjCreateDisplay(400, 300, disp);
+    console.log(`[demo] cheerpjInit wrapped completed in ${(performance.now() - t0).toFixed(0)}ms`);
+
+    // Now: the user's tool jar is already on classpath (our wrapper auto-prepended it).
+    // Load ij.jar + use MacroRunner to run a macro through the rewriter.
+    const baseUrl = location.pathname.endsWith("/")
+      ? location.pathname
+      : location.pathname.substring(0, location.pathname.lastIndexOf("/") + 1);
+    const ijJar = `/app${baseUrl.replace(/threadhack\/runtime\/?$/, "")}lib/ImageJ/ij.jar`;
+    console.log("[demo] loading ij.jar:", ijJar);
+
+    const lib = await cheerpjRunLibrary(ijJar);  // ← wrapper prepends parallel-tool.jar
+    const MacroRunner = await lib.com.hack.ij.MacroRunner;
+    await MacroRunner.init(ijJar);
+
+    console.log(`[demo] ready. rewrites=${await MacroRunner.getRewriteCount()} sites=${await MacroRunner.getRewriteSites()}`);
+
+    // Run a simple macro that stays within ImageJ headless limits
+    const result = await MacroRunner.runMacro(`
+      setBatchMode(true);
+      newImage("t", "8-bit noise", 512, 512, 1);
+      run("Gaussian Blur...", "sigma=3");
+      getStatistics(area, mean);
+      close();
+      setBatchMode(false);
+      "" + mean;
+    `);
+    const resultStr = result ? await result.toString() : "";
+    console.log(`[demo] macro result: mean=${resultStr}`);
+
+    const stats = {
+      classesTouched:    Number(await MacroRunner.getClassesTouched()),
+      rewriteSites:      Number(await MacroRunner.getRewriteSites()),
+      tpeDirectRewrites: Number(await MacroRunner.getTpeDirectRewrites()),
+      shipped:           Number(await MacroRunner.getShippedCount()),
+      fallback:          Number(await MacroRunner.getFallbackCount()),
+    };
+    console.log("[demo] rewriter stats: " + JSON.stringify(stats));
+    console.log("[demo] DONE ✓");
+  } catch (e) {
+    console.error("ERR: " + (e && e.message || e));
+  }
+};
+</script>
+</body>
+</html>
