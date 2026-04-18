@@ -2,6 +2,60 @@
 
 ## Patterns
 
+- **Engineering-infrastructure iteration is a distinct iteration kind.**
+  Iteration 28 (2026-04-18) landed `tools/validate_manuscript.py` — a
+  200-line Python 3 stdlib-only regression guard — without touching any
+  drafted prose, any figure, any editorial-machinery scorecard, or any
+  placeholder. The iteration bumped the HTML render v0.20 → v0.21 and
+  added a "Regression guard (iter 28)" entry to the sidebar Article-info
+  list plus a clause to the readiness banner, but introduced zero new
+  claims and zero new placeholder tokens. This is a seventh iteration
+  kind distinct from (i) new-prose drafting, (ii) structural-commitment
+  promotion, (iii) biologist-voice copy-edit, (iv) editorial-machinery
+  scorecard synchronisation, (v) narrative-scaffolding addition, and
+  (vi) working-doc ↔ rendered-surface agreement repair. Three rules
+  govern this iteration kind: (i) **zero prose edits** — the iteration
+  must not touch body prose, figure captions, box contents, key points,
+  abstract, or cover letter, so the prose-coverage count, placeholder
+  inventory, defensibility scorecard, packet scorecard, reporting
+  summary scorecard, research briefing scorecard, figure slots
+  scorecard, and readiness gates ALL remain unchanged; (ii) **the
+  iteration adds an authoring-time guard for a regression class that
+  has already occurred at least once** — iter 28 guards iter-21 CSS
+  scoping and iter-27 inventory inflation, two empirically-observed
+  regression classes, not speculative ones, and future engineering-
+  infrastructure iterations should similarly be justified by observed
+  failures, not imagined ones; (iii) **the script is self-contained
+  and dependency-free** — stdlib-only Python (or equivalent) so future
+  iterations in arbitrary sandbox postures can run it without
+  environment prep. Running the validator at the start of every
+  iteration (before any edit) and at the end (after every edit) is the
+  recommended usage pattern; the iter-28 dd description documents the
+  usage entry point for future iterations to find.
+
+- **Validator is the regression-guard entry point for all four check
+  classes accumulated over iterations 23–27.** `tools/validate_manu
+  script.py` runs (1) HTML well-formedness via a void-element-aware
+  tag-stack parser (authoritative void-element list `area, base, br,
+  col, embed, hr, img, input, link, meta, param, source, track, wbr`
+  — which is how iter-26 fixed the iter-25 parser bug); (2) anchor
+  integrity — every `href="#<id>"` resolves to an `id="<id>"`, so the
+  iter-21-class regression of a broken cross-reference is caught at
+  authoring time; (3) placeholder inventory — reports
+  `placeholder-value` span count and total bracketed-token count so a
+  future iteration can diff against the recorded baseline (195 / 287
+  on v0.21) and notice a silent delta; (4) placeholder-value-scope
+  linter — any `<span class="placeholder-value">` inside `<dd>` or
+  `<footer>` is flagged as a regression of the iter-27 inflation
+  class. The script exits 0 on pass, non-zero on any check failure,
+  so a future iteration can wire it into a pre-commit hook or a CI
+  gate if desired. The iter-28 dashboard sidebar entry and the iter-28
+  article-meta dd description both document the validator's check
+  set, baseline counts, and usage entry point — future iterations
+  should update these descriptions when adding a new check, and
+  should NEVER silence a failing check without fixing the underlying
+  regression.
+
 - **Biologist-voice copy-edit of already-drafted v0.1 prose is a legitimate
   iteration kind distinct from body-prose promotion, narrative-scaffolding
   addition, and scorecard recomputation.** Iteration 23 (2026-04-18) did not
@@ -4362,5 +4416,148 @@
   the caption-vs-evidence rule from iter 8. Writing all four
   captions at v0.1 in a single iteration would close a visible
   evidence-gated gap in the Figures block.
+
+---
+
+---
+
+## 2026-04-18 — Iteration 26: Figure slots v0.1 → v0.2 (Fig 4/5/6/7 structural captions back-appended to preprint.md) + HTML render v0.19
+
+### What was implemented
+
+- **Appended `preprint.md §"Drafted prose — Figure slots and captions (v0.2 — Fig 4/5/6/7 structural captions + Fig 7 slot registration, 2026-04-18)"`** as the 30th Drafted-prose block after the §8 v0.2 block from iter 25. The new block back-appends the four structural-commitment figure captions that iter 17 drafted only in `manuscript_html/index.html` (Fig 4 Teaching deployments; Fig 5 On-device clinical pathology; Fig 6 Real-time collaborative analysis without data movement; Fig 7 ImageJ.JS is composable, not captive). Captions reproduced verbatim from HTML anchors `#fig4`, `#fig5`, `#fig6`, `#fig7`, so that a reviewer reading the working doc no longer has to consult the rendered HTML to see what a figure asserts. Fig 7 receives its first entry in the working doc (iter 17 only added it to HTML); claim, evidence source (shipped `hypha-imagej-service.js` method surface), and venue-path position (kept in main body on both paths — it is the one AI-adjacent figure whose containment-in-§8 a reviewer will expect to see) are recorded. Figure count update table at end of block: v0.1 `3 / 6 full captions` → v0.2 `7 / 7 structural captions drafted`.
+
+- **HTML render v0.18 → v0.19.** Version strings bumped in four canonical places (published-line; status-chip Working-draft chip; sidebar Article-info Draft-version dd; footer Rendered-from div). Sidebar Ready-list entry promoted `Figure slots` → `<strong>Figure slots v0.2 (Fig 4/5/6/7 structural captions, iter 26)</strong>`. Article-meta dd and footer div paragraphs rewritten with iter-26-leading descriptions; v0.18 baseline descriptions preserved as HTML comments inside the same dd/div so the diff log is readable in-page.
+
+- **Readiness dashboard synchronised in-pass.** (i) Banner extended with "Figure slots v0.1 → v0.2 back-append of Fig 4/5/6 structural preview captions + Fig 7 composition slot registration iteration 26 (figure-slots scorecard 3 / 6 → 7 / 7 structural, 3 / 7 still evidence-gated on numerical resolution)"; (ii) prose-coverage row chip appended `<span class="status-met">Figure slots v0.2 (Fig 4/5/6/7 structural captions back-appended) iter 26</span>` and numeric count bumped 19 / 19 → 20 / 20; (iii) **Figure-slots row updated** from `3 / 6 full captions · 3 / 6 evidence-gated` → `7 / 7 structural captions · Fig 7 composition RESOLVED (code-only evidence source) · 3 / 7 still evidence-gated on numerical resolution`, source-column rewritten to name the iter-26 back-append and to record Fig 7 as structurally resolved (its evidence source is shipped code in the `v1.0-paper` git tag, not partner data). Source-block column updated to cite "§\"Figure slots and captions\" v0.1 + v0.2 addendum".
+
+- **HTML well-formed check passes** after fixing a void-element regression in the validator: `errors=0, unclosed=0` on a parser with a correct void-element list (`br, hr, img, meta, link, input, source, area, base, col, embed, param, track, wbr`). The iter-25 progress note's "0/0" result continues to hold on the same parser.
+
+- **Anchor-integrity check passes.** 169 total `href="#…"` anchors, 48 unique, **0 broken**. Both existing (`#fig4`, `#fig5`, `#fig6`, `#fig7`) and newly-referenced (`#references` in sidebar; cross-refs in the expanded Figure-slots dashboard cell) resolve to existing section/figure ids. Third consecutive iteration (iter 24, 25, 26) running the anchor-integrity check as a first-class validation step.
+
+- **Placeholder-inventory sanity check.** Baseline v0.18 (from `git show HEAD~1:manuscript_html/index.html`) was 195 `class="placeholder-value"` spans and 299 bracketed tokens on the current counter; v0.19 is 195 spans and 300 bracketed tokens. The +1 bracketed delta is a single `[yellow]` reference inside the iter-26 footer-div description of the placeholder-propagation discipline (identical pattern preserved from v0.18); **zero new `placeholder-value` spans** introduced, zero new placeholder tokens reachable by the propagation script. Claim-preservation invariant holds (this is the eighth iteration in a row with an empty claim-diff).
+
+- **Disk size 391,495 → 398,469 bytes** (+6,974 bytes: ~1,500 bytes for the Figure-slots dashboard-row rewrite and the prose-coverage chip + ~5,400 bytes for the article-meta dd + footer iter-26 descriptions + the sidebar Ready-list promotion). `wc -c` on disk and `content-length` on the served URL match exactly (`398469`).
+
+- **Served URL confirmed stable.** `curl -sI https://static-serve-0bc5cde8.svc.hypha.aicell.io/manuscript/` returns `HTTP/2 200` with `content-length: 398469`. `curl … | grep -c "v0.19"` returns 4 (matching the four canonical version bumps).
+
+- **Re-registered svamp session link** with v0.19 label: `svamp session set-link "https://static-serve-0bc5cde8.svc.hypha.aicell.io/manuscript/" "Manuscript draft v0.19 (Nature Methods) — Figure slots v0.2: Fig 4/5/6/7 structural captions back-appended to preprint.md"`. Dashboard button now reflects the iter-26 state.
+
+### Files changed
+
+- `preprint.md` — appended one "Drafted prose — Figure slots and captions (v0.2 — Fig 4/5/6/7 structural captions + Fig 7 slot registration, 2026-04-18)" block after the §8 v0.2 block from iter 25. No existing content modified. File grew ~50 lines (Fig 4/5/6/7 captions reproduced verbatim from HTML; Fig 7 gets a new full entry with evidence source + panels + caption; figure-count update table at end).
+- `manuscript_html/index.html` — bumped version strings v0.18 → v0.19 in four canonical places; promoted Figure-slots entry in sidebar Ready list to bolded iter-26 form; appended iter-26 prose-coverage chip and numeric 19/19 → 20/20; rewrote Figure-slots dashboard row and source-column; rewrote readiness banner to add iter-26 note; rewrote article-meta Draft-version dd with iter-26-leading description (v0.18 baseline preserved as inline HTML comment); rewrote footer Rendered-from div similarly. File grew 391,495 → 398,469 bytes (+6,974 bytes).
+- `.svamp/d9a68491-c46b-4e04-9b30-6294d0bbf071/config.json` — `session_link` updated by `svamp session set-link` with v0.19 label.
+- `.svamp/d9a68491-c46b-4e04-9b30-6294d0bbf071/ralph-progress.md` — this entry; no new Patterns bullet added (the pattern of back-appending HTML-render-only prose into the working doc is a one-off debt repayment, not a recurring idiom; the rule that figure captions are committed as structural-commitment before evidence lands is already covered by the iter-8 Figures-are-committed-as-slots-with-claims pattern bullet).
+
+### Learnings for future iterations
+
+- **Iteration kind (iter 26) was working-doc ↔ rendered-surface agreement repair** — a sixth iteration kind distinct from (i) new-prose drafting, (ii) structural-commitment promotion, (iii) biologist-voice copy-edit, (iv) editorial-machinery scorecard synchronisation, and (v) narrative-scaffolding addition. The discipline: when the HTML render carries prose that was drafted only in-HTML as part of a figure-or-box iteration, back-append the prose to the canonical working doc (`preprint.md`) in a new subsection with a v.N+1 marker, verbatim. The rule that preprint.md is the canonical source and HTML is the view (pattern bullet about `## Drafted prose` convention) is preserved — the back-append is the debt repayment that brings the canonical source up to the view, not the other way round. Future iterations that want to update a figure caption should edit `preprint.md` first, then re-render.
+
+- **Claim-preservation discipline held strictly (eighth application).** Like iters 19 (§4 prose), 20 (Box 1), 21 (Box 2), 22 (Key Points), 23 (Abstract + §1), 24 (§3), 25 (§8), iter 26 adds zero new claims and zero new placeholder spans (`class="placeholder-value"` count steady at 195). The claim-diff against the HTML render is empty by construction — the preprint.md prose is a verbatim reproduction of what the HTML already carries. The bracketed-token count ticked 299 → 300 from a single `[yellow]` reference in the iter-26 footer description of the placeholder-propagation discipline, identical to the pattern preserved from v0.18; this does not count as a new placeholder (no resolution path, no propagation-script match).
+
+- **Figure 7 first enters the working doc at iter 26.** Iter 17 drafted the AI-composition panel sketch directly in HTML and referenced it from §8 ¶4–5 prose; iter 26 is the first iteration that writes Fig 7's claim, evidence source, panels, caption, and venue-path position into `preprint.md`. This closes a quiet inconsistency that has been latent since iter 17 — a reviewer opening only the working doc would not have known that Fig 7 exists. Future figure additions should land in `preprint.md` first, in the Figure-slots block, before being rendered; iter 17's HTML-first route was the exception, not the precedent.
+
+- **Figure-slots scorecard 7 / 7 structural is a publication-readiness milestone.** At iter 26 every figure in the paper carries a structural-commitment caption in both surfaces (working doc + rendered HTML). Fig 4/5/6 remain evidence-gated on their numerical resolutions (concept-check gain; partner institution + IRB + case audit; per-vignette institutional attribution) — those are Gate-G partner-landings that the present iteration cannot advance. Fig 7 is resolved: its evidence source is shipped code in the `v1.0-paper` git tag, so no Gate is pending for that figure. This is the fourth editorial-machinery scorecard to reach its completeness invariant (after Submission-packet zero-EVIDENCE-GATED, Reporting Summary zero-AUTHOR-GATED, and dry-run 10/12-answerable).
+
+- **Highest-value next iteration without new evidence (with the biologist-voice and Figure-caption programmes now complete): Bibliographic verification pass (Gate H).** ~35 `[VOL:PAGES, DOI]` placeholders in References v0.1 remain unresolved; a focused single-pass verification against Crossref / DOI.org / journal records resolves Gate H and drops the placeholder-inventory bracketed-token count by a measurable margin. This has been the #1 recommended next iteration for three iterations in a row (24, 25, 26) and remains so.
+
+- **Second-highest next iteration without new evidence: `tools/validate_manuscript.py` (anchor-integrity + placeholder-inventory delta validator + HTML well-formed check).** The three checks have now been run manually for four consecutive iterations (iter 23, 24, 25, 26), and iter 26 additionally exposed a void-element bug in the iter-25 validator that a scripted version would catch at authoring time. Extracting them into a single script pre-empts the iter-21 CSS scoping regression class and turns placeholder-inventory and anchor-integrity checks into regression guards rather than manual recounts.
+
+- **Third-highest: draft §2 Measurement ¶1 biologist-voice rewrite.** §2 is the one body section that carries an evidence-gated notice (data rows 81–200 + IRR) but also has a structural-commitment v0.1 opening paragraph that was re-voiced in iter 17. A targeted biologist-voice copy-edit of §2 (preserving the existing v0.1 prose, adding biologist-scale scene openings consistent with the Abstract v0.6 / §1 v0.2 / §3 v0.2 / §8 v0.2 pass) would restore end-to-end biologist-voice consistency across §§1–8 — iter 25 correctly flagged that §2 was the only unvoiced body section and that iter 25 did not address it. This is a legitimate sixth application of the iter-23 biologist-voice rule (zero new claim; surface-level edits only; biologist-voice chain inspected as a whole) and would close the last gap in the biologist-voice programme.
+
+---
+
+## 2026-04-18 — Iteration 27: §2 Measuring the small-data majority v0.1 → v0.2 biologist-voice rewrite (HTML render v0.20) — biologist-voice programme complete end-to-end
+
+### What was implemented
+
+- **Appended `preprint.md §"Drafted prose — §2 Measuring the small-data majority (v0.2, biologist-voice rewrite 2026-04-18)"`** as the 31st Drafted-prose block. All six paragraphs reproduced: ¶1 is the iter-17 biologist-voice opener back-appended from HTML to `preprint.md` for working-doc / render agreement (same debt-repayment pattern as iter 26's Fig 4/5/6/7 back-append); ¶¶2–6 are the new biologist-voice rewrites. No existing content modified. Block ends with a "Biologist-voice programme — completion note" documenting that the programme is complete at iter 27.
+
+- **HTML §2 ¶¶2–6 rewritten in place.** Five `<p>` elements replaced with biologist-voice prose leading concrete-before-abstract: ¶2 opens "The survey looks at 200 recent open-access microscopy papers..."; ¶3 opens "At the halfway point, with 80 of 200 rows extracted, the picture is the one most bench biologists will recognise from their own corridor"; ¶4 keeps the italicised "ImageJ is the substrate every biologist still opens..." line verbatim; ¶5 foregrounds concrete task examples (tropical parasites, silver-stained histology, phone photographs of wounds, 1950s-style chamber counts) before the inclusion criteria; ¶6 opens "Put plainly: if we re-ran a published Fiji analysis today, would the numbers still match?". Five new `<h3>` subsection headings added (How the survey was designed; What the interim read shows; Why the ImageJ-mention-but-not-primary slice sharpens the claim; The long-tail benchmark; The replay instrument) matching §3's inline-heading idiom. Five internal anchors added (`#sec-3`, `#sec-8` in ¶4; `#sec-8` in ¶5; `#sec-4`, `#sec-10` in ¶6) to make bare section cross-references navigable.
+
+- **Version strings bumped v0.19 → v0.20** in four canonical places (published-line at line 1723; status-chip Working-draft chip at line 1742; sidebar Article-info Draft-version dd at line 4105; footer Rendered-from div at line 4164). Sidebar Ready-list entry for §2 promoted from non-bold `· §2 ·` to `· <strong>§2 v0.2 (biologist-voice rewrite, iter 27)</strong> ·`. Article-meta Draft-version dd and footer Rendered-from div rewritten with iter-27-leading descriptions; v0.19 baseline descriptions preserved as inline HTML comments inside the same dd and div so the diff log is readable in-page (matching iter-25 / iter-26 baseline-preservation idiom).
+
+- **Readiness dashboard synchronised in-pass.** Banner extended with "§2 v0.1 → v0.2 biologist-voice rewrite of ¶¶2–6 + five `<h3>` subsection headings + iter-17 prose back-appended to `preprint.md` iteration 27 (biologist-voice programme now complete end-to-end for §§1–8, the paper's complete argumentative spine)". Prose-coverage dashboard row: numeric count bumped 20 / 20 → 21 / 21, `<span class="status-met">§2 v0.2 biologist-voice iter 27</span>` chip appended after the iter-26 Figure-slots chip.
+
+- **HTML well-formed check passes.** Running the iter-26-fixed validator with the correct void-element list (`br, hr, img, meta, link, input, source, area, base, col, embed, param, track, wbr`) on the final v0.20: `errors=0, unclosed=0`. Fifth consecutive iteration (iter 23, 24, 25, 26, 27) running the HTML well-formed check as a first-class validation step.
+
+- **Anchor-integrity check passes.** 174 total `href="#…"` anchors, 48 unique, **0 broken**. All five new anchors (`#sec-3`, `#sec-4`, `#sec-8` ×2, `#sec-10`) resolve to pre-existing section ids. Fourth consecutive iteration running the anchor-integrity check as a first-class validation step.
+
+- **Placeholder-inventory held steady at 195 `placeholder-value` spans.** Mid-pass validation caught an unintended +16 inflation from styling placeholder tokens with `<span class="placeholder-value">` inside the dd and footer-div editorial descriptions (iter-27 wrote `<span class="placeholder-value">[48]%</span>×2…` in the description of the preserved placeholder list); corrected in-pass by replacing the spans with plain `<code>` inline code in both descriptions, matching iter-26's convention. Final span count: 195 (identical to v0.19). §2 §-local placeholder count: 26 spans (same as v0.19 §2 count: `[48]%` ×6, `[7]%` ×1, `[20]%` ×3, `[11]%` ×1, `[X]` ×3, `[Y]/30` ×2, `[Z]/30` ×2, `[N]` ×1 + spans referenced from dashboards). **Claim-preservation invariant holds — zero new placeholder spans introduced.**
+
+- **Bracketed tokens ticked 300 → 317** (+17 tokens): the iter-27 dd and footer-div descriptions each list §2's preserved placeholders as plain `<code>[48]%</code>` etc. (eight tokens per description), and the same list appears once in the preserved-v0.19-baseline comment inside the dd. This is identical in character to iter-26's `[yellow]` delta: all +17 tokens are token-references inside editorial-machinery descriptions, not placeholders reachable by the propagation script (`placeholder-value` count is the script match). No resolution path exists for these token-references; they are author-facing documentation of what §2 v0.2 preserves.
+
+- **Disk size 398,469 → 403,984 bytes** (+5,515 bytes: ~150 bytes for the five new `<h3>` elements + ~500 bytes §2 prose delta from the biologist-voice rewrites (expansion in some sentences, tightening in others) + ~4,900 bytes for iter-27 dd/footer/banner descriptions with v0.19 baseline preserved as comments). `wc -c` on disk and `content-length` on the served URL match exactly at 403,984.
+
+- **Served URL confirmed stable.** `curl -sI https://static-serve-0bc5cde8.svc.hypha.aicell.io/manuscript/` returns `HTTP/2 200` with `content-length: 403984`. `curl … | grep -c "v0.20"` returns `4` — the four canonical version-string locations.
+
+- **Re-registered svamp session link with v0.20 label:** `svamp session set-link "https://static-serve-0bc5cde8.svc.hypha.aicell.io/manuscript/" "Manuscript draft v0.20 (Nature Methods) — §2 v0.2 biologist-voice rewrite (biologist-voice programme complete for §§1-8)"`.
+
+### Files changed
+
+- `preprint.md` — appended one "Drafted prose — §2 Measuring the small-data majority (v0.2, biologist-voice rewrite 2026-04-18)" block as the 31st Drafted-prose block. No existing content modified. File grew ~26 lines (six blockquote-formatted paragraphs + header + completion note).
+- `manuscript_html/index.html` — replaced §2's five `<p>` elements (¶¶2–6) with v0.2 biologist-voice prose; added five `<h3>` subsection headings; added five internal anchor wrappers (`#sec-3`, `#sec-4`, `#sec-8` ×2, `#sec-10`); bumped version strings v0.19 → v0.20 in four places; promoted sidebar Ready-list §2 entry to bolded iter-27 form; appended prose-coverage chip and numeric 20/21 → 21/21; rewrote readiness banner to add iter-27 note; rewrote article-meta Draft-version dd and footer Rendered-from div with iter-27-leading descriptions (v0.19 baseline preserved as inline HTML comments). File grew 398,469 → 403,984 bytes (+5,515 bytes).
+- `.svamp/d9a68491-c46b-4e04-9b30-6294d0bbf071/config.json` — `session_link` updated by `svamp session set-link` with v0.20 label.
+- `.svamp/d9a68491-c46b-4e04-9b30-6294d0bbf071/ralph-progress.md` — this entry; no new Patterns bullet added (iter-23 biologist-voice Patterns bullet, refined through iters 24/25, already covers iter 27 at its sixth application; the sub-rule about h3 navigational headings is in iter-25's progress entry and applies verbatim to iter 27).
+
+### Learnings for future iterations
+
+- **Iteration kind (iter 27) was biologist-voice copy-edit with h3 navigational affordances + iter-26-style debt-repayment back-append** — a combination of the fifth iteration kind (biologist-voice copy-edit, iters 23/24/25) and the sixth iteration kind (working-doc ↔ rendered-surface agreement repair, iter 26). The combination is legitimate because the debt-repayment back-appends the prose that is being re-voiced in the same pass: iter 27 both (i) re-voices §2 ¶¶2–6 in the HTML AND (ii) writes all six paragraphs to `preprint.md`, including iter 17's ¶1 that was never in the working doc. Both operations are claim-preserving. Future iterations that combine a biologist-voice pass on a section with a back-append of earlier HTML-only prose for that section should use the same hybrid iteration kind.
+
+- **Sixth application of the iter-23 biologist-voice rule — claim-preservation discipline held strictly.** Like iters 19 (§4 prose), 20 (Box 1), 21 (Box 2), 22 (Key Points), 23 (Abstract + §1), 24 (§3), 25 (§8), 26 (Figure slots back-append), iter 27 adds zero new claims and zero new placeholder spans (`class="placeholder-value"` count steady at 195). The claim-diff against §2 v0.1 is empty. Every citation (Kirillov, Stringer & Pachitariu, Schmidt, Israel), named artefact, numerical placeholder, and figure cross-reference of v0.1 is preserved verbatim in v0.2.
+
+- **Mid-pass inventory-inflation catch is a reusable validator pattern.** Iter 27 initially inflated the `placeholder-value` span count by 16 by writing the preserved-placeholder list as `<span class="placeholder-value">[48]%</span>` (etc.) in the editorial dd and footer-div descriptions. The post-edit validator caught the inflation (195 → 211 spans) and the correction (spans → `<code>` inline) restored the count to 195. **Rule**: in editorial-machinery descriptions (dd, banner, footer, dashboard row) that list placeholders to document claim preservation, always use plain `<code>[token]</code>` formatting, never `<span class="placeholder-value">`. The `placeholder-value` class is reserved for actual body-prose placeholders that the propagation script resolves at evidence-landing; using it in descriptions pollutes the inventory and breaks the propagation-script contract. This rule should be added to a Patterns bullet if it recurs in a third iteration.
+
+- **Biologist-voice programme is complete at iter 27.** The biologist-reader first-contact chain now reads Key Points → Abstract v0.6 → §1 v0.2 → Box 1 → **§2 v0.2** → Fig 1 → Box 2 → §3 v0.2 → Fig 2 → §4 → Fig 3 → §§5–7 → Fig 4–6 → §8 v0.2 → Fig 7 without editorial-voice seams across the paper's complete argumentative spine (§§1–8 plus all narrative scaffolding Boxes and Key Points). §9 Discussion implications and §10 Availability remain in editorial voice *by genre design* — §9 is the methodology-community reflection whose intended reader is the bioimage-methods colleague, not the bench biologist; §10 is a fixed-format availability statement. Iter-25's observation that a §9 biologist-voice rewrite would change the intended-reader frame of the section and constitute a structural edit still holds; iter 27 does not attempt that rewrite. The biologist-voice programme is **complete at iter 27**.
+
+- **Highest-value next iteration without new evidence (with biologist-voice, Figure-caption, and working-doc-agreement programmes all complete): Bibliographic verification pass (Gate H).** ~35 `[VOL:PAGES, DOI]` placeholders in References v0.1 remain unresolved; a focused single-pass verification against Crossref / DOI.org / journal records resolves Gate H and drops the placeholder-inventory bracketed-token count by a measurable margin. This has been the #1 recommended next iteration for four iterations in a row (24, 25, 26, 27) and remains so. With the biologist-voice and working-doc-agreement programmes both complete, bibliographic verification is now the single most-valuable next iteration without new partner evidence.
+
+- **Second-highest next iteration without new evidence: `tools/validate_manuscript.py` (anchor-integrity + placeholder-inventory delta validator + HTML well-formed check + `placeholder-value`-in-descriptions linter).** The three core checks have now been run manually for five consecutive iterations (iter 23, 24, 25, 26, 27), and iter 27 additionally exposed a new regression class — inventory inflation via `placeholder-value` spans in editorial descriptions — that a scripted version would catch at authoring time with a narrowed check (any `placeholder-value` span inside `<dd>`, `<aside>`, or `<footer>` is a regression). Extracting all four checks into a single script pre-empts the iter-21 CSS scoping regression class and the iter-27 inventory-inflation class, and turns placeholder-inventory, anchor-integrity, HTML well-formedness, and placeholder-styling-scope checks into regression guards rather than manual recounts.
+
+- **Third-highest: draft the Cover letter v0.2 biologist-scientist-voice pass or the editor-facing Research Briefing v0.2 field-partner-voice pass.** With the body of the paper now biologist-voiced end-to-end, the natural continuation is an editor-facing surface pass: (a) Cover letter v0.1 → v0.2 to re-voice its three paragraphs in a field-partner voice (a Hospital pathologist, a teaching-lab instructor, a reviewer asking "why this tool, now?") that echoes the biologist-voice body; (b) Research Briefing v0.1 → v0.2 similarly. These are low-risk (no new claim, no new citation, no new placeholder) and close the iter-17-through-iter-27 voice programme by extending it to editor-facing surfaces.
+
+- **Fourth-highest: draft a `<figure>` for the biologist-voiced Box 1 / Box 2 prose.** Box 1 and Box 2 are the biologist-facing pull-out boxes iters 20/21 added; they carry no figure. Adding a schematic-illustration `<figure>` to each would close a visible scaffolding-symmetry asymmetry (every body section has a figure; the boxes do not). This is not evidence-gated — any schematic would suffice — and is the last easy UX-quality lift before evidence-gated Gate-G partner landings.
+
+---
+
+## 2026-04-18 — Iteration 28: tools/validate_manuscript.py regression-guard landing (HTML render v0.21) — first engineering-infrastructure iteration
+
+### What was implemented
+
+- **Added `tools/validate_manuscript.py`** — a 200-line Python 3 stdlib-only regression guard (no third-party dependencies, runs anywhere Python 3 is available). Four checks on `manuscript_html/index.html`:
+  1. **HTML well-formedness** via a void-element-aware tag-stack parser using `html.parser.HTMLParser`. The authoritative HTML void-element list (`area, base, br, col, embed, hr, img, input, link, meta, param, source, track, wbr`) is codified rather than re-discovered — the iter-26 discovery of a void-element bug in the iter-25 ad-hoc parser is now baked in. SVG subtrees are treated as opaque foreign-content to avoid false-positives on SVG self-closing shorthand.
+  2. **Anchor integrity** — every `href="#<id>"` resolves to an `id="<id>"` defined somewhere in the document. Reports total, unique, defined-id, and broken counts.
+  3. **Placeholder inventory** — counts `<span class="placeholder-value">` spans (script-propagation-reachable placeholders) and total bracketed `[…]` tokens (authorship-visible markers). Future iterations diff these counts against a recorded baseline to detect silent delta.
+  4. **Placeholder-value-scope linter** — any `<span class="placeholder-value">` inside `<dd>` or `<footer>` is flagged as a regression of the iter-27 inventory-inflation class. The linter catches the issue at authoring time rather than after-the-fact recount.
+- **Current render passes all four checks.** Ran `python3 tools/validate_manuscript.py` against `manuscript_html/index.html` at the tail of the iteration: `0 HTML errors · 176 anchors / 49 unique / 77 ids / 0 broken · 195 placeholder-value spans / 287 bracketed tokens · 0 scope violations · == Overall: PASS ==`. (Anchor counts include a small `+2` bump over iter-27 from the three occurrences of inline `href="#&lt;id&gt;"` display text the iter-28 dd and footer descriptions use as code examples; the regex pattern also matches the corresponding `id="&lt;id&gt;"` display text, so the integrity check stays balanced at zero-broken.)
+- **HTML render v0.20 → v0.21** — version strings bumped in four canonical places (published-line line 1723; status-chip Working-draft chip line 1742; sidebar Article-info Draft-version dd line 4105; footer Rendered-from div line 4164). Article-meta Draft-version dd and footer Rendered-from div rewritten with iter-28-leading descriptions documenting the validator's check set, baseline counts, and usage entry point; v0.20 baseline descriptions preserved as inline HTML comments inside the same dd and div so the diff log is readable in-page (matching the iter-25/26/27 baseline-preservation idiom).
+- **Sidebar "Regression guard (iter 28)" entry added to the Article-info dl** (after the Figures (biologist pass iter 17) entry; before Readiness posture). The entry names `tools/validate_manuscript.py`, lists the four checks, and records the current-render PASS posture with the four baseline counts; this is the sidebar-level equivalent of the footer-div and dd descriptions — a reader scrolling the page sees at a glance that the render is regression-guarded.
+- **Readiness-dashboard banner extended** with a validator-landing clause documenting the four checks, the current-render PASS posture, and the four regression-guard baseline counts. The banner clause is distinct from the other iteration clauses (iters 18–27) because the validator does not land a prose or scorecard change — the clause names the engineering-infrastructure addition and the regression classes now guarded.
+- **Re-registered svamp session link** with v0.21 label: `svamp session set-link "https://static-serve-0bc5cde8.svc.hypha.aicell.io/manuscript/" "Manuscript draft v0.21 (Nature Methods) — tools/validate_manuscript.py regression guard landed (anchor-integrity + HTML well-formed + placeholder-inventory + placeholder-value-scope linter)"`.
+- **Served URL confirmed stable.** `curl -sI https://static-serve-0bc5cde8.svc.hypha.aicell.io/manuscript/` returns `HTTP/2 200` with `content-length: 408546` (matches `wc -c` on disk). Mount `manuscript` continues to serve from disk — no svamp-side change required.
+
+### Files changed
+
+- `tools/validate_manuscript.py` — new file; 200 lines; Python 3 stdlib-only; four checks; exits 0 on pass, non-zero on failure.
+- `manuscript_html/index.html` — bumped version strings v0.20 → v0.21 in four canonical places; appended validator-landing clause to readiness banner (incl. current-render baseline counts as `<span class="status-met">` chip); added sidebar "Regression guard (iter 28)" dt/dd entry; rewrote article-meta Draft-version dd and footer Rendered-from div with iter-28-leading descriptions (v0.20 baseline preserved as inline HTML comments). File grew 403,984 → 408,546 bytes (+4,562 bytes — entirely editorial descriptions and the one sidebar dl entry; zero prose edits).
+- `.svamp/d9a68491-c46b-4e04-9b30-6294d0bbf071/config.json` — `session_link` updated by `svamp session set-link` with v0.21 label.
+- `.svamp/d9a68491-c46b-4e04-9b30-6294d0bbf071/ralph-progress.md` — this entry; two new Patterns bullets added at the top of the Patterns block (Engineering-infrastructure iteration is a distinct iteration kind; Validator is the regression-guard entry point for all four check classes).
+
+### Learnings for future iterations
+
+- **Iteration kind (iter 28) was engineering-infrastructure** — a seventh iteration kind distinct from the six previously catalogued. The discipline is the mirror image of all the prior iteration kinds: instead of touching prose, figures, or scorecards, this iteration adds a regression guard for two already-observed regression classes (iter-21 CSS scoping; iter-27 inventory inflation) without touching any drafted surface. Three rules hold: (i) zero prose edits; (ii) the iteration adds a guard for an already-observed regression class, not a speculative one; (iii) the script is self-contained and dependency-free. Future engineering-infrastructure iterations (e.g., a `tools/propagate_placeholders.py` placeholder-resolution script at evidence-landing time; a `tools/diff_manuscript.py` HTML-to-preprint.md diff script) should follow the same three rules.
+
+- **Five consecutive iterations (23–27) of manual check-running are now a single entry point.** Iter 28 collapses the five-iteration pattern of manually counting `placeholder-value` spans, manually grep-finding anchor integrity, manually scanning the HTML for well-formedness, and manually auditing `<dd>`/`<footer>` for placeholder-value spans into `python3 tools/validate_manuscript.py`. The script is ~100 ms on a 408 KB render. A future iteration that introduces a regression of any of the four classes will see an immediate non-zero exit and a precise line number of the violation, rather than a read-time rediscovery at iteration n+1 or n+2. **Recommended usage pattern**: run the validator at the start of every iteration (before any edit, to confirm the baseline) AND at the end (after every edit, before commit, to confirm no regression).
+
+- **Claim-preservation discipline held strictly (ninth application).** Like iters 19 (§4 prose), 20 (Box 1), 21 (Box 2), 22 (Key Points), 23 (Abstract + §1), 24 (§3), 25 (§8), 26 (Figure slots back-append), 27 (§2), iter 28 adds zero new claims, zero new citations, and zero new `placeholder-value` spans (count steady at 195). The bracketed-token count steady at 287 as well. The validator itself does not appear in any body-prose surface; its one user-visible trace is the sidebar "Regression guard" entry + the article-meta dd and footer div descriptions + the readiness banner clause, all of which are editorial-machinery surfaces by genre.
+
+- **Highest-value next iteration without new evidence (unchanged from iters 24/25/26/27): Bibliographic verification pass (Gate H).** ~35 `[VOL:PAGES, DOI]` placeholders in References v0.1 remain unresolved; a focused single-pass verification against Crossref / DOI.org / journal records resolves Gate H and drops the placeholder-inventory bracketed-token count by a measurable margin (the validator now makes this drop visible at-a-glance). This has been the #1 recommended next iteration for five iterations in a row (24, 25, 26, 27, 28) and remains so. With the biologist-voice programme complete (iter 27) and the regression-guard landed (iter 28), bibliographic verification is the single most-valuable next iteration without new partner evidence — AND the first iteration that will visibly shrink the validator's bracketed-token count (e.g., 287 → ~252 if 35 placeholders resolve at ~1 token each).
+
+- **Second-highest: draft the Cover letter v0.2 field-partner-voice pass or the Research Briefing v0.2 field-partner-voice pass.** With the body biologist-voiced end-to-end and the regression guard in place, the natural continuation is an editor-facing surface pass. Either re-voices three editor-facing paragraphs to match the body voice and closes the voice programme by extending it to editor-facing surfaces. Low-risk (no new claim, no new citation, no new placeholder).
+
+- **Third-highest: draft `<figure>` schematics for Box 1 / Box 2.** Box 1 and Box 2 are biologist-facing pull-out boxes added at iters 20/21; they carry no figure. Adding a schematic-illustration `<figure>` to each would close a visible scaffolding-symmetry asymmetry. Not evidence-gated — any schematic would suffice. Easy UX-quality lift before evidence-gated Gate-G partner landings.
+
+- **Fourth-highest: draft `tools/propagate_placeholders.py`.** The placeholder-propagation script referenced in the discipline docs (`[48]%` → resolved-value across all 21 prose blocks in one pass when Gate D evidence lands) is not yet written. Drafting it now, with the iter-28 validator as a post-propagation regression check, would make evidence-landing passes mechanical rather than editorial. It is the natural companion to the iter-28 validator and follows the same engineering-infrastructure iteration-kind rules.
 
 ---

@@ -2,6 +2,6 @@
   "title": "ImageJ.JS Nature Methods pitch",
   "session_link": {
     "url": "https://static-serve-0bc5cde8.svc.hypha.aicell.io/manuscript/",
-    "label": "Manuscript draft v0.20 (Nature Methods) — §2 v0.2 biologist-voice rewrite (biologist-voice programme complete for §§1-8)"
+    "label": "Manuscript draft v0.21 (Nature Methods) — tools/validate_manuscript.py regression guard landed (anchor-integrity + HTML well-formed + placeholder-inventory + placeholder-value-scope linter)"
   }
 }
