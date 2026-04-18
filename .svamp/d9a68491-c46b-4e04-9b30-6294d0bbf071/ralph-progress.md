@@ -2,6 +2,30 @@
 
 ## Patterns
 
+- **Biologist-facing pull-out box is a legitimate narrative-scaffolding surface
+  distinct from body prose.** Iteration 20 (2026-04-18) added `Box 1 — Three
+  working days with ImageJ.JS` between §1 Introduction and §2 Measurement,
+  rendered as an `aside.nm-box` in the HTML with Nature Methods-style styling
+  (light-blue tint, left accent border, sans-serif header, three subsection
+  vignettes). Two rules govern this surface type: (i) Box 1 introduces **no new
+  claim, number, or citation** — every mechanism named is defined elsewhere
+  and every partner-evidence-gated detail uses placeholder tokens already
+  carried by Fig 4/5 captions (so no new entry enters the placeholder
+  inventory); (ii) each vignette maps **one-to-one** to a pillar section and
+  its figure (Monday teaching lab → §5/Fig 4; Thursday clinical consult →
+  §6/Fig 5; Friday re-run → §4/Fig 3), so a reader who challenges a vignette
+  can be pointed at the body surface that substantiates it. This idiom is the
+  biologist-reader equivalent of the §2 opening biologist-voice rewrite from
+  iteration 17: it is written in recognisable working-day prose ("a cell-
+  biology instructor", "fifteen undergraduates on Chromebooks", "a pathologist
+  in a regional hospital", "a reviewer asks …"), addressed to the biologist
+  reader rather than to a methodology reviewer. Future iterations that want
+  to add similarly biologist-facing scaffolding (e.g., a Box 2 for sensitive-
+  data workflows, or a boxed "how to cite a URL" explainer) should follow the
+  same idiom: aside.nm-box, no new claim, one-to-one mapping to an already-
+  drafted body section and figure. Never use this surface to sneak in new
+  claims the body does not carry.
+
 - **Primary working doc is `preprint.md`** in repo root. It contains framing, pillars, spine,
   evidence status, risks, venue strategy — and, from iteration 1 onward, drafted prose sections
   appended in order. Evidence inputs live in `survey_production_*`, `replay_week1_report.md`,
@@ -3126,3 +3150,147 @@
 
 ---
 
+
+## 2026-04-18 — Iteration 20: Box 1 biologist-facing pull-out (HTML render v0.13)
+
+### What was implemented
+
+- **Drafted Box 1 v0.1 (~420 words, one lede + three working-day vignettes)** in
+  `preprint.md §"Drafted prose — Box 1 Three working days with ImageJ.JS (v0.1,
+  2026-04-18)"` — a biologist-facing prose-pullout positioned between §1
+  Introduction and §2 Measurement. The lede names the Box's role (wiring the
+  §3 design principles to recognisable working-day scenes) and its containment
+  rule (introduces no new claim). Three vignettes follow at Monday / Thursday /
+  Friday-six-months-later rhythm: the teaching-lab scene mapping to §5/Fig 4,
+  the pathologist's consult mapping to §6/Fig 5, and the reviewer-triggered
+  re-run six months after submission mapping to §4/Fig 3. Every mechanism named
+  — zero-install URL load, client-side pixel isolation, Hypha-authenticated
+  audit log (`collab/audit_log.js`), pinned CheerpJ runtime at `v1.0-paper`,
+  cross-version Find-Edges drift (`replay/mri_wound_healing_2020/MATCH_REPORT.md`)
+  — is already committed by §§3/4/5/6 or §10, so the Box carries no new
+  empirical weight; it is narrative scaffolding that gives the biologist reader
+  a concrete entry point between the abstract regime argument and the empirical
+  instruments.
+
+- **HTML render v0.13 adds `<aside class="nm-box" id="box1">` between §1 and §2.**
+  New CSS rules (91 lines in the `<style>` block, preceding the `.gated`
+  section) define the box's Nature Methods-style appearance: light-blue tint
+  (`#eef4fb`), thin border with a 4-px accent left border in the Nature Methods
+  primary accent, serif body with sans-serif box-tag and vignette headers,
+  italic lede, dotted separators between vignettes, justified serif vignette
+  paragraphs. Three vignette subsections render with bold sans-serif title +
+  per-vignette cross-reference link row ("→ §5 · Fig 4" etc.) and a justified
+  serif paragraph. A footer row at the bottom of the box restates the no-new-
+  claim rule ("Box 1 introduces no new claim, number, or citation …
+  placeholders already carried by Fig 4/Fig 5 captions, resolving at Gate G").
+
+- **Version bumps v0.12 → v0.13** in all four places (article-meta line under
+  Published, draft chip, sidebar Draft version dd, footer rendered-from div).
+  Status chip extended with iteration-20 narrative: `Evidence status · 22 prose
+  blocks v0.1 (+ Box 1 biologist-facing pull-out, iter 20; + §4 Replay
+  structural-commitment prose, iter 19); Box 1 wires §§3/4/5/6 to three
+  recognisable working-day scenarios (Monday teaching lab → §5 · Thursday
+  clinical consult → §6 · Friday re-run six months later → §4); …`. Sidebar
+  Ready (prose v0.1) list extended with `Box 1 (biologist pull-out, iter 20)`
+  (bold).
+
+- **Readiness dashboard synchronised in-pass.** Banner augmented with "Box 1
+  biologist-facing pull-out added between §1 and §2 iteration 20". Prose-block
+  coverage row's count increments 16/16 → 17/17 STRUCTURAL-READY, with
+  `Box 1 added iter 20` chip appended. Gate A condition and source column both
+  updated to name iteration 20 + Box 1. Dashboard narrative kept — Box 1 is
+  not a new scorecard, it is a body-surface addition.
+
+- **HTML well-formed check passes.** Custom html.parser-based validator (with
+  SVG/HTML void-element handling) reports zero tag issues. Final file 368,132
+  bytes (up from 360,972 bytes in iteration 19 — +7,160 bytes for Box 1 prose
+  + CSS rules).
+
+- **Served URL confirmed stable (Iteration 8–20 pattern).** Mount `manuscript`
+  continues to serve from disk. HTTP HEAD against
+  `https://static-serve-0bc5cde8.svc.hypha.aicell.io/manuscript/` → `200`,
+  `content-length: 368132` exactly matching `wc -c` on disk.
+
+- **Re-registered svamp session link** with v0.13 label:
+  `svamp session set-link "https://static-serve-0bc5cde8.svc.hypha.aicell.io/manuscript/" "Manuscript draft v0.13 (Nature Methods) — Box 1 biologist pull-out"`.
+
+### Files changed
+
+- `preprint.md` — appended one "Drafted prose" block (Box 1 v0.1, ~420 words,
+  one lede + three vignettes) after the §4 Replay v0.1 block. No existing
+  content modified. File grew from 2,145 → ~2,160 lines.
+- `manuscript_html/index.html` — added `aside.nm-box` CSS block (91 lines in
+  `<style>`), inserted a complete `<aside class="nm-box" id="box1">…</aside>`
+  section after §1 closes and before §2 opens; bumped version strings v0.12
+  → v0.13 in four places; extended status chip with iteration-20 narrative;
+  extended Ready (prose v0.1) list; synchronised readiness dashboard (prose
+  coverage row 16/16 → 17/17, Gate A condition and source column, banner).
+  File grew 360,972 → 368,132 bytes (+7,160 bytes for the Box + CSS).
+- `.svamp/d9a68491-c46b-4e04-9b30-6294d0bbf071/config.json` — `session_link`
+  updated by `svamp session set-link` with v0.13 label.
+- `.svamp/d9a68491-c46b-4e04-9b30-6294d0bbf071/ralph-progress.md` — this
+  entry; added one new Patterns bullet at the top (biologist-facing pull-out
+  as a legitimate narrative-scaffolding surface distinct from body prose).
+
+### Learnings for future iterations
+
+- **Box 1 is a narrative-scaffolding block, not an editorial-machinery scorecard
+  and not an evidence-gated body section.** It is a *third* kind of surface,
+  and the visual vocabulary has to reflect that or the reader will miscategorise
+  it. Editorial-machinery blocks (dry run, readiness dashboard, submission
+  packet, reporting summary, research briefing) use distinct-coloured cards
+  with explicit "submission engineering" labelling; evidence-gated body
+  sections use the amber `.gated` style (now slim one-line banners after
+  iterations 18/19). Box 1 uses a fresh light-blue palette with a Nature
+  Methods-accent left border, distinct from both — so a reader scrolling the
+  rendered draft sees three visual categories at a glance: body prose (plain
+  serif), editorial machinery (coloured scorecards), narrative scaffolding
+  (Box 1 style). Future iterations adding a Box 2 or further biologist-facing
+  scaffolding should reuse the `.nm-box` class, not invent new styling.
+
+- **Placeholder-inventory discipline holds.** Naïvely, three working-day
+  vignettes with partner-institution, course-code, IRB-number, and threshold-
+  value mentions could have added 6–10 new placeholders to the inventory.
+  But every placeholder-requiring detail in Box 1 either (i) uses a concrete
+  illustrative value that resolves at draft time, not evidence landing
+  (`threshold=65`, `threshold=72` — these are illustrations, not claims), or
+  (ii) points back to a body surface that carries the placeholder (Fig 4/Fig 5
+  captions; §§5/6 prose). The inventory count is therefore unchanged at v0.13,
+  and the placeholder-inventory-shared-with-figure-captions rule (from
+  iteration 18) is preserved for this new surface type as well.
+
+- **Body prose remains AI-free.** Box 1 mentions no deep-learning method,
+  foundation model, or agent; it mentions Hypha only as the collaboration
+  infrastructure in the Thursday vignette (which is §6's subject). The
+  "AI stays contained to §8" pattern is preserved at v0.13.
+
+- **Iteration kind was narrative-scaffolding, not body-prose promotion and
+  not scorecard.** Five editorial-machinery scorecards (dry run, packet,
+  reporting summary, readiness dashboard, research briefing) remain valid at
+  v0.13 without re-computation — Box 1 does not change any Gate state.
+  Iteration 20 is therefore a fourth iteration kind beyond the three
+  catalogued at iteration 19 (body-prose promotion, figure/visual pass,
+  scorecard). Future iterations should name their kind explicitly.
+
+- **Highest-value next iteration without new evidence: Bibliographic
+  verification pass (Gate H), deferred from iterations 16–19.** Still ~35
+  `[VOL:PAGES, DOI]` placeholders in References v0.1 remain unresolved. A
+  focused one-pass verification against Crossref / DOI.org / journal records
+  resolves Gate H, drops the placeholder-inventory count significantly, and
+  promotes the references-verification dashboard row from `0 / ~35` to `~35 /
+  ~35` in a single pass.
+
+- **Second-highest next iteration without new evidence: Box 2 candidate —
+  "What ImageJ.JS is not" short pull-out on regime boundaries.** A second
+  biologist-facing pull-out, positioned between §7 Collaboration and §8
+  Limits, could translate §8's regime-boundary argument ("where deep
+  learning is the right tool; where ImageJ.JS composes rather than
+  competes") into three recognisable counter-vignettes — e.g., the
+  connectomics lab, the high-content-screen facility, the clinical-
+  triage use case — to make the complementarity claim as concrete as
+  Box 1 makes the pillar claims. Like Box 1, it would introduce no
+  new claim; it would be narrative scaffolding for §8's argument. This
+  should be a candidate for iteration 21 or 22 if the bibliographic
+  pass is blocked on network access.
+
+---
