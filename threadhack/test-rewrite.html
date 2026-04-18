@@ -1,0 +1,46 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Bytecode rewriter — Thread.start interception test</title>
+<script src="https://cjrtnc.leaningtech.com/4.2/loader.js"></script>
+<style>body{font:13px ui-monospace,Menlo,monospace;padding:16px} pre{background:#111;color:#eee;padding:10px;white-space:pre-wrap;word-break:break-all;max-height:650px;overflow:auto}</style>
+</head>
+<body>
+<h2>Stage 1: ParallelClassLoader rewrites Thread.start() → ThreadHook.start()</h2>
+<p>Loads <code>threadspawn-sample.jar</code> (a trivial program that does <code>new Thread(r).start(); t.join();</code>) through our <code>ParallelClassLoader</code>. The loader should rewrite the bytecode so the invocation goes through <code>com.hack.ThreadHook.start(Thread)</code>, which logs and counts.</p>
+<pre id="out">(booting CheerpJ…)</pre>
+<script>
+const out = document.getElementById("out");
+const orig = console.log, origE = console.error;
+console.log = (...a) => { orig(...a); out.textContent += "\n" + a.join(" "); };
+console.error = (...a) => { origE(...a); out.textContent += "\nERR: " + a.join(" "); };
+
+(async () => {
+  try {
+    await cheerpjInit({
+      status: "none",
+      clipboardMode: "java",
+      javaProperties: ["java.awt.headless=true", "user.dir=/files"],
+    });
+    console.log("cheerpjInit done");
+
+    const baseUrl = location.pathname.endsWith("/")
+      ? location.pathname
+      : location.pathname.substring(0, location.pathname.lastIndexOf("/") + 1);
+
+    const toolJar = `/app${baseUrl}parallel-tool.jar`;
+    const sampleJar = `/app${baseUrl}threadspawn-sample.jar`;
+    console.log("tool jar: " + toolJar);
+    console.log("sample jar: " + sampleJar);
+
+    await cheerpjRunJar(toolJar, [sampleJar]);
+    console.log("\n=== cheerpjRunJar returned ===");
+  } catch (e) {
+    console.error(String(e && e.message || e));
+    console.error((e && e.stack) || "");
+  }
+})();
+</script>
+</body>
+</html>

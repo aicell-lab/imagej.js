@@ -11,7 +11,8 @@
 
   gtag('config', 'G-WH7GT4NC11');
 </script>
-<script src="https://cjrtnc.leaningtech.com/4.2/loader.js"></script>
+<!-- threadhack drop-in CheerpJ loader: auto worker pool + bytecode rewriter -->
+<script src="threadhack/runtime/loader.js"></script>
 <script src="https://cdn.tailwindcss.com"></script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -243,11 +244,54 @@
       }
     }
 
-    /* Add 20px extra height to all ImageJ windows */
-    /* .cjWindow.cjBordered {
-      padding-bottom: 20px !important;
-      box-sizing: content-box !important;
-    } */
+    /*
+     * CheerpJ workaround: restore native-looking borders on TextField /
+     * number-field inputs inside ImageJ dialogs. CheerpJ's AWT peer emits
+     * <input> elements with no border styling, which makes dialog fields
+     * look like bare text labels.
+     *
+     * This scopes strictly to inputs inside .cjWindow so it doesn't touch
+     * any of the surrounding app chrome.
+     */
+    .cjWindow input:not([type="checkbox"]):not([type="radio"]):not([type="button"]) {
+      border: 1px solid #9ca3af !important;
+      border-radius: 2px !important;
+      box-sizing: border-box !important;
+      padding: 1px 3px !important;
+      background: #ffffff !important;
+    }
+
+    .cjWindow input:not([type="checkbox"]):not([type="radio"]):not([type="button"]):focus {
+      outline: none !important;
+      border-color: #3b82f6 !important;
+      box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.25) !important;
+    }
+
+    /*
+     * CheerpJ workaround: many dialog content wrappers use
+     * overflow:hidden inline, which clips Choice (drop-down) popups so
+     * they appear to "not work". We cannot target dialog wrappers by
+     * class (they use inline styles), so we target any position:absolute
+     * overflow:hidden div inside a cjWindow that's a direct child of the
+     * dialog root. Popups are late-added children and need to escape.
+     *
+     * This is a best-effort fix; if a specific dialog breaks with this,
+     * that dialog can be excluded by class.
+     */
+    .cjWindow > div[style*="overflow: hidden"][style*="width: 100%"][style*="height: 100%"] {
+      overflow: visible !important;
+    }
+
+    /*
+     * CheerpJ may render java.awt.Choice as a native <select>; give it
+     * a visible border so it matches the TextField styling above.
+     */
+    .cjWindow select {
+      border: 1px solid #9ca3af !important;
+      border-radius: 2px !important;
+      box-sizing: border-box !important;
+      background: #ffffff !important;
+    }
 
     /* Mobile styles for status indicators */
     @media (max-width: 640px) {

@@ -1,0 +1,12 @@
+# Third-party plugin jars fetched for static-scan testing — not our IP, don't ship
+real-jars/
+
+# Java build output (source-of-truth is in src/; jars are committed artifacts)
+java/build/
+
+# Deferred build artifacts
+*.class
+
+# Svamp session state
+.svamp/
+

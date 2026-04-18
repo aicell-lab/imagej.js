@@ -1,0 +1,138 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Stage 2 — scaling + speedup benchmark</title>
+<script src="https://cjrtnc.leaningtech.com/4.2/loader.js"></script>
+<style>body{font:13px ui-monospace,Menlo,monospace;padding:16px} pre{background:#111;color:#eee;padding:10px;white-space:pre-wrap;word-break:break-all;max-height:760px;overflow:auto}</style>
+</head>
+<body>
+<h2>Stage 2 benchmark: N workers vs serial</h2>
+<p>URL params: <code>?pool=<i>N</i>&amp;jobs=<i>M</i>&amp;work=<i>K</i></code> — spawn N workers, dispatch M Serializable SumJobs each doing K iterations.</p>
+<pre id="out">(booting…)</pre>
+<script>
+const qs = new URLSearchParams(location.search);
+const POOL_SIZE = parseInt(qs.get("pool") || "4");
+const JOBS      = parseInt(qs.get("jobs") || (POOL_SIZE * 2));
+const WORK      = parseInt(qs.get("work") || "20000000");
+const PREWARM   = qs.get("prewarm") !== "0";    // default on
+const HW_CORES  = navigator.hardwareConcurrency;
+
+const out = document.getElementById("out");
+const orig = console.log, origE = console.error;
+console.log = (...a) => { orig(...a); out.textContent += "\n" + a.join(" "); };
+console.error = (...a) => { origE(...a); out.textContent += "\nERR: " + a.join(" "); };
+
+console.log(`[config] POOL=${POOL_SIZE} JOBS=${JOBS} WORK=${WORK} PREWARM=${PREWARM} hwCores=${HW_CORES}`);
+
+const pool = [];
+let nextWorker = 0;
+let nextHandle = 1;
+const pending = new Map();
+const handleResults = new Map();
+
+async function preloadCheerpJ() {
+  // Prime browser HTTP cache for CheerpJ runtime files, so workers' cheerpjInit
+  // hits the cache rather than racing on the CDN.
+  const urls = [
+    "https://cjrtnc.leaningtech.com/4.2/cj3.js",
+    "https://cjrtnc.leaningtech.com/4.2/cj3.wasm",
+  ];
+  console.log("[preload] priming browser cache for CheerpJ runtime…");
+  const t0 = performance.now();
+  await Promise.all(urls.map(u => fetch(u, { cache: "force-cache" }).then(r => r.arrayBuffer())));
+  console.log(`[preload] done (+${(performance.now() - t0).toFixed(0)}ms)`);
+}
+
+async function spawnPool(n) {
+  console.log(`[pool] spawning ${n} workers sequentially…`);
+  const t0 = performance.now();
+  for (let i = 0; i < n; i++) {
+    const w = new Worker("s2-worker.js?cb=" + Date.now() + "_" + i, { name: `w${i}` });
+    w.__name = `w${i}`;
+    const readyP = new Promise((res, rej) => { w._res = res; w._rej = rej; });
+    w.onmessage = (e) => {
+      const d = e.data;
+      if (d.kind === "ready") { console.log(`[pool] ${w.__name} ready (+${d.bootMs.toFixed(0)}ms)`); w._res(); }
+      else if (d.kind === "log") { console.log(`[${d.workerId}] ${d.msg}`); }
+      else if (d.kind === "done" || d.kind === "error") {
+        const p = pending.get(d.id); if (!p) return;
+        pending.delete(d.id);
+        d.kind === "error" ? p.reject(new Error(d.err)) : p.resolve(d);
+      }
+    };
+    pool.push(w);
+    await readyP;
+  }
+  console.log(`[pool] ${n} workers ready in ${(performance.now() - t0).toFixed(0)}ms`);
+}
+
+const threadHookNatives = {
+  async Java_com_hack_ThreadHook_nativeWorkerAvailable(lib) {
+    return pool.length > 0;
+  },
+  async Java_com_hack_ThreadHook_nativeDispatch(lib, bytes, className) {
+    const handle = nextHandle++;
+    const buf = new Uint8Array(bytes).buffer.slice(0);
+    const w = pool[nextWorker++ % pool.length];
+    const resultPromise = new Promise((resolve, reject) => pending.set(handle, { resolve, reject }));
+    w.postMessage({ kind: "run", id: handle, bytes: buf }, [buf]);
+    handleResults.set(Number(handle), resultPromise);
+    return handle;
+  },
+  async Java_com_hack_ThreadHook_nativeAwait(lib, handle) {
+    const key = Number(handle);
+    const p = handleResults.get(key);
+    handleResults.delete(key);
+    if (!p) throw new Error("no such handle: " + handle);
+    const { resultBuf, ms } = await p;
+    return new Int8Array(resultBuf);
+  },
+};
+
+(async () => {
+  try {
+    await preloadCheerpJ();
+
+    await cheerpjInit({
+      status: "none",
+      clipboardMode: "java",
+      javaProperties: ["java.awt.headless=true", "user.dir=/files"],
+      natives: threadHookNatives,
+    });
+    console.log("[main] cheerpjInit done");
+
+    await spawnPool(POOL_SIZE);
+
+    if (PREWARM) {
+      console.log(`[prewarm] warming ${pool.length} workers with a tiny task each…`);
+      const w0 = performance.now();
+      // Build ONCE a serialized mini-SumJob (n=10000) byte[]. Done via a
+      // tiny runjar of the tool itself? Simpler: just manually-serialize
+      // in Java via a BenchTool side-effect? For simplicity: skip prewarm
+      // here — the benchmark itself will have a pre-run inside Java:
+      await new Promise((r) => setTimeout(r, 50));  // give idle a tick
+      console.log(`[prewarm] placeholder done (+${(performance.now()-w0).toFixed(0)}ms)`);
+    }
+
+    const baseUrl = location.pathname.endsWith("/")
+      ? location.pathname
+      : location.pathname.substring(0, location.pathname.lastIndexOf("/") + 1);
+    const toolJar = `/app${baseUrl}bench-tool.jar`;
+    const sampleJar = `/app${baseUrl}threadspawn-sample.jar`;
+    console.log("[main] running bench tool jar:", toolJar);
+
+    const t0 = performance.now();
+    await cheerpjRunJar(toolJar, sampleJar, String(JOBS), String(WORK));
+    const wallJS = performance.now() - t0;
+    console.log(`[main] cheerpjRunJar wall = ${wallJS.toFixed(0)}ms`);
+
+    console.log("\n=== done ===");
+  } catch (e) {
+    console.error(String(e && e.message || e));
+    console.error((e && e.stack) || "");
+  }
+})();
+</script>
+</body>
+</html>

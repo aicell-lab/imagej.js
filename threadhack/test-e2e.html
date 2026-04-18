@@ -1,0 +1,223 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>ImageJ.js end-to-end: rewriter + worker pool + macro runner</title>
+<script src="https://cjrtnc.leaningtech.com/4.2/loader.js"></script>
+<style>
+  body { font: 13px ui-monospace, Menlo, monospace; padding: 16px; max-width: 1200px; }
+  h2 { margin-top: 20px; border-bottom: 1px solid #ccc; padding-bottom: 4px; }
+  button { font: inherit; padding: 6px 12px; margin: 4px 6px 4px 0; cursor: pointer; }
+  textarea { width: 100%; height: 220px; font: 12px ui-monospace, Menlo, monospace; background: #222; color: #eee; border: 1px solid #444; padding: 8px; }
+  pre { background: #111; color: #eee; padding: 10px; white-space: pre-wrap; word-break: break-all; max-height: 620px; overflow: auto; }
+  .row { display: flex; gap: 12px; align-items: flex-start; flex-wrap: wrap; }
+  .col { flex: 1 1 480px; }
+  label { display: inline-flex; align-items: center; gap: 4px; }
+  input[type=number] { width: 60px; font: inherit; }
+  .metric { background: #eef; padding: 6px 10px; border-radius: 4px; margin: 4px 0; font-size: 12px; }
+  .good { color: #0a7; font-weight: bold; }
+</style>
+</head>
+<body>
+<h2>End-to-end: ImageJ.js running macros through the rewriting classloader + worker pool</h2>
+<p>
+Boots N workers, preloads CheerpJ into HTTP cache, then uses library-mode
+to call <code>com.hack.ij.MacroRunner.init(ij.jar + plugin jars)</code> —
+this constructs our <code>ParallelClassLoader</code> which rewrites every
+Java class it loads (Thread.start/join, Executors.newXxx, new
+ThreadPoolExecutor, ForkJoinPool.commonPool, CompletableFuture.supplyAsync).
+Plugins that use these standard concurrency APIs get parallelized via the
+Worker pool — <b>no code changes in the plugin jar</b>.
+</p>
+
+<div class="row">
+  <label>Pool: <input id="pool" type="number" value="6" min="1" max="16"></label>
+  <button id="boot">Boot pool + load ImageJ</button>
+  <div id="status" class="metric">idle</div>
+</div>
+
+<h2>Macro</h2>
+<div class="row">
+  <div class="col">
+    <label>Preset:
+      <select id="preset">
+        <option value="bench">bench.ijm (Gaussian+Median stack)</option>
+        <option value="morpholibj">morpholibj-bench.ijm (MorphoLibJ Distance Transform 3D)</option>
+        <option value="custom">— custom —</option>
+      </select>
+    </label>
+    <textarea id="macro">(load a preset above)</textarea>
+    <div>
+      <button id="run">Run macro</button>
+      <span id="elapsed" class="metric">—</span>
+    </div>
+  </div>
+  <div class="col">
+    <h3 style="margin-top:0">Rewriter stats</h3>
+    <pre id="stats">—</pre>
+  </div>
+</div>
+
+<h2>Console</h2>
+<pre id="out"></pre>
+
+<script>
+const POOL_SIZE_INPUT = document.getElementById("pool");
+const outEl = document.getElementById("out");
+const origLog = console.log;
+console.log = (...a) => { origLog(...a); outEl.textContent += "\n" + a.join(" "); outEl.scrollTop = outEl.scrollHeight; };
+console.error = console.log;
+
+const baseUrl = location.pathname.endsWith("/")
+  ? location.pathname
+  : location.pathname.substring(0, location.pathname.lastIndexOf("/") + 1);
+
+const workers = [];
+let nextWorker = 0, nextHandle = 1;
+const pending = new Map();
+const handleResults = new Map();
+let MacroRunner = null;
+let booted = false;
+
+async function preloadCheerpJ() {
+  const urls = ["https://cjrtnc.leaningtech.com/4.2/cj3.js", "https://cjrtnc.leaningtech.com/4.2/cj3.wasm"];
+  await Promise.all(urls.map(u => fetch(u, { cache: "force-cache" }).then(r => r.arrayBuffer())));
+}
+
+async function spawnPool(n) {
+  const t0 = performance.now();
+  for (let i = 0; i < n; i++) {
+    const w = new Worker("s2-worker.js?cb=" + Date.now() + "_" + i, { name: `w${i}` });
+    w.__name = `w${i}`;
+    const readyP = new Promise((res) => w._res = res);
+    w.onmessage = (e) => {
+      const d = e.data;
+      if (d.kind === "ready") { console.log(`[pool] ${w.__name} ready (+${d.bootMs.toFixed(0)}ms)`); w._res(); }
+      else if (d.kind === "log") { /* squelch for brevity */ }
+      else if (d.kind === "done" || d.kind === "error") {
+        const p = pending.get(d.id); if (!p) return;
+        pending.delete(d.id);
+        d.kind === "error" ? p.reject(new Error(d.err)) : p.resolve(d);
+      }
+    };
+    workers.push(w);
+    await readyP;
+  }
+  console.log(`[pool] ${n} workers ready in ${(performance.now() - t0).toFixed(0)}ms`);
+}
+
+const threadHookNatives = {
+  async Java_com_hack_ThreadHook_nativeWorkerAvailable(lib) { return workers.length > 0; },
+  async Java_com_hack_ThreadHook_nativeDispatch(lib, bytes, className) {
+    const handle = nextHandle++;
+    const buf = new Uint8Array(bytes).buffer.slice(0);
+    const w = workers[nextWorker++ % workers.length];
+    const resultPromise = new Promise((resolve, reject) => pending.set(handle, { resolve, reject }));
+    w.postMessage({ kind: "run", id: handle, bytes: buf }, [buf]);
+    handleResults.set(Number(handle), resultPromise);
+    return handle;
+  },
+  async Java_com_hack_ThreadHook_nativeAwait(lib, handle) {
+    const key = Number(handle);
+    const p = handleResults.get(key); handleResults.delete(key);
+    if (!p) throw new Error("no such handle: " + handle);
+    const { resultBuf } = await p;
+    return new Int8Array(resultBuf);
+  },
+};
+
+async function bootAll() {
+  if (booted) return;
+  document.getElementById("status").textContent = "preloading CheerpJ runtime…";
+  await preloadCheerpJ();
+
+  document.getElementById("status").textContent = "initializing main JVM…";
+  await cheerpjInit({
+    status: "none", clipboardMode: "java",
+    // ImageJ's IJ.init() constructs its menu bar via AWT during the first
+    // IJ.run call — cannot be headless. We DO still run in a headless
+    // browser, but give AWT a small virtual display to satisfy its checks.
+    javaProperties: ["user.dir=/files", "plugins.dir=/app" + baseUrl + "real-jars"],
+    natives: threadHookNatives,
+  });
+  // Create an (invisible-ish) display for AWT compatibility. The ImageJ
+  // menu + any IJ.run("...") windows will render here.
+  const display = document.getElementById("cj-display") || (() => {
+    const d = document.createElement("div"); d.id = "cj-display";
+    d.style.cssText = "position:fixed;left:-10000px;top:-10000px;width:800px;height:600px;";
+    document.body.appendChild(d); return d;
+  })();
+  cheerpjCreateDisplay(800, 600, display);
+
+  document.getElementById("status").textContent = "spawning pool…";
+  await spawnPool(parseInt(POOL_SIZE_INPUT.value));
+
+  document.getElementById("status").textContent = "loading jars…";
+  // parallel-tool.jar (contains MacroRunner + ParallelClassLoader + ASM + ThreadHook)
+  //  :  ij.jar (via /app prefix → imagej.js project root)
+  //  :  MorphoLibJ jar
+  const toolJar       = `/app${baseUrl}parallel-tool.jar`;
+  const ijJar         = `/app${baseUrl.replace(/threadhack\/?$/, "")}lib/ImageJ/ij.jar`;
+  const morphoJar     = `/app${baseUrl}real-jars/MorphoLibJ_-1.4.2.1.jar`;
+
+  const lib = await cheerpjRunLibrary(toolJar);
+  MacroRunner = await lib.com.hack.ij.MacroRunner;
+  console.log("[main] library loaded, initializing MacroRunner");
+  // The jars given to init() are loaded through ParallelClassLoader → bytecode-rewritten
+  await MacroRunner.init([ijJar, morphoJar].join(","));
+
+  document.getElementById("status").innerHTML = `<span class="good">ready</span>`;
+  booted = true;
+  refreshStats();
+}
+
+document.getElementById("boot").onclick = () => bootAll().catch(e => console.log("ERR: " + (e && e.message || e)));
+
+async function refreshStats() {
+  if (!MacroRunner) return;
+  const stats = {
+    classesTouched:    Number(await MacroRunner.getClassesTouched()),
+    rewriteSites:      Number(await MacroRunner.getRewriteSites()),
+    tpeDirectRewrites: Number(await MacroRunner.getTpeDirectRewrites()),
+    syncWarnings:      Number(await MacroRunner.getSynchronizedWarnings()),
+    // how many runs of this macro actually shipped to workers vs fell back
+    threadsShipped:    Number(await MacroRunner.getShippedCount()),
+    threadsFallback:   Number(await MacroRunner.getFallbackCount()),
+    poolsCreated:      Number(await MacroRunner.getPoolsCreated()),
+  };
+  document.getElementById("stats").textContent = JSON.stringify(stats, null, 2);
+}
+
+// Load presets
+const PRESETS = {
+  bench: `${baseUrl}macros/bench.ijm`,
+  morpholibj: `${baseUrl}macros/morpholibj-bench.ijm`,
+};
+async function loadPreset(key) {
+  if (key === "custom") return;
+  const r = await fetch(PRESETS[key]);
+  document.getElementById("macro").value = await r.text();
+}
+document.getElementById("preset").addEventListener("change", (e) => loadPreset(e.target.value));
+loadPreset("bench");
+
+document.getElementById("run").onclick = async () => {
+  if (!booted) { alert("Click Boot pool first"); return; }
+  const macro = document.getElementById("macro").value;
+  const el = document.getElementById("elapsed");
+  el.textContent = "running…";
+  const t0 = performance.now();
+  try {
+    const result = await MacroRunner.runMacro(macro);
+    const ms = performance.now() - t0;
+    const r = result ? await result.toString() : "";
+    el.innerHTML = `<span class="good">done</span> in ${ms.toFixed(0)}ms — result=${JSON.stringify(r)}`;
+    refreshStats();
+  } catch (e) {
+    el.textContent = "ERROR: " + (e && e.message || e);
+    console.log("macro error: " + (e && e.message || e));
+  }
+};
+</script>
+</body>
+</html>

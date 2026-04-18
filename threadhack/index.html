@@ -1,0 +1,222 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>CheerpJ Thread-via-Worker experiment</title>
+<style>
+body { font: 13px ui-monospace, Menlo, monospace; padding: 16px; max-width: 1100px; }
+h2 { margin-top: 28px; border-bottom: 1px solid #ccc; padding-bottom: 4px; }
+button { font: inherit; padding: 6px 12px; margin: 4px 6px 4px 0; cursor: pointer; }
+pre { background: #111; color: #eee; padding: 10px; overflow: auto; max-height: 280px; font-size: 12px; }
+.row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.metric { background: #eef; padding: 6px 10px; border-radius: 4px; margin: 4px 0; }
+.good { color: #0a7; font-weight: bold; }
+.bad { color: #c33; }
+label { display: inline-flex; align-items: center; gap: 4px; }
+input[type=number] { width: 60px; font: inherit; }
+</style>
+</head>
+<body>
+<h1>CheerpJ Threading Experiment</h1>
+<p>Goal: verify we can get <b>real parallel execution</b> by hosting CheerpJ inside Web Workers.
+The WASM/JS analysis confirmed CheerpJ runs single-threaded cooperative fibers — <i>no</i> pthread/SharedArrayBuffer.
+So real parallelism must come from multiple JVM instances, one per Worker.</p>
+
+<h2>Step 1 — Worker pool</h2>
+<div class="row">
+  <label>Workers: <input id="numWorkers" type="number" value="4" min="1" max="16"></label>
+  <button id="spawn">Spawn worker pool</button>
+  <button id="spawnMain">Load CheerpJ in main thread (for comparison)</button>
+</div>
+<div id="poolStatus" class="metric">pool: idle</div>
+<pre id="bootLog"></pre>
+
+<h2>Step 2 — Round-trip baseline</h2>
+<p>Send a trivial macro to one worker. Measures end-to-end RPC overhead.</p>
+<button id="trivial">1 trivial macro → worker 0</button>
+<div id="trivialOut" class="metric"></div>
+
+<h2>Step 3 — Parallelism test</h2>
+<p>Dispatches N CPU-heavy macros (2048² Gaussian Blur).
+If parallelism is real, 4 workers should finish ~4× faster than 4 serial runs on the main thread.</p>
+<div class="row">
+  <label>Tasks: <input id="numTasks" type="number" value="8" min="1" max="32"></label>
+  <label>Image size: <input id="imgSize" type="number" value="2048" min="128" max="4096"></label>
+  <label>Sigma: <input id="sigma" type="number" value="8" min="1" max="32"></label>
+  <button id="runPool">Run in worker pool</button>
+  <button id="runMain">Run sequentially on main</button>
+</div>
+<div id="runOut" class="metric"></div>
+<pre id="runLog"></pre>
+
+<h2>Step 4 — Thread-patch experiment</h2>
+<p>Inspect the loaded CheerpJ module, see what's exposed, and probe whether we can intercept
+  <code>cj3CreateThread</code> at the JS level.</p>
+<button id="probe" disabled>Probe cj3 module (main must be loaded)</button>
+<pre id="probeOut"></pre>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const log = (elId, msg) => { $(elId).textContent += msg + "\n"; };
+
+let workers = [];
+let readyCount = 0;
+let mainReady = false;
+let mainLib = null;
+let mainIJ = null;
+
+function makeMacro(size, sigma) {
+  // Self-contained: create image, blur it, return stats
+  return `
+    newImage("t", "16-bit random", ${size}, ${size}, 1);
+    run("Gaussian Blur...", "sigma=${sigma}");
+    getStatistics(area, mean);
+    close();
+    "" + mean;
+  `;
+}
+
+// --- Worker pool ---
+$("spawn").onclick = async () => {
+  const n = parseInt($("numWorkers").value);
+  $("poolStatus").textContent = `spawning ${n} workers…`;
+  $("bootLog").textContent = "";
+  workers.forEach(w => w.terminate());
+  workers = [];
+  readyCount = 0;
+  const t0 = performance.now();
+  for (let i = 0; i < n; i++) {
+    const w = new Worker("worker.js", { name: `w${i}` });
+    w._pending = new Map();
+    w._nextId = 1;
+    w.onmessage = (e) => {
+      const d = e.data;
+      if (d.kind === "log") log("bootLog", `[${d.workerId}] ${d.msg}`);
+      else if (d.kind === "ready") {
+        readyCount++;
+        $("poolStatus").textContent = `pool: ${readyCount}/${n} ready (boot ${d.bootMs.toFixed(0)}ms each)`;
+        if (readyCount === n) {
+          $("poolStatus").innerHTML = `<span class="good">pool: ${n} workers ready</span> — total wallclock ${(performance.now()-t0).toFixed(0)}ms`;
+        }
+      }
+      else if (d.kind === "result" || d.kind === "error") {
+        const p = w._pending.get(d.id);
+        if (!p) return;
+        w._pending.delete(d.id);
+        if (d.kind === "error") p.rej(new Error(d.err));
+        else p.res(d);
+      }
+    };
+    workers.push(w);
+  }
+};
+
+function runOnWorker(w, macro) {
+  return new Promise((res, rej) => {
+    const id = w._nextId++;
+    w._pending.set(id, { res, rej });
+    w.postMessage({ kind: "macro", id, macro });
+  });
+}
+
+// --- Main thread CheerpJ (for comparison) ---
+$("spawnMain").onclick = async () => {
+  if (mainReady) { alert("main already loaded"); return; }
+  $("poolStatus").textContent += " | loading main CheerpJ…";
+  // load CheerpJ loader on demand
+  await new Promise((res, rej) => {
+    const s = document.createElement("script");
+    s.src = "https://cjrtnc.leaningtech.com/4.2/loader.js";
+    s.onload = res; s.onerror = rej;
+    document.head.appendChild(s);
+  });
+  await cheerpjInit({ status: "none", clipboardMode: "java",
+    javaProperties: ["java.awt.headless=true", "user.dir=/files"] });
+  mainLib = await cheerpjRunLibrary("/app/lib/ImageJ/ij.jar");
+  mainIJ = await mainLib.ij.IJ;
+  mainReady = true;
+  $("poolStatus").textContent += " | main CheerpJ ready";
+  $("probe").disabled = false;
+};
+
+// --- Trivial round-trip ---
+$("trivial").onclick = async () => {
+  if (workers.length === 0) { alert("spawn pool first"); return; }
+  const t0 = performance.now();
+  const r = await runOnWorker(workers[0], `"hello from worker"`);
+  const ms = performance.now() - t0;
+  $("trivialOut").innerHTML =
+    `<b>round-trip</b>: ${ms.toFixed(1)}ms · worker-side: ${r.ms.toFixed(1)}ms · result="${r.result}"`;
+};
+
+// --- Parallelism test ---
+$("runPool").onclick = async () => {
+  if (workers.length === 0) { alert("spawn pool first"); return; }
+  const tasks = parseInt($("numTasks").value);
+  const size = parseInt($("imgSize").value);
+  const sigma = parseInt($("sigma").value);
+  $("runLog").textContent = "";
+  const macro = makeMacro(size, sigma);
+  const t0 = performance.now();
+  // Round-robin dispatch
+  const promises = [];
+  for (let i = 0; i < tasks; i++) {
+    const w = workers[i % workers.length];
+    promises.push(runOnWorker(w, macro).then(r => {
+      log("runLog", `[${w.name}] task ${i}: ${r.ms.toFixed(0)}ms`);
+      return r;
+    }));
+  }
+  const results = await Promise.all(promises);
+  const wall = performance.now() - t0;
+  const sumWork = results.reduce((s, r) => s + r.ms, 0);
+  $("runOut").innerHTML =
+    `<b>pool run</b>: wallclock <b>${wall.toFixed(0)}ms</b> for ${tasks} tasks on ${workers.length} workers<br>` +
+    `sum of per-task Java time: ${sumWork.toFixed(0)}ms · speedup vs serial java time: <span class="good">${(sumWork/wall).toFixed(2)}×</span>`;
+};
+
+$("runMain").onclick = async () => {
+  if (!mainReady) { alert("load main CheerpJ first"); return; }
+  const tasks = parseInt($("numTasks").value);
+  const size = parseInt($("imgSize").value);
+  const sigma = parseInt($("sigma").value);
+  $("runLog").textContent = "";
+  const macro = makeMacro(size, sigma);
+  const t0 = performance.now();
+  let results = [];
+  for (let i = 0; i < tasks; i++) {
+    const tt = performance.now();
+    const r = await mainIJ.runMacro(macro);
+    const ms = performance.now() - tt;
+    log("runLog", `[main] task ${i}: ${ms.toFixed(0)}ms → ${r}`);
+    results.push({ ms });
+  }
+  const wall = performance.now() - t0;
+  const sumWork = results.reduce((s, r) => s + r.ms, 0);
+  $("runOut").innerHTML =
+    `<b>main sequential</b>: wallclock <b>${wall.toFixed(0)}ms</b> for ${tasks} tasks<br>` +
+    `sum of per-task time: ${sumWork.toFixed(0)}ms (should equal wallclock, single thread)`;
+};
+
+// --- Probe cj3 module ---
+$("probe").onclick = () => {
+  const cj3 = globalThis;
+  const out = [];
+  const keys = Object.keys(cj3).filter(k => /cj3|cheerpj|Java_/i.test(k));
+  out.push(`=== cj3/cheerpj-named globals on self: ${keys.length} ===`);
+  for (const k of keys) {
+    const v = cj3[k];
+    const t = typeof v;
+    out.push(`  ${k}  (${t}${t === 'function' ? ', ' + (v.length||0) + ' args' : ''})`);
+  }
+  // Try to find cj3CreateThread
+  out.push("");
+  out.push(`=== thread-related symbols ===`);
+  for (const k of Object.keys(cj3)) {
+    if (/thread/i.test(k)) out.push(`  ${k} = ${typeof cj3[k]}`);
+  }
+  $("probeOut").textContent = out.join("\n");
+};
+</script>
+</body>
+</html>

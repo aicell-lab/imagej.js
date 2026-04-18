@@ -1,0 +1,73 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>JNI Thread.start0 override test</title>
+<script src="https://cjrtnc.leaningtech.com/4.2/loader.js"></script>
+</head>
+<body>
+<h2>Test: can cheerpjInit.natives override Java_java_lang_Thread_start0?</h2>
+<pre id="out">Booting…</pre>
+<script>
+const log = (msg) => {
+  document.getElementById("out").textContent += "\n" + msg;
+  console.log("[hooktest]", msg);
+};
+window.hookFired = 0;
+window.origStart0Behavior = "unknown";
+
+(async () => {
+  try {
+    await cheerpjInit({
+      status: "none",
+      clipboardMode: "java",
+      javaProperties: ["java.awt.headless=true", "user.dir=/files"],
+      natives: {
+        async Java_java_lang_Thread_start0(lib, thread) {
+          window.hookFired++;
+          log(`HOOK FIRED! #${window.hookFired} on thread=${thread}`);
+          // Return nothing — effectively suppress the real start
+          return;
+        },
+        async Java_java_lang_Thread_setPriority0(lib, thread, prio) {
+          log(`setPriority0 hook fired (prio=${prio})`);
+        },
+      },
+    });
+    log("cheerpjInit done");
+
+    const lib = await cheerpjRunLibrary("");
+    log("stdlib loaded");
+
+    const Thread = await lib.java.lang.Thread;
+    const System = await lib.java.lang.System;
+    log("Thread class resolved");
+
+    // Try the Java-level Runnable path
+    const Runnable = await lib.java.lang.Runnable;
+    log("Runnable resolved — now trying to start a thread via Thread.start()");
+
+    // We can't create a Runnable from JS easily, but we CAN create a Thread instance
+    // and call .start() — in OpenJDK Thread() no-arg constructor creates a thread
+    // with null target, but .start() still invokes start0().
+    const t = await new Thread();
+    log("new Thread() created");
+    await t.start();
+    log("Thread.start() returned — hookFired=" + window.hookFired);
+
+    // Also try the second one
+    const t2 = await new Thread();
+    await t2.start();
+    log("2nd start() done — hookFired=" + window.hookFired);
+
+    log("FINAL: hookFired = " + window.hookFired);
+    if (window.hookFired > 0) log("✅ JNI native override WORKS for Thread.start0");
+    else log("❌ Override did NOT fire — CheerpJ bypasses the natives table for JDK internals");
+  } catch (e) {
+    log("ERROR: " + (e && e.message || e));
+    console.error(e);
+  }
+})();
+</script>
+</body>
+</html>

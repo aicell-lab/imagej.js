@@ -1,0 +1,53 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>CheerpJ ClassLoader interception test</title>
+<script src="https://cjrtnc.leaningtech.com/4.2/loader.js"></script>
+<style>body{font:13px ui-monospace,Menlo,monospace;padding:16px} pre{background:#111;color:#eee;padding:10px;white-space:pre-wrap;word-break:break-all}</style>
+</head>
+<body>
+<h2>Does CheerpJ honor a custom ClassLoader for user jars?</h2>
+<p>Runs <code>com.hack.ClassLoaderTest</code> which creates a logging URLClassLoader and tries to load <code>ij.IJ</code> and other classes through it. All output flows to the page.</p>
+<pre id="out">(booting CheerpJ…)</pre>
+<script>
+const out = document.getElementById("out");
+const orig_log = console.log;
+const orig_err = console.error;
+console.log = (...a) => { orig_log(...a); out.textContent += "\n" + a.join(" "); };
+console.error = (...a) => { orig_err(...a); out.textContent += "\nERR: " + a.join(" "); };
+
+(async () => {
+  try {
+    // Capture Java System.out by intercepting console output
+    await cheerpjInit({
+      status: "none",
+      clipboardMode: "java",
+      javaProperties: [
+        "java.awt.headless=true",
+        "user.dir=/files",
+      ],
+    });
+    console.log("cheerpjInit done");
+
+    // Compute base path for this page's folder
+    const baseUrl = location.pathname.endsWith("/")
+      ? location.pathname
+      : location.pathname.substring(0, location.pathname.lastIndexOf("/") + 1);
+
+    const testJarPath = `/app${baseUrl}classloader-test.jar`;
+    const ijJarPath = `/app${baseUrl.replace(/threadhack\/?$/, "")}lib/ImageJ/ij.jar`;
+    console.log("Running test jar: " + testJarPath);
+    console.log("Expecting ij.jar at: " + ijJarPath);
+
+    // cheerpjRunJar runs main(String[] args) of the Main-Class
+    await cheerpjRunJar(testJarPath, [ijJarPath]);
+    console.log("\n=== cheerpjRunJar returned ===");
+  } catch (e) {
+    console.error(String(e && e.message || e));
+    console.error((e && e.stack) || "");
+  }
+})();
+</script>
+</body>
+</html>

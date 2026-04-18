@@ -1,0 +1,110 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Stage 2 — ship Serializable Runnables to worker pool</title>
+<script src="https://cjrtnc.leaningtech.com/4.2/loader.js"></script>
+<style>body{font:13px ui-monospace,Menlo,monospace;padding:16px} pre{background:#111;color:#eee;padding:10px;white-space:pre-wrap;word-break:break-all;max-height:700px;overflow:auto}</style>
+</head>
+<body>
+<h2>Stage 2: Serializable Runnables → Web Worker pool</h2>
+<p>Boots a worker pool, then runs the sample. The sample spawns two threads:
+  (a) a <b>Serializable</b> <code>SumJob</code> — should be shipped to a worker (executes in worker JVM),
+  (b) an <b>anonymous</b> Runnable — not Serializable, falls through to cooperative Thread.start().</p>
+<pre id="out">(booting…)</pre>
+<script>
+const out = document.getElementById("out");
+const origLog = console.log, origErr = console.error;
+console.log = (...a) => { origLog(...a); out.textContent += "\n" + a.join(" "); };
+console.error = (...a) => { origErr(...a); out.textContent += "\nERR: " + a.join(" "); };
+
+// ---- Worker pool + JNI-dispatch plumbing ----
+const POOL_SIZE = 1;
+const pool = [];
+let nextWorker = 0;
+let nextHandle = 1;
+const pending = new Map();  // handle -> { resolve, reject }
+
+async function spawnPool() {
+  for (let i = 0; i < POOL_SIZE; i++) {
+    const w = new Worker("s2-worker.js?cb=" + Date.now() + "_" + i, { name: `w${i}` });
+    w.__name = `w${i}`;
+    const readyP = new Promise((res, rej) => { w._res = res; w._rej = rej; });
+    w.onmessage = (e) => {
+      const d = e.data;
+      if (d.kind === "ready") { console.log(`[pool] ${w.__name} ready (${d.bootMs.toFixed(0)}ms)`); w._res(); }
+      else if (d.kind === "log") { /* console.log(`[${d.workerId}] ${d.msg}`); */ }
+      else if (d.kind === "done" || d.kind === "error") {
+        const p = pending.get(d.id); if (!p) return;
+        pending.delete(d.id);
+        d.kind === "error" ? p.reject(new Error(d.err)) : p.resolve(d);
+      }
+    };
+    pool.push(w);
+    await readyP;   // sequential boot
+  }
+  console.log(`[pool] ${POOL_SIZE} workers ready`);
+}
+
+// ---- Natives implementing ThreadHook.nativeDispatch / nativeAwait ----
+const threadHookNatives = {
+  async Java_com_hack_ThreadHook_nativeWorkerAvailable(lib) {
+    return pool.length > 0;
+  },
+  async Java_com_hack_ThreadHook_nativeDispatch(lib, bytes, className) {
+    const handle = nextHandle++;
+    const buf = new Uint8Array(bytes).buffer.slice(0);
+    const w = pool[nextWorker++ % pool.length];
+    const wn = w.__name || "w?";
+    console.log(`[JS.dispatch] handle=${handle} (${typeof handle}) bytes=${buf.byteLength} -> ${wn}`);
+    const resultPromise = new Promise((resolve, reject) => pending.set(handle, { resolve, reject }));
+    w.postMessage({ kind: "run", id: handle, bytes: buf }, [buf]);
+    // Map handle (normalize to number) -> promise for nativeAwait
+    handleResults.set(Number(handle), resultPromise);
+    return handle;
+  },
+  async Java_com_hack_ThreadHook_nativeAwait(lib, handle) {
+    const key = Number(handle);   // Java long may arrive as BigInt or Number; normalize
+    console.log(`[JS.await] handle=${handle} (${typeof handle}) key=${key} present=${handleResults.has(key)}`);
+    const p = handleResults.get(key);
+    handleResults.delete(key);
+    if (!p) throw new Error("no such handle: " + handle + " (normalized " + key + ")");
+    const { resultBuf, ms } = await p;
+    console.log(`[JS.await] handle=${key} result ${resultBuf.byteLength}B (worker ${ms.toFixed(0)}ms)`);
+    return new Int8Array(resultBuf);
+  },
+};
+
+const handleResults = new Map();
+
+(async () => {
+  try {
+    // Boot main CheerpJ first (avoids CDN-fetch race with workers)
+    await cheerpjInit({
+      status: "none",
+      clipboardMode: "java",
+      javaProperties: ["java.awt.headless=true", "user.dir=/files"],
+      natives: threadHookNatives,
+    });
+    console.log("[main] cheerpjInit done");
+
+    // Now the main's runtime is warm; workers can be spawned without racing
+    await spawnPool();
+
+    const baseUrl = location.pathname.endsWith("/")
+      ? location.pathname
+      : location.pathname.substring(0, location.pathname.lastIndexOf("/") + 1);
+    const toolJar = `/app${baseUrl}parallel-tool.jar`;
+    const sampleJar = `/app${baseUrl}threadspawn-sample.jar`;
+    console.log("[main] running tool jar:", toolJar);
+
+    await cheerpjRunJar(toolJar, sampleJar);
+    console.log("\n=== cheerpjRunJar returned ===");
+  } catch (e) {
+    console.error(String(e && e.message || e));
+    console.error((e && e.stack) || "");
+  }
+})();
+</script>
+</body>
+</html>

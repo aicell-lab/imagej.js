@@ -1,0 +1,128 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Stage 2 — Executors rewrite + pool reuse</title>
+<script src="https://cjrtnc.leaningtech.com/4.2/loader.js"></script>
+<style>body{font:13px ui-monospace,Menlo,monospace;padding:16px} pre{background:#111;color:#eee;padding:10px;white-space:pre-wrap;word-break:break-all;max-height:800px;overflow:auto}</style>
+</head>
+<body>
+<h2>Stage 2: Executors.newFixedThreadPool rewrite + pool reuse demo</h2>
+<p>URL params: <code>?pool=N&amp;jobs=M&amp;work=K&amp;runs=R</code> — spawns N workers once, then does R rounds of
+  (Thread-bench + Executor-bench) with same M jobs × K iterations. Each round reuses the warmed pool.</p>
+<pre id="out">(booting…)</pre>
+<script>
+const qs = new URLSearchParams(location.search);
+const POOL_SIZE = parseInt(qs.get("pool") || "6");
+const JOBS      = parseInt(qs.get("jobs") || "10");
+const WORK      = parseInt(qs.get("work") || "100000000");
+const RUNS      = parseInt(qs.get("runs") || "3");
+
+const out = document.getElementById("out");
+const orig = console.log;
+console.log = (...a) => { orig(...a); out.textContent += "\n" + a.join(" "); };
+
+const pool = [];
+let nextWorker = 0, nextHandle = 1;
+const pending = new Map();
+const handleResults = new Map();
+
+async function preloadCheerpJ() {
+  const urls = ["https://cjrtnc.leaningtech.com/4.2/cj3.js", "https://cjrtnc.leaningtech.com/4.2/cj3.wasm"];
+  await Promise.all(urls.map(u => fetch(u, { cache: "force-cache" }).then(r => r.arrayBuffer())));
+}
+
+async function spawnPool(n) {
+  const t0 = performance.now();
+  for (let i = 0; i < n; i++) {
+    const w = new Worker("s2-worker.js?cb=" + Date.now() + "_" + i, { name: `w${i}` });
+    w.__name = `w${i}`;
+    const readyP = new Promise((res) => w._res = res);
+    w.onmessage = (e) => {
+      const d = e.data;
+      if (d.kind === "ready") { console.log(`[pool] ${w.__name} ready (+${d.bootMs.toFixed(0)}ms)`); w._res(); }
+      else if (d.kind === "log") { /* squelch for brevity */ }
+      else if (d.kind === "done" || d.kind === "error") {
+        const p = pending.get(d.id); if (!p) return;
+        pending.delete(d.id);
+        d.kind === "error" ? p.reject(new Error(d.err)) : p.resolve(d);
+      }
+    };
+    pool.push(w);
+    await readyP;
+  }
+  console.log(`[pool] ${n} workers ready in ${(performance.now() - t0).toFixed(0)}ms`);
+}
+
+const threadHookNatives = {
+  async Java_com_hack_ThreadHook_nativeWorkerAvailable(lib) { return pool.length > 0; },
+  async Java_com_hack_ThreadHook_nativeDispatch(lib, bytes, className) {
+    const handle = nextHandle++;
+    const buf = new Uint8Array(bytes).buffer.slice(0);
+    const w = pool[nextWorker++ % pool.length];
+    const resultPromise = new Promise((resolve, reject) => pending.set(handle, { resolve, reject }));
+    w.postMessage({ kind: "run", id: handle, bytes: buf }, [buf]);
+    handleResults.set(Number(handle), resultPromise);
+    return handle;
+  },
+  async Java_com_hack_ThreadHook_nativeAwait(lib, handle) {
+    const key = Number(handle);
+    const p = handleResults.get(key); handleResults.delete(key);
+    if (!p) throw new Error("no such handle: " + handle);
+    const { resultBuf } = await p;
+    return new Int8Array(resultBuf);
+  },
+};
+
+(async () => {
+  console.log(`[config] POOL=${POOL_SIZE} JOBS=${JOBS} WORK=${WORK} RUNS=${RUNS}`);
+  await preloadCheerpJ();
+  await cheerpjInit({
+    status: "none", clipboardMode: "java",
+    javaProperties: ["java.awt.headless=true", "user.dir=/files"],
+    natives: threadHookNatives,
+  });
+  console.log("[main] cheerpjInit done");
+  await spawnPool(POOL_SIZE);
+
+  // Library mode — init BenchTool once, reuse across runs
+  const baseUrl = location.pathname.endsWith("/")
+    ? location.pathname
+    : location.pathname.substring(0, location.pathname.lastIndexOf("/") + 1);
+  const toolJar = `/app${baseUrl}parallel-tool.jar`;
+  const sampleJar = `/app${baseUrl}threadspawn-sample.jar`;
+
+  console.log(`[main] loading library: ${toolJar} (sample jar loaded via ParallelClassLoader, not main)`);
+  const lib = await cheerpjRunLibrary(toolJar);
+  const BenchTool = await lib.com.hack.BenchTool;
+
+  console.log(`[main] BenchTool.init(${sampleJar})`);
+  await BenchTool.init(sampleJar);
+
+  // Run RUNS rounds. First round warms everything; later rounds reuse pool + JIT.
+  const results = [];
+  for (let r = 1; r <= RUNS; r++) {
+    console.log(`\n=== run ${r}/${RUNS} ===`);
+    const tT = await BenchTool.runThreadBench(JOBS, WORK, r === 1);   // only warm on first
+    const tE = await BenchTool.runExecutorBench(JOBS, WORK, false);
+    const tP = await BenchTool.runTpeBench(JOBS, WORK);               // new ThreadPoolExecutor path
+    results.push({ run: r, thread_ms: Number(tT), executor_ms: Number(tE), tpe_ms: Number(tP) });
+    console.log(`run ${r}: thread=${tT}ms  executor=${tE}ms  direct-TPE=${tP}ms`);
+  }
+
+  console.log("\n=== SUMMARY ===");
+  console.log(`pool=${POOL_SIZE} jobs=${JOBS} work=${WORK}`);
+  for (const r of results) {
+    console.log(`  run ${r.run}: Thread.start=${r.thread_ms}ms  Executors=${r.executor_ms}ms  directTPE=${r.tpe_ms}ms`);
+  }
+  // Speedup run1 vs run3 (shows pool-reuse benefit)
+  if (results.length >= 2) {
+    const first = results[0], last = results[results.length - 1];
+    console.log(`\nPool-reuse speedup (Thread path):   ${(first.thread_ms / last.thread_ms).toFixed(2)}× (first ${first.thread_ms}ms → last ${last.thread_ms}ms)`);
+    console.log(`Pool-reuse speedup (Executor path): ${(first.executor_ms / last.executor_ms).toFixed(2)}× (first ${first.executor_ms}ms → last ${last.executor_ms}ms)`);
+  }
+  console.log("\n=== done ===");
+})().catch(e => console.log("ERR: " + (e && e.message || e)));
+</script>
+</body>
+</html>
