@@ -2,6 +2,65 @@
 
 ## Patterns
 
+- **The biologist-voice programme now covers every author-voiced
+  argumentative surface of the paper — the end state the iter-17 / iter-
+  23 programme was aiming at.** Iteration 40 (2026-04-18) landed the §10
+  Availability v0.1 → v0.2 biologist-voice rewrite and by doing so
+  exhausted the pool of over-claimed genre-constrained surfaces surfaced
+  by the iter-37 inverse-genre-constraint pattern. The pass was a
+  seventh application of the iter-23 biologist-voice copy-edit kind and
+  a second application of iter-37's inverse-genre-constraint test.
+  Three observations fall out and should shape future iterations: (i)
+  **iter-37's test is now proven reusable** — applied to §9 (iter 37)
+  and to §10 (iter 40) with the same result: the genre-constraint claim
+  was over-broad, the surface can be re-voiced for the biologist while
+  preserving every claim-token; whenever a future chain-of-voice summary
+  asserts a surface is "genre-constrained", the test must be applied
+  before the next iteration, not carried forward; (ii) **the zero-adds
+  biologist-voice iteration is achievable across section types** — §8
+  iter-25 achieved zero-adds on a methodological-argument section, §10
+  iter-40 achieved zero-adds on a list-of-artefacts index; the zero-
+  adds bar is not a property of §8's specific structure, it is the
+  ideal outcome of a biologist-voice pass for any section type;
+  (iii) **no surface of the paper's argumentative spine still reads in
+  editorial voice** — Key Points → Abstract v0.6 → §1 v0.2 → Box 1 →
+  §2 v0.2 → Fig 1 → Box 2 → §3 v0.2 → Fig 2 → §4 v0.2 → Fig 3 → §§5–7
+  → Fig 4–6 → §8 v0.2 → Fig 7 → §9 v0.2 → §10 v0.2 → Cover letter v0.2
+  → Research Briefing v0.2; Online Methods remains in editorial voice
+  by *genuine* genre constraint (a fixed-format deliverable addressed
+  to a copy-editor with pre-registered protocol language, not an
+  argument addressed to the biologist). Future biologist-voice
+  iterations are Gate-G-dependent (the §§5/6/7 pass lands with partner
+  vignettes replacing the current `[Partner-institution]` /
+  `[IRB-number]` / per-course `[C_k-delta]` / `[Postdoc-institution]`
+  placeholder sets); after that Gate-G pass, no other biologist-voice
+  iteration the paper warrants remains.
+
+- **Render-fidelity drift between `preprint.md` and the v0.N HTML
+  render is a newly-surfaced regression class.** Iteration 40 (2026-04-
+  18) discovered that v0.1 HTML silently dropped the last sentence of
+  §10 paragraph 2 ("*The Week-1 three-candidate pilot is archived
+  verbatim; the full [N]-analysis corpus replaces it in the same layout
+  at revision time.*") that v0.1 `preprint.md` had always carried. The
+  drop was invisible to the current four-tool suite: `validate_manu
+  script.py` only checks rendered-HTML invariants; `propagate_place
+  holders.py` and `recheck_references.py` operate on `preprint.md`
+  only; `check_discipline.py` diffs between `## Drafted prose —`
+  version-pairs within `preprint.md`. None of the four tools compares
+  `preprint.md` to the HTML render. A future engineering-
+  infrastructure iteration (fifth application of the iter-28 kind)
+  would introduce `tools/check_render_fidelity.py` — walk every
+  `## Drafted prose — ...` block in `preprint.md`, locate the
+  corresponding HTML section, and report prose differences. This
+  guards a sixth check class distinct from the four in the current
+  matched suite (HTML invariants · placeholder propagation ·
+  bibliographic currency · claim-token preservation → render fidelity).
+  Empirically justified by the iter-40 drop; stdlib-only Python; would
+  slot cleanly into the iter-28 rule-set. Future iterations that touch
+  the HTML `<section>` body for any already-drafted-in-preprint block
+  should re-render from `preprint.md` rather than hand-edit the HTML,
+  so drops like iter-40's cannot recur.
+
 - **`tools/check_discipline.py` is the fourth application of the
   engineering-infrastructure iteration kind and the first authoring-time
   guard for the iter-23 claim-preservation discipline.** Iteration 39
@@ -5281,5 +5340,47 @@
 - **Third-highest: quarterly `recheck_references.py --online` cron via the `schedule` skill.** The 5 remaining author-/evidence-gated references include `ref-bioimageagent2026` (arXiv preprint in-preparation) and `ref-naparimcp2025` (software-release metadata) which are both time-sensitive — a quarterly check would surface their Crossref landing within 90 days rather than waiting for a manual iteration to run the tool by hand. This is the `schedule` skill's use-case; would need a pre-submission readiness-check workflow that runs the tool at a regular cadence and surfaces newly-resolved references.
 - **Fourth-highest: `tools/check_links.py` href-target liveness linter.** Fifth application of the engineering-infrastructure iteration kind. Would query every `http(s)://` URL in the References section and `<a href>` body-prose links against their authoritative source (Crossref, DOI resolver, W3C, product-release registry) and flag broken / redirected / changed links. Guards a regression class that is latent today (all URLs in the rendered HTML appear live as of 2026-04-18) but that will emerge as the paper ages between submission, peer review, and publication (typically 8–16 weeks for Nature Methods; links added today may have rotted by the time proofs are returned). The tool would follow the iter-28 rule-set verbatim: zero prose edits, stdlib-only (urllib.request), empirically-justified (broken links are a copy-editor-facing regression class with a long tail).
 - **The four-tool matched suite is now complete for the iter-23 discipline scope.** Before iter 28, the iter-23 discipline was enforced by manual self-review. At iter 28 the validator automated HTML / anchor / placeholder invariant checks. At iter 35 the propagator automated mechanical single-token evidence-landing. At iter 36 the recheck_references automated bibliographic currency. At iter 39 the discipline linter automated claim-preservation audits between Drafted-prose versions. A fifth tool (`check_links.py` or equivalent) would cover a *new* regression class rather than a sub-part of iter-23. The four-tool suite's coverage of iter-23 is: (a) authoring-time invariants on the rendered HTML (validator); (b) evidence-landing without silent edits (propagator); (c) bibliographic metadata freshness (recheck); (d) claim-token preservation between versions (discipline). These four together are the mechanical codification of the iter-23 discipline. A future iteration that introduces a fifth tool is guarding a new class, not closing a gap in iter-23.
+
+---
+
+## 2026-04-18 — Iteration 40: §10 Availability v0.1 → v0.2 biologist-voice rewrite (HTML render v0.33) — biologist-voice programme now covers every author-voiced argumentative surface of the paper
+
+### What was implemented
+
+- Appended `preprint.md §"Drafted prose — §10 Availability (v0.2, biologist-voice rewrite 2026-04-18, iter 40)"` — the seventh application of the iter-23 biologist-voice copy-edit iteration kind and the direct continuation of the iter-37 inverse-genre-constraint pattern. §10 Availability had been asserted "by genre design" in editorial voice through iters 8–39; the iter-37 test applied here too: the biologist-voice rewrite preserves every URL, file name, licence, placeholder, method name, and DOI verbatim, so §10 can be re-voiced for the biologist reader without losing its copy-editor readability. Each of the four paragraphs now opens by addressing the biologist reader directly ("*You can open ImageJ.JS in any recent browser…*", "*Three kinds of data sit under the empirical claims…*", "*If you want to call ImageJ.JS from a script, a Python notebook, or an AI agent…*", "*On telemetry: we record only…*"), and four `<h3>` subsection headings (*How to open the tool and find the source* · *What data sits under the paper's numbers* · *How to call the tool from a script or an agent* · *What happens with your data — and what we record*) follow the §9 v0.2 idiom for biologist skim-navigation.
+
+- Updated `manuscript_html/index.html` §10 Availability section to render v0.2 with the four new h3 subsections; added `<a href="#sec-4">§4</a>`, `<a href="#sec-7">§7</a>`, `<a href="#sec-3">§3</a>`, `<a href="#sec-8">§8</a>` internal cross-reference anchors so a biologist skim-reader can one-click-jump from §10 back to the referenced body section. Bumped HTML render v0.32 → v0.33 at header chip, footer stamp, article-meta dd, and readiness banner (six `v0.32` → `v0.33` replacements).
+
+- **Claim-preservation discipline perfectly preserved.** `tools/check_discipline.py --surface "§10 Availability" --strict` reports 0 added / 0 removed tokens. §10 joins §8 as the second zero-adds biologist-voice iteration in the full 12-pair discipline report. Every URL (`https://ij.aicell.io`, `https://github.com/aicell-lab/imagej.js`), every file name (`index.html`, `hypha-imagej-service.js`, `collab/`, `survey_schema.md`, `survey_production_regex_baseline.csv`, `survey_production_v2.csv`, `longtail_tasks.md`, `replay/`, `macro.ijm`, `INPUTS.json`, `run_replay.py`, `MATCH_REPORT.md`, `docs/rpc-examples/`, `README.md`), every placeholder (`[DAU]`, `[YYYY]`, `[DOI]`, `[48]%` ×2, `[20]%`, `[X]`, `[Y]/30`, `[Z]/30`, `[N]`), every method name (`runMacro`, `takeScreenshot`, `getRoisAsGeoJson`, `executeJavaScript`, `convertToMcpUrl`), every §§2/4/7/8/3 cross-reference, every ACQUIRE / EXECUTE / MATCH axis name, and the MIT licence and Zenodo archive are preserved verbatim.
+
+- **Drop-restoration: v0.1 HTML had silently omitted one sentence.** The last sentence of v0.1 paragraph 2 ("*The Week-1 three-candidate pilot is archived verbatim; the full [N]-analysis corpus replaces it in the same layout at revision time.*") was present in v0.1 `preprint.md` but missing from the v0.1 HTML render. Iter-40 brings the rendered surface into alignment with the working doc, so the `placeholder-value` span count moves 185 → 186 (+1 is the restored `[N]` span), not because a new claim landed but because a render-fidelity gap closed.
+
+- Readiness scoreboard per-§ biologist-voice row updated: the row's description string previously said "*only §10 Availability remains in fixed-format editorial voice*"; updated to "*Abstract / §§1/2/3/4/8/9/10 / Cover letter / Research Briefing all biologist-voiced — every author-voiced argumentative surface of the paper is in biologist voice today, including §10 Availability (iter 40, the inverse-genre-constraint test first applied by iter 37 for §9 now also successful for §10). Online Methods remains in editorial voice by genuine genre constraint*". Added `§10 Availability v0.2 biologist-voice iter 40` chip alongside the Abstract / §9 / Cover letter / Research Briefing chips.
+
+- Readiness banner iter-40 clause appended at the end of the banner paragraph (describes the pattern, the zero-adds discipline result, and the drop-restoration). Article-meta "Draft version" dd extended with an iter-40 clause. Article-meta "Regression guard … + discipline linter (iter 39)" dt extended to "+ biologist-voice coverage (iter 40)". Footer render-stamp main text extended with the iter-40 rationale paragraph listing every preserved URL, file name, placeholder, and method name, and recording the drop-restoration explicitly.
+
+- Validator PASS at v0.33: 0 HTML errors · 228 anchors / 50 unique / 90 ids / 0 broken · **186 `placeholder-value` spans** (+1 from iter-39's 185 baseline — the drop-restoration documented above) · 0 scope violations. 15th consecutive iteration running the validator.
+
+- Svamp `session set-link` re-run to update the session dashboard label to "Manuscript draft v0.33 (Nature Methods, biologist-voice complete)". URL stable across re-renders at `https://static-serve-0bc5cde8.svc.hypha.aicell.io/manuscript/`.
+
+### Files changed
+
+- `preprint.md` — appended `§10 Availability (v0.2, biologist-voice rewrite 2026-04-18, iter 40)` drafted-prose block. No existing content modified.
+- `manuscript_html/index.html` — §10 section body replaced (v0.1 four-paragraph editorial block → v0.2 four-h3-subsection biologist-voice block); version stamps v0.32 → v0.33 (6 replacements); readiness banner, article-meta dd, article-meta dt, per-§ biologist-voice row, and footer render-stamp extended with iter-40 clauses.
+- `.svamp/d9a68491-c46b-4e04-9b30-6294d0bbf071/ralph-progress.md` — this entry.
+
+### Learnings for future iterations
+
+- **The iter-37 inverse-genre-constraint test is reusable and has now been applied successfully twice.** Iter 37 first introduced the test (*test every chain-of-voice "complete" or "by genre design" claim against the actual rendered surface state*) and applied it to §9 Discussion implications, narrowing the previous "§9 remains in editorial voice by genre design" assertion. Iter 40 applies the same test to §10 Availability and lands the same result — the genre-constraint claim was over-broad, the surface can be re-voiced for the biologist while preserving every claim-token. Two applications confirm the test's robustness: whenever a chain-of-voice summary asserts a surface is "genre-constrained", the test should be applied before the next iteration rather than carried forward.
+
+- **The end of the biologist-voice programme for the main body has been reached.** Every author-voiced argumentative surface of the paper — Abstract, §§1–10 (with §§5/6/7 Gate-G-pending), Cover letter, Research Briefing — is now in publication-ready biologist voice. Online Methods remains in editorial voice by genuine genre constraint (it is a fixed-format deliverable addressed to a copy-editor, not an argument addressed to the biologist). Future biologist-voice iterations are Gate-G-dependent: when §§5/6/7 partners land, a thirteenth biologist-voice pass re-voices those three sections with concrete partner vignettes replacing the current `[Partner-institution]` / `[IRB-number]` / per-course `[C_k-delta]` / `[Postdoc-institution]` placeholder sets. That pass is the last biologist-voice iteration the paper warrants; no other surface is both (a) author-voiced argumentative and (b) not yet biologist-voiced.
+
+- **Two zero-adds biologist-voice iterations now exist (§8 iter 25 and §10 iter 40).** Zero-adds is the strictest form of the iter-23 discipline and requires the v_{n+1} prose to contain *exactly* the claim-token set of v_n. §8's zero-adds result was achieved on a highly structural section with well-defined claim tokens; §10's zero-adds result was achieved on a different kind of section (a list-of-artefacts index rather than a methodological argument), confirming that the zero-adds bar is achievable across section types rather than being a property of §8's specific structure. The zero-adds result is the ideal outcome of a biologist-voice pass; future biologist-voice iterations should aim for it.
+
+- **A render-fidelity gap between `preprint.md` and the v0.N HTML render is now a known regression class.** Iter 40 surfaced a latent drop — v0.1 HTML omitted a sentence v0.1 `preprint.md` carried. The current validator does not check HTML-to-preprint fidelity (it checks HTML well-formedness, anchor integrity, placeholder inventory, and placeholder-scope). A future engineering-infrastructure iteration (fifth application of the iter-28 kind) could introduce `tools/check_render_fidelity.py` — a tool that walks every `## Drafted prose — ...` block in `preprint.md`, identifies the corresponding HTML section, and reports prose differences. This is a sixth check class (beyond the four tools in the matched suite: validate / propagate / recheck / discipline) and guards render-time edits drifting from the canonical working-doc source. Empirically justified by the iter-40 drop.
+
+- **Highest-value next iteration: the Gate-G-gated §§5/6/7 biologist-voice pass is blocked, but an evidence-side iteration can still land.** `tools/recheck_references.py --online` run (requires network egress) would re-check the 5 remaining author-/evidence-gated references against Crossref and land any that have appeared in the 90 days since iter 36. If `ref-bioimageagent2026`, `ref-ouyangcompanion`, `ref-naparimcp2025`, `ref-chencellvoyager2026`, `ref-royeromega2024` have landed, Gate H moves from 10/15 to up to 15/15.
+
+- **Biologist-voice chain-of-voice summary now reads end-to-end.** Key Points → Abstract v0.6 → §1 v0.2 → Box 1 → §2 v0.2 → Fig 1 → Box 2 → §3 v0.2 → Fig 2 → §4 v0.2 → Fig 3 → §§5–7 → Fig 4–6 → §8 v0.2 → Fig 7 → §9 v0.2 → **§10 v0.2** → Cover letter v0.2 → Research Briefing v0.2. No surface of the paper's argumentative spine still reads in editorial voice; Online Methods remains in editorial voice by genuine genre constraint. The iter-37 pattern learnings ("whenever a chain-of-voice summary asserts a surface is 'genre-constrained'… that assertion must be tested against the iter-23 biologist-voice rule rather than carried forward as a permanent boundary") fully exhausts the pool of over-claimed genre-constrained surfaces as of iter 40.
 
 ---
