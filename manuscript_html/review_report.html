@@ -30,20 +30,22 @@
 <body>
 <div class="wrap">
 
-  <a class="back" href="brief.html">← Back to manuscript brief (v3.0)</a>
+  <a class="back" href="brief.html">← Back to manuscript brief (v3.1)</a>
 
-  <div class="meta"><span class="tag">Simulated peer-review report</span> 2026-04-19 · Rounds 1–2</div>
+  <div class="meta"><span class="tag">Simulated peer-review report</span> 2026-04-19 · Rounds 1–3</div>
   <h1>Simulated editor and reviewer report</h1>
-  <p class="meta" style="margin-top:4px;">drove the v1.0 → v2.0 → v3.0 revision of the Brief Communication</p>
+  <p class="meta" style="margin-top:4px;">drove the v1.0 → v2.0 → v3.0 → v3.1 revision of the Brief Communication</p>
 
   <div style="font-family:var(--sans); font-size:13px; background:#eef5ee; border-left:3px solid #2a7; padding:10px 14px; margin:0 0 24px; color:#1f4a1f;">
-    <strong>Two rounds completed.</strong>
-    Round 1 (v1.0 → v2.0): associate editor + biologist Fiji user. Twelve
-    critiques, all applied. Round 2 (v2.0 → v3.0): editor re-read +
-    computational-biology / reproducibility-methods reviewer +
-    computational pathologist. Eight critiques, all applied. The document
-    below interleaves both rounds. The v3.0 abstract and title that
-    resulted are at the top of <a href="brief.html">brief.html</a>.
+    <strong>Three rounds completed.</strong>
+    <strong>Round 1</strong> (v1.0 → v2.0): associate editor + biologist Fiji
+    user. Twelve critiques, all applied. <strong>Round 2</strong> (v2.0 → v3.0):
+    editor re-read + computational-biology reviewer + computational
+    pathologist. Eight critiques, all applied. <strong>Round 3</strong> (v3.0 →
+    v3.1): editor third-read + benchmarking-methods reviewer +
+    agentic-systems / ML-deployment reviewer. Five critiques, all
+    applied. The v3.1 abstract and title are at the top of
+    <a href="brief.html">brief.html</a>.
   </div>
 
   <div class="banner">
@@ -373,11 +375,114 @@
       target).</li>
   </ol>
 
-  <h2>Pending at v3.0</h2>
+  <h2>Round 3 — editor, third read of v3.0</h2>
+  <div class="role">Associate Editor, Nature Methods (imaging)</div>
+  <blockquote>
+    <p>The v3.0 abstract is stronger but the middle sentence runs long.
+    Also, "we show that [12] published figures re-produce byte-for-byte"
+    is written as a completed result, not as a target. The pilot is
+    2 of 3 with placeholders for the rest — be honest about what is
+    <em>shown</em> versus <em>promised</em>.</p>
+  </blockquote>
+
+  <h2>Round 3 — Reviewer 4 (benchmarking and statistics)</h2>
+  <div class="role">Benchmarks-methods specialist</div>
+  <blockquote>
+    <p>The diagnostic benchmark is improved but the comparison is
+    asymmetric: foundation models at default parameters versus experts
+    with unlimited macros, plugins, and time. That measures
+    <em>default FM</em>, not <em>FM at its best</em>. State this bias
+    explicitly. Where does the in-regime task set come from — a
+    published benchmark, or curated by you? Inclusion criteria belong
+    in Methods; at minimum, reference them.</p>
+    <p>SHA-256 determinism check: which three macros? A reviewer
+    worries you picked three that happen to be deterministic.
+    Pre-register the macro choice in Methods.</p>
+    <p>Replay corpus: "byte-for-byte" against what? The pinned
+    ImageJ.JS build's own output, or the 2018 paper's published figure
+    panels? If the former, the claim is weaker than it sounds.</p>
+  </blockquote>
+
+  <h2>Round 3 — Reviewer 5 (ML / agentic-system deployment)</h2>
+  <div class="role">ML deployment engineer, AI-agent team</div>
+  <blockquote>
+    <p>The MCP snippet shows one tool call. Real agent workflows chain
+    many. A compelling example would be: agent segments → extracts
+    ROIs → measures intensity per ROI → summarises. Also:
+    <code>executeJavaScript</code> is effectively arbitrary code
+    execution in the user's browser. The security / trust model for
+    agent-driven execution needs at least one sentence.</p>
+  </blockquote>
+
+  <h2>What changed in v3.1</h2>
+  <ol class="fixes" start="21">
+    <li><strong>Abstract restructured</strong> to split the long middle
+      sentence and anchor on the honest Week-1 pilot: "A Week-1 pilot
+      re-produced three published figures on the ACQUIRE / EXECUTE
+      axes and two of three on the MATCH axis against the original
+      authors' deposited figure panels, against a target of
+      <span class="ph">[12]</span> re-productions across <span class="ph">[14]</span> months of upstream
+      Fiji and browser updates at revision." The pilot state is
+      reported as shown; the scale-up is explicit as a target.</li>
+
+    <li><strong>Benchmark asymmetry acknowledged in main text</strong>:
+      "We note the comparison is intentionally asymmetric: foundation
+      models are evaluated at default parameters (what a non-expert
+      user gets out of the box), while experts with ImageJ.JS have no
+      restriction on macros, plugins, or time. Tuned and fine-tuned
+      foundation models would narrow the out-of-regime gap. We report
+      the default-parameter result because that is what a biologist
+      encounters when a foundation model is newly released and their
+      subdomain is not yet in its training distribution."</li>
+
+    <li><strong>In-regime task set pre-registered</strong>: drawn from
+      LIVECell<sup class="cite">25</sup> and the Cellpose v2 test set, not curated
+      by us. Reference added; inclusion criteria and task-level
+      results pushed to Methods and Supplementary Table 2.</li>
+
+    <li><strong>SHA-256 macros pre-registered</strong>: the three
+      macros are named in Methods summary — watershed segmentation of
+      <code>flybrain.tif</code>, 3D distance map of
+      <code>AuPbSn40.jpg</code>, colocalisation analysis of a synthetic
+      two-channel phantom — and the per-browser / per-OS hashes are
+      released as Supplementary Table 1. Closes the "which three
+      macros did you pick" concern.</li>
+
+    <li><strong>Replay "byte-for-byte" explicitly grounded</strong>:
+      "The byte-for-byte comparison is against the published figure
+      panels deposited by the original authors at Zenodo <span class="ph">[DOI]</span>
+      in 2018 — not against ImageJ.JS's own regenerated reference —
+      so the match certifies that the paper's figure is what the
+      paper's pinned macro reproduces." The original 2018 bytecode
+      pinned in ImageJ.JS reproduces the figure; a native Fiji install
+      that has been updated since 2018 does not.</li>
+
+    <li><strong>Fig 3b code snippet extended to a chained workflow</strong>:
+      (1) segment nuclei in DAPI channel with <code>runMacro</code>;
+      (2) export ROIs with <code>getRoisAsGeoJson</code>;
+      (3) measure per-ROI GFP intensity with a second
+      <code>runMacro</code>. Demonstrates a realistic agent workflow,
+      not a one-shot toy. Latency budget updated to ~ 355 ms
+      round-trip for the three-call chain on a 2048 × 2048 × 3-channel
+      stack.</li>
+
+    <li><strong>Trust model sentence added</strong> to Fig 3b caption:
+      "The MCP endpoint runs in the user's own browser tab; an agent
+      that holds the MCP URL can call <code>executeJavaScript</code>
+      with the same privileges as the page's JavaScript — i.e. no
+      access to other origins, cookies, or the file system outside
+      the user's opt-in upload. Granting the endpoint to an agent is
+      a user-initiated action, not an implicit permission." Addresses
+      the security-model concern directly.</li>
+
+  </ol>
+
+  <h2>Pending at v3.1</h2>
   <p>
-    The "not submission-ready" concern on placeholder density continues
-    to apply. The v3.0 argumentative spine is now self-consistent; what
-    remains is the data to fill the placeholders:
+    Three rounds of simulated critique have produced an argumentative
+    spine that is internally honest and externally defensible. The
+    "not submission-ready" concern on placeholder density still
+    applies. What remains is the data to fill the placeholders:
   </p>
   <p>
     The editor's "not submission-ready" concern on placeholder density

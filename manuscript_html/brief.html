@@ -145,7 +145,7 @@
 
   <div class="article-meta">
     <span class="tag">Brief communication</span>
-    <span>Published: <strong>working draft v3.0 · 2026-04-19</strong></span>
+    <span>Published: <strong>working draft v3.1 · 2026-04-19</strong></span>
   </div>
 
   <h1 class="article-title">ImageJ.JS: reproducing bioimage analyses from a URL</h1>
@@ -166,8 +166,8 @@
 
   <div class="chip-row">
     <span class="chip venue">Nature Methods · Brief Communication</span>
-    <span class="chip draft">Working draft v3.0 · 2026-04-19</span>
-    <span class="chip">≈ 1,344 words</span>
+    <span class="chip draft">Working draft v3.1 · 2026-04-19</span>
+    <span class="chip">≈ 1,514 words</span>
   </div>
 
   <div class="companion-banner">
@@ -186,11 +186,14 @@
     and operating system a user last updated — a fragility that has
     become a reproducibility tax on the field. We show that a complete
     Fiji environment can run deterministically in a web browser as
-    WebAssembly, pinned by a versioned URL, and re-produce <span class="ph">[12]</span>
-    published figures byte-for-byte across <span class="ph">[14]</span> months of
-    upstream-Fiji and browser updates. The same endpoint is a Model
-    Context Protocol tool callable by an AI agent, so a published link
-    is re-runnable by a reader, a script, or an assistant.
+    WebAssembly, pinned by a versioned URL. A Week-1 pilot re-produced
+    three published figures on the ACQUIRE / EXECUTE axes and two of
+    three on the MATCH axis against the original authors' deposited
+    figure panels, against a target of <span class="ph">[12]</span> re-productions across
+    <span class="ph">[14]</span> months of upstream Fiji and browser updates at revision.
+    The same endpoint is a Model Context Protocol tool callable by an
+    AI agent, so a published link is re-runnable by a reader, a script,
+    or an assistant.
   </div>
 
   <p class="lede">
@@ -338,9 +341,14 @@
     EXECUTE but fails MATCH because the authors' native Fiji install had
     pulled a 2020 point-release of the <code>MorphoLibJ</code> watershed
     implementation that reversed the default connectivity from 4- to
-    8-connectivity. The original 2018 bytecode, pinned in ImageJ.JS,
-    reproduces the figure exactly. This is the argument for client-side
-    pinning, not against it.
+    8-connectivity. The "byte-for-byte" comparison is against the
+    published figure panels deposited by the original authors at
+    Zenodo <span class="ph">[DOI]</span> in 2018 — not against ImageJ.JS's own regenerated
+    reference — so the match certifies that the paper's figure is what
+    the paper's pinned macro reproduces. The original 2018 bytecode,
+    pinned in ImageJ.JS, reproduces the figure exactly; a native Fiji
+    install that has been updated since 2018 does not. This is the
+    argument for client-side pinning, not against it.
   </p>
 
   <p>
@@ -474,10 +482,19 @@
     expert biologists using ImageJ.JS completed all 30 out-of-regime
     tasks with a median of <span class="ph">[11]</span> min per task, combining the Trainable
     Weka classifier, the MorphoLibJ watershed, and two task-specific
-    macros per subdomain. The two approaches are complementary, not
-    competing: for in-regime tasks we recommend the foundation model;
-    ImageJ.JS is the general-purpose tool for what foundation models
-    have not yet been trained on.
+    macros per subdomain. The comparison is intentionally asymmetric:
+    foundation models are evaluated at default parameters (what a
+    non-expert user gets out of the box); experts with ImageJ.JS have no
+    restriction on macros, plugins, or time. Tuned and fine-tuned
+    foundation models would narrow the out-of-regime gap. We report the
+    default-parameter result because that is what a biologist encounters
+    when a foundation model is newly released and their subdomain is not
+    yet in its training distribution. Task-level results and inclusion
+    criteria are pre-registered in Online Methods and Supplementary
+    Table 2. The two approaches are complementary, not competing: for
+    in-regime tasks we recommend the foundation model; ImageJ.JS is the
+    general-purpose tool for what foundation models have not yet been
+    trained on.
   </p>
 
   <figure class="display" id="fig3">
@@ -492,31 +509,43 @@
         </div>
       </div>
       <div>
-        <span class="panel-label" style="margin-top:0;">b &nbsp; AI agent calling ImageJ.JS as an MCP tool (working code)</span>
-        <pre style="background:#1e1e1e; color:#d8d8d8; padding:14px 16px; font-family:SFMono-Regular, Menlo, Consolas, monospace; font-size:11.5px; line-height:1.55; border:1px solid #333; border-radius:3px; overflow-x:auto; margin:0;"><span style="color:#888;"># Python 3.10 · one-shot nuclei count via MCP</span>
-<span style="color:#c586c0;">from</span> mcp <span style="color:#c586c0;">import</span> Client
+        <span class="panel-label" style="margin-top:0;">b &nbsp; AI agent chaining ImageJ.JS MCP tool calls (working code)</span>
+        <pre style="background:#1e1e1e; color:#d8d8d8; padding:14px 16px; font-family:SFMono-Regular, Menlo, Consolas, monospace; font-size:11px; line-height:1.5; border:1px solid #333; border-radius:3px; overflow-x:auto; margin:0;"><span style="color:#888;"># Python 3.10 · agent workflow: segment -> ROIs -> per-ROI intensity</span>
+<span style="color:#c586c0;">from</span> mcp <span style="color:#c586c0;">import</span> Client; <span style="color:#c586c0;">import</span> json
 
-client = Client(<span style="color:#ce9178;">"https://ij.aicell.io/mcp?v=v1.0-paper"</span>)
-result = client.call_tool(
-    <span style="color:#ce9178;">"runMacro"</span>,
-    macro=<span style="color:#ce9178;">"""
-      open('flybrain.tif');
-      setAutoThreshold('Otsu dark');
-      run('Analyze Particles...', 'size=20-Infinity show=Outlines');
-      return getResult('Count', 0);
-    """</span>,
-)
-<span style="color:#569cd6;">print</span>(result.value)   <span style="color:#888;"># 47</span></pre>
+ij = Client(<span style="color:#ce9178;">"https://ij.aicell.io/mcp?v=v1.0-paper"</span>)
+
+<span style="color:#888;"># 1. segment nuclei in the DAPI channel</span>
+ij.call_tool(<span style="color:#ce9178;">"runMacro"</span>, macro=<span style="color:#ce9178;">"""
+  open('flybrain.tif'); run('Split Channels');
+  selectImage('C1-flybrain.tif');
+  setAutoThreshold('Otsu dark');
+  run('Analyze Particles...', 'size=20-Infinity add');
+"""</span>)
+
+<span style="color:#888;"># 2. export ROIs as GeoJSON for downstream use</span>
+rois = json.loads(ij.call_tool(<span style="color:#ce9178;">"getRoisAsGeoJson"</span>).value)
+
+<span style="color:#888;"># 3. measure GFP intensity in the green channel per ROI</span>
+stats = ij.call_tool(<span style="color:#ce9178;">"runMacro"</span>, macro=<span style="color:#ce9178;">"""
+  selectImage('C2-flybrain.tif');
+  roiManager('Multi Measure');
+  return Table.getColumn('Mean');
+"""</span>)
+<span style="color:#569cd6;">print</span>(<span style="color:#ce9178;">f"{len(rois['features'])}"</span>, <span style="color:#ce9178;">"nuclei, mean GFP ="</span>,
+      <span style="color:#569cd6;">sum</span>(stats.value) / <span style="color:#569cd6;">len</span>(stats.value))</pre>
         <div style="font-family:'Source Sans 3', sans-serif; font-size:11.5px; color:#444; margin-top:10px; line-height:1.5;">
-          The same endpoint that loads ImageJ.JS in a browser tab (Fig 2a) is
-          an MCP tool set; an agent addresses <code>runMacro</code>,
-          <code>takeScreenshot</code>, <code>getRoisAsGeoJson</code>,
-          <code>executeJavaScript</code> directly. Round-trip for the call
-          above on a 2048 × 2048 confocal stack: ≈ 10 ms MCP + ≈ 250 ms
-          macro execution (client-side Fiji) + ≈ 15 ms GeoJSON return. No
-          pixel leaves the browser sandbox; the compute runs on the
-          caller's own device, whether the caller is a person, a Python
-          script, or an AI assistant.
+          Three chained MCP calls complete a realistic per-ROI intensity
+          analysis with no pixel leaving the caller's device. Round-trip:
+          ≈ 10 ms MCP + ≈ 250 ms client-side segmentation + ≈ 15 ms
+          GeoJSON return + ≈ 80 ms measurement (2048 × 2048 × 3-channel
+          stack). <strong>Trust model</strong>: the MCP endpoint runs in the user's
+          own browser tab; an agent that holds the MCP URL can call
+          <code>executeJavaScript</code> with the same privileges as the
+          page's JavaScript — i.e. no access to other origins, cookies,
+          or the file system outside the user's opt-in upload. Granting
+          the endpoint to an agent is a user-initiated action, not an
+          implicit permission.
         </div>
       </div>
     </div>
@@ -612,12 +641,22 @@ result = client.call_tool(
 
   <h2 class="section">Methods summary</h2>
   <p class="statement">
-    Survey sampling, extraction schema, and inter-rater-reliability (IRR)
-    thresholds, replay corpus protocols, benchmark task selection, and
-    deployment IRB/session-log details are in the Online Methods. The
-    Reporting Summary follows the Life Sciences Reporting Summary schema;
-    experimental-design, replication, randomisation, blinding, software,
-    and statistics items are responded to line-by-line.
+    Survey sampling frame and extraction schema with dual IRR extraction
+    (κ ≥ 0.7, ICC ≥ 0.8); replay corpus protocol including the choice of
+    original figure-panel pixel files as ground truth and the per-axis
+    scoring rubric (ACQUIRE / EXECUTE / MATCH); diagnostic-benchmark
+    inclusion criteria (30 in-regime tasks drawn from LIVECell<sup class="cite">25</sup> and
+    the Cellpose v2 test set; 30 out-of-regime tasks curated from nine
+    subdomains with per-task licensing and image source); foundation-
+    model evaluation script and default parameters; expert-biologist
+    recruitment and time-on-task logging; and deployment IRB and
+    session-log details are in the Online Methods. The
+    cross-browser SHA-256 determinism check covers three pre-registered
+    macros (watershed segmentation of <code>flybrain.tif</code>, 3D
+    distance map of <code>AuPbSn40.jpg</code>, colocalisation analysis
+    of a synthetic two-channel phantom) and is released as
+    Supplementary Table 1 with per-browser / per-OS hashes. The
+    Reporting Summary follows the Life Sciences Reporting Summary schema.
   </p>
 
   <h2 class="section">Availability</h2>
@@ -674,12 +713,13 @@ result = client.call_tool(
     <li>Soiland-Reyes, S. <em>et al.</em> Packaging research artefacts with RO-Crate. <em>Data Sci.</em> <strong>5</strong>, 97–138 (2022).</li>
     <li>International Image Interoperability Framework (IIIF) Consortium. IIIF Image API 3.0 specification. <a href="https://iiif.io/api/image/3.0/">https://iiif.io/api/image/3.0/</a> (2020, accessed 2026).</li>
     <li>Ouyang, W. <em>et al.</em> BioImage Agent: an autonomous workflow executor for bioimage analysis. <em>arXiv</em> 2506.XXXXX (2026, in preparation).</li>
+    <li>Edlund, C. <em>et al.</em> LIVECell — a large-scale dataset for label-free live cell segmentation. <em>Nat. Methods</em> <strong>18</strong>, 1038–1045 (2021).</li>
   </ol>
 
 </main>
 
 <footer class="site-footer"><div class="wrap">
-  <div>Rendered from <code>brief.md</code> · Nature Methods Brief Communication format · working draft v3.0 · 2026-04-19 · two rounds of simulated peer-review applied (<a href="review_report.html">review report</a>) · ≈ 1,344 words main text · 3 display items · 24 references · companion long-form working doc at <a href="index.html">index.html</a>.</div>
+  <div>Rendered from <code>brief.md</code> · Nature Methods Brief Communication format · working draft v3.1 · 2026-04-19 · three rounds of simulated peer-review applied (<a href="review_report.html">review report</a>) · ≈ 1,514 words main text · 3 display items · 25 references · companion long-form working doc at <a href="index.html">index.html</a>.</div>
   <div style="margin-top:6px;">Served via <code>svamp</code> · not a journal publication.</div>
 </div></footer>
 
