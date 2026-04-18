@@ -2,6 +2,38 @@
 
 ## Patterns
 
+- **Top-of-article "Key Points" bench-biologist summary is a third biologist-
+  facing surface distinct from both the body-inline narrative-scaffolding
+  Boxes and the appendix-region editorial-machinery scorecards.** Iteration 22
+  (2026-04-18) added a 5-bullet `aside.key-points` block between the Abstract
+  and Fig 0 Graphical Abstract as the text-mode companion to the graphical
+  abstract: a bench scientist who reads only the Key Points plus the Abstract
+  comes away with a correct first-order understanding of the paper's claim,
+  scope, and relevance to their own work. Three rules govern this surface
+  type and any future iteration of it: (i) **no new claim, number, or
+  citation** — every bullet rephrases an assertion already drafted in the
+  Abstract, §§1/3/4/6/7/8, Box 1 or Box 2, and every bracketed placeholder
+  rephrases a token already carried by those surfaces, resolving on the same
+  Gate-D/E/G path; (ii) **explicit § and figure cross-reference on every
+  bullet** — a reader persuaded by a bullet can jump directly to the body
+  surface that substantiates it, which is the property that distinguishes
+  this surface from a marketing blurb; (iii) **plain bench-scientist voice**
+  — no methodology-review vocabulary, no un-glossed acronyms, no
+  `READY`/`EVIDENCE-GATED` placeholder labels visible outside the `[…]`
+  brackets. Visual palette is burgundy (`#7a1f2b`) with a left double-rule
+  and numbered bullets in circular badges, distinct from both the
+  Box 1 / Box 2 blue `.nm-box` idiom (body-inline narrative scaffolding)
+  and from the eight editorial-appendix palettes (cover-letter serif,
+  supp-outline green/amber/red, release-eng blue, dry-run amber, packet
+  teal, dashboard violet, reporting-summary rose/coral, research-briefing
+  sage/olive). A reader scrolling the rendered draft now sees four visual
+  categories at a glance: body prose (plain serif), editorial machinery
+  (coloured scorecards), body-inline narrative scaffolding (Box 1/2 blue
+  pull-outs), and top-of-article first-contact summary (Key Points
+  burgundy panel). This is the point at which the four-category visual
+  vocabulary is complete; future iterations should reuse existing
+  categories, not add a fifth.
+
 - **CSS scoping discipline when an HTML element type is reused across section
   roles.** Iteration 21 (2026-04-18) fixed a regression introduced silently in
   iteration 20: the generic `aside { position:sticky; top:20px; border-top:2px
@@ -3446,3 +3478,169 @@
 
 ---
 
+
+
+## 2026-04-18 — Iteration 22: Key Points for the bench biologist (HTML render v0.15)
+
+### What was implemented
+
+- **Drafted Key Points v0.1 (~220 words, one lede + 5 numbered bullets)** in
+  `preprint.md §"Drafted prose — Key points for the bench biologist (v0.1,
+  2026-04-18)"`, positioned between the Abstract and Fig 0 Graphical Abstract
+  in the rendered article as the text-mode companion to the graphical
+  abstract. The five bullets cover: (1) the regime (§1/§2 · Fig 1/1-suppl);
+  (2) tool delivery — Fiji via browser (§3 · Fig 2 · Box 1 Monday); (3)
+  URL-driven reproducibility (§3/§4 · Fig 3 · Box 1 Friday); (4) client-side
+  privacy (§6/§7 · Fig 5/6 · Box 1 Thursday); and (5) the regime boundary
+  plus a "what this paper is *not*" pointer (§8 · Fig 7 · Box 2). Each bullet
+  rephrases an already-drafted assertion with §- and figure-level
+  cross-references so a reader persuaded by a bullet can jump directly to
+  the body surface that substantiates it. Block introduces **no new claim,
+  number, or citation**; every bracketed value rephrases a placeholder
+  already carried by Abstract / §§1–10 / Fig 1c / Boxes 1–2, and all
+  resolve on the same Gate-D/E/G path.
+
+- **HTML render v0.15 adds `<aside class="key-points" id="keypoints">`
+  between Abstract and Fig 0** using a new `.key-points` CSS rule set
+  (burgundy `#7a1f2b` border-left double-rule; `#fbf6f4` background;
+  circular numbered bullet badges). CSS adds 85 lines in the `<style>`
+  block. The panel is visually distinct from both the `.nm-box` Box 1/2
+  body-inline narrative-scaffolding pull-outs (blue palette) and from the
+  eight editorial-appendix scorecards (cover-letter serif, supp-outline
+  green/amber/red, release-eng blue, dry-run amber, packet teal,
+  dashboard violet, reporting-summary rose/coral, research-briefing
+  sage/olive). Every link in the panel back-references an existing id on
+  the page (`#sec-1` … `#sec-8`, `#fig1` … `#fig7`, `#box1`, `#box2`,
+  `#ref-lord2024`); no dangling anchors introduced.
+
+- **Version bumps v0.14 → v0.15** in all four places (article-meta line
+  under Published, draft chip, sidebar Draft version dd, footer
+  rendered-from div). Status chip extended with iteration-22 narrative;
+  sidebar Ready (prose v0.1) list extended with `Key Points
+  (bench-biologist first-contact summary, iter 22)` (bold) at the
+  start — between Abstract and §1 — matching the rendered position.
+
+- **Readiness dashboard synchronised in-pass.** Banner augmented with
+  "Key Points for the bench biologist added between Abstract and Fig 0
+  iteration 22". Prose-block coverage row's count increments 18/18 →
+  19/19, Key Points chip appended, and the source column updated with a
+  paragraph situating Key Points as the third biologist-facing surface
+  (Box 1 → Box 2 → Key Points) all of which introduce no new empirical
+  claim.
+
+- **HTML well-formed check passes.** Custom `html.parser`-based validator
+  reports zero tag issues. File grew 373,951 → 382,898 bytes (+8,947
+  bytes: ~3.8 KB of new prose and anchor markup + ~5.2 KB of new CSS for
+  the `.key-points` palette).
+
+- **Served URL confirmed stable.** Mount `manuscript` continues to serve
+  from disk. `HTTP/2 200`, `content-length: 382898` exactly matching
+  `wc -c` on disk.
+
+- **Re-registered svamp session link** with v0.15 label:
+  `svamp session set-link "https://static-serve-0bc5cde8.svc.hypha.aicell.io/manuscript/" "Manuscript draft v0.15 (Nature Methods) — Key Points for the bench biologist"`.
+
+### Files changed
+
+- `preprint.md` — appended one "Drafted prose" block (Key Points v0.1,
+  ~220 words, 1 lede + 5 numbered bullets) after the Box 2 v0.1 block.
+  No existing content modified. File grew ~60 lines.
+- `manuscript_html/index.html` — added `.key-points` CSS block (~85
+  lines in `<style>`), inserted a complete `<aside class="key-points"
+  id="keypoints">…</aside>` between the Abstract `</section>` and
+  the Fig 0 `<figure>`; bumped version strings v0.14 → v0.15 in four
+  places; extended status chip with iteration-22 narrative; extended
+  sidebar Ready list (Key Points appended as first item, bold);
+  synchronised readiness dashboard (prose coverage row 18/18 → 19/19,
+  Key Points chip added, source-column paragraph updated; banner
+  augmented); rewrote sidebar Draft version dd rationale paragraph and
+  footer rendered-from div to describe the iter-22 addition. File grew
+  373,951 → 382,898 bytes (+8,947 bytes).
+- `.svamp/d9a68491-c46b-4e04-9b30-6294d0bbf071/config.json` —
+  `session_link` updated by `svamp session set-link` with v0.15 label.
+- `.svamp/d9a68491-c46b-4e04-9b30-6294d0bbf071/ralph-progress.md` —
+  this entry; added one new Patterns bullet at the top (top-of-article
+  Key Points bench-biologist first-contact summary as a third
+  biologist-facing surface type, completing the four-category visual
+  vocabulary).
+
+### Learnings for future iterations
+
+- **Four-category visual vocabulary is now complete.** See the new
+  Patterns bullet at top. As of iteration 22 the rendered manuscript has
+  four visually distinguishable categories: body prose (plain serif);
+  editorial machinery (eight distinct scorecard palettes); body-inline
+  narrative scaffolding (Box 1 / Box 2 `.nm-box` blue pull-outs); and
+  top-of-article first-contact summary (Key Points `.key-points`
+  burgundy panel). Future narrative-scaffolding additions (a hypothetical
+  Box 3, or a plain-language methods box) should reuse the `.nm-box`
+  class rather than introduce a fifth category; future first-contact
+  surfaces should reuse `.key-points` rather than introduce a second
+  burgundy variant.
+
+- **Biologist-first-contact surface is a legitimate publication-readiness
+  move even in the absence of new evidence.** The iteration kind here is
+  narrative-scaffolding (same kind as iteration 20's Box 1 and iteration
+  21's Box 2), not body-prose promotion and not scorecard. The addition
+  does not move any Gate state except prose-block coverage (18/18 →
+  19/19 STRUCTURAL-READY). Dry-run, packet, reporting-summary, readiness,
+  and research-briefing scorecards remain valid at v0.15 without
+  re-computation — Key Points does not change any defensibility
+  response, any CRediT role, any reporting-summary slot, any
+  dashboard gate, or any research-briefing segment.
+
+- **Placeholder-inventory discipline holds (fourth application).** Like
+  iterations 19 (§4 prose), 20 (Box 1), and 21 (Box 2), Key Points adds
+  zero new placeholders. Every bracketed value in the five bullets
+  points at a token already carried by Abstract (`[48]%`, `[48]%`,
+  `[20]%`), §1 (`[Y1–Y2]`, `[N]`), or §10 (`[DAU]`, `[YYYY]`). The
+  placeholder-inventory-shared-with-body-prose rule (iterations 17 + 18
+  Patterns bullet) now has four body-surface applications.
+
+- **Body prose remains AI-free outside §8 (fourth application).** Key
+  Points mentions deep-learning methods only in bullet 5, exclusively
+  to name the regimes where ImageJ.JS is *not* the right tool (§8 / Box
+  2). The "AI stays contained to §8" pattern is preserved; bullet 5 is
+  the `§8-adjacent biologist-facing surface` analogue to Box 2 at the
+  top of the article.
+
+- **Anchor-integrity check is now a distinct validation surface.** Key
+  Points contains 14 internal links (`#sec-1` … `#sec-8`, `#fig1` …
+  `#fig7`, `#box1`, `#box2`, `#ref-lord2024`). Every one resolves to an
+  existing id on the page; a linter that validates `<a href="#…">`
+  anchors against the set of `id="…"` attributes would catch a class of
+  regression not caught by the HTML well-formedness validator. This is
+  the fourth validation surface catalogued (HTML well-formedness,
+  placeholder inventory, Gate-state scorecards, visual rendering) and
+  the first that could be added as a small automated check.
+
+- **Iteration kind (iter 22) was single-phase narrative-scaffolding.**
+  Unlike iteration 21 which combined narrative-scaffolding with a
+  regression fix, iteration 22 is a pure addition with no fix component.
+  This confirms that narrative-scaffolding remains a tractable single
+  iteration kind.
+
+- **Highest-value next iteration without new evidence: Bibliographic
+  verification pass (Gate H), still deferred from iterations 16–21.**
+  Still ~35 `[VOL:PAGES, DOI]` placeholders in References v0.1 remain
+  unresolved. Resolving them would promote Gate H from PENDING to MET
+  and drop the placeholder-inventory count significantly.
+
+- **Second-highest next iteration without new evidence: Anchor-integrity
+  validator + visual-rendering validation surface combined into a single
+  `tools/validate_manuscript.py` script.** The iteration-21 CSS regression
+  would have been caught by a visual-rendering check; iteration 22
+  introduces a cross-reference graph that would be caught by an
+  anchor-integrity check. Both are discoverable by programmatic
+  inspection; both are currently uncatalogued validation surfaces.
+
+- **Third-highest next iteration: Copy-edit / biologist-tone pass across
+  Abstract + §1 + §2 (the first three surfaces a biologist reader now
+  encounters, Key Points being the new zeroth).** With Key Points in
+  place, the pressure on §1 to be immediately biologist-accessible is
+  slightly relieved (§1 can now assume the reader has seen Key Points),
+  but the Abstract + §1 + §2 prose could still be tightened for the
+  biologist voice the Key Points panel establishes. This remains a
+  candidate for a future iteration.
+
+---
