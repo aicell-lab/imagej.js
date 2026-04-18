@@ -54,6 +54,16 @@
   updating the body once propagates here. Future public-facing summaries (editor
   responses, pre-submission emails, conference abstracts) should follow the same rule:
   rephrase from the draft body, don't paraphrase into new ground.
+- **§10 Availability = promise-the-editor-can-audit, not a feature list.** The §10
+  draft (2026-04-18) reads as an index of checkable artefacts: for every empirical
+  claim in the paper there is a named, shipped file or directory
+  (`longtail_tasks.md`, `replay/<name>/MATCH_REPORT.md`, `survey_production_v2.csv`,
+  `hypha-imagej-service.js:880`) that a reviewer can retrieve and verify. No feature
+  appears that is not already wired to a §1–§8 claim; no claim is left without its
+  resolving artefact. This discipline — every mechanism binds to an empirical
+  commitment — is the inverse of the usual Availability-section temptation to list
+  capabilities for marketing. Future availability, data-availability, or
+  reproducibility-checklist passes should follow the same binding rule.
 
 ---
 
@@ -326,4 +336,87 @@
   between them undoes the work of both. Before submission, do a one-pass
   diff of bracketed numbers + claim verbs + citations across Abstract v0.5
   and Cover letter v0.1 — anything that drifts is a bug.
+---
+
+## 2026-04-18 — Iteration 5: drafted §10 Availability prose (v0.1)
+
+### What was implemented
+
+- Drafted `preprint.md §"Drafted prose — §10 Availability (v0.1, 2026-04-18)"` —
+  four paragraphs, ~560 words, as an auditable index of every artefact the paper
+  asserts:
+  1. **Live instance + source code.** Single HTML page + WASM served at [URL];
+     repo contents enumerated (`index.html`, `hypha-imagej-service.js`,
+     CheerpJ VFS + plugin machinery, `collab/`, build tooling). Permissive
+     [LICENCE], archived git tag `v1.0-paper` + Zenodo DOI. Explicit split
+     between `main` (ongoing) and the tagged version-of-record (paper claims).
+  2. **Three corpora.** Survey corpus (`survey_schema.md` +
+     `survey_production_regex_baseline.csv` + `survey_production_v2.csv`,
+     with per-claim provenance to the [48]%/[48]%/[20]% headlines);
+     long-tail benchmark (`longtail_tasks.md` + task imagery-where-licensed +
+     ImageJ.JS macros + eval harness for [X] IoU, [Y]/30, [Z]/30); replay
+     corpus (`replay/<name>/macro.ijm` + `INPUTS.json` + `run_replay.py` +
+     `MATCH_REPORT.md` per re-run, ACQUIRE/EXECUTE/MATCH axes separated).
+     Week-1 three-candidate pilot archived; full [N]-analysis corpus
+     replaces it at revision.
+  3. **Programmatic interface.** Names the four Hypha-RPC methods
+     (`runMacro`, `takeScreenshot`, `getRoisAsGeoJson`, `executeJavaScript`)
+     and the MCP endpoint via `convertToMcpUrl` at
+     `hypha-imagej-service.js:880` — the exact identifiers §3 and §8 cite.
+     `docs/rpc-examples/` promised for Python + MCP caller notebooks;
+     authentication = Hypha workspace tokens, no new layer.
+  4. **Collaboration + telemetry.** §7 demonstrations as recorded sessions
+     (video + event log) + re-runnable scripted sessions; URL opens in
+     driver or observer mode; per-participant Hypha-authenticated logging.
+     [DAU]/[YYYY] from `README.md` analytics baseline. Explicit: no image
+     content, filenames, or user-identifying data collected — property of
+     §3's client-side-compute principle, not a policy overlay.
+- Added one pattern at top of progress file: **§10 Availability =
+  promise-the-editor-can-audit, not a feature list** — every mechanism binds
+  to an empirical commitment. Future data-availability / reproducibility-
+  checklist passes should follow the same binding rule.
+
+### Files changed
+
+- `preprint.md` — appended §10 drafted-prose block (after Cover letter v0.1).
+  File is now 341 lines / ~8,200 words. No existing content modified.
+- `.svamp/d9a68491-c46b-4e04-9b30-6294d0bbf071/ralph-progress.md` — appended
+  this entry; added one pattern bullet at the top.
+
+### Learnings for future iterations
+
+- **The big six drafts now exist.** Abstract v0.5, §1 Introduction v0.1,
+  §3 Design principles v0.1, §8 Limits-and-complementarity v0.1, Cover
+  letter v0.1, and §10 Availability v0.1 are all publication-readable.
+  The paper now has end-to-end prose coverage of every section whose
+  argument does not depend on unlanded evidence. Remaining drafts are
+  either (a) evidence-gated (§2 survey final numbers; §4 replay scale-up;
+  §5 teaching; §6 clinical; §7 collaboration demos) or (b) secondary-pass
+  consolidation (§9 Discussion implications; title lock; Risks-table
+  rewrite).
+- **Highest-value next iteration without new evidence: §9 Discussion
+  implications.** Different from §8 (which is regime-characterisation):
+  §9 is methodology-research implications — what it means for Nature
+  Methods-style tool-paper practice that the small-data majority has been
+  methodologically under-invested. One page, ~600 words, source material
+  already in `## Core framing`, `## Venue strategy`, `## What's deliberately
+  NOT in the abstract`, and the first paragraph of §8. This closes the
+  prose-loop on the paper body.
+- **Second-highest next iteration: title lock.** Three candidates in
+  `preprint.md:19–25`. The cover letter v0.1 uses candidate 1 ("Small
+  data, human hands: …"). Before the cover letter is finalised, confirm
+  that candidate 1 is final — or edit §19–25 and the cover letter
+  together. Small change, high consistency payoff.
+- **Third: a bracket-reconciliation pass.** Abstract v0.5, §1 v0.1, §3
+  v0.1, §8 v0.1, Cover letter v0.1, and §10 v0.1 now reference the same
+  placeholder set: [48]%, [48]%, [20]%, [X], [Y], [Z], [N], [Y1–Y2],
+  [DAU], [YYYY], [URL], [LICENCE], [DOI], [URL/github]. When evidence
+  lands, one single pass must resolve every placeholder everywhere in
+  the file. Drift between abstracts/letter/sections is exactly what
+  reviewers catch first. Script it if feasible (simple regex over the
+  file) rather than by-eye editing.
+- **Do not draft §9 yet in this iteration.** That is next iteration's
+  work; avoid overshooting and banking two prose drafts on the same
+  commit. The progress-file discipline is one-draft-per-iteration so
+  that a failure in one does not contaminate the previous.
 ---
