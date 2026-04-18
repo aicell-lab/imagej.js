@@ -2852,3 +2852,121 @@ If you want to call ImageJ.JS from a script, a Python notebook, or an AI agent r
 The collaboration demonstrations of §7 are released as recorded sessions (video + session-event log) and as re-runnable scripted sessions. Each demonstration is addressable by a URL that opens the session in driver or observer mode and either joins a live room or replays the recorded event stream locally; no image byte leaves the originator's device in either mode, and every participant action in the recorded log is attributed to a Hypha-authenticated identity. On telemetry: we record only aggregate daily-active-user counts — the live instance at `https://ij.aicell.io` collects no image content, no filenames, and no user-identifying data, and this is a property of the client-side-compute design principle in §3 rather than a policy overlay we could later change. The tool has served an average of [DAU] daily active users since [YYYY], measured by the analytics baseline described in `README.md`.
 
 ---
+
+## Drafted prose — `tools/chain_of_voice_audit.py` review-time chain-of-voice audit (v0.1, engineering-infrastructure iteration 2026-04-18, iter 42)
+
+*Sixth application of the engineering-infrastructure iteration kind (iter 28) and the eleventh distinct iteration kind in the log. This is the first **review-time** tool in the matched five-tool suite — the prior five (`validate_manuscript.py`, `propagate_placeholders.py`, `recheck_references.py`, `check_discipline.py`, `check_render_fidelity.py`) are all authoring-time linters that run against `preprint.md` and / or the rendered HTML as working-document surfaces; this tool runs against the rendered HTML as the thing a reviewer reads. The three iter-28 rules hold verbatim across this sixth application: (i) zero prose edits by the tool itself — all six HTML edits that close the first-application drifts are made by the iteration commit, not by the tool; (ii) guards an empirically-observed regression class — the iter-37 / iter-39 chain-of-voice gap, where "complete" claims in the rendered-HTML meta surfaces had silently inherited stale denominators or missing iteration mentions across iter-N commits that touched the body-prose but not the self-descriptive surfaces; (iii) self-contained, stdlib-only (a single Python 3 file with no dependencies outside `re`, `json`, `argparse`, `subprocess`, `dataclasses`, `pathlib`).*
+
+### What the tool does
+
+The tool parses `manuscript_html/index.html` to extract the six canonical chain-of-voice claim sites: (1) the header chip (`<span class="chip draft">Working draft vX.Y · YYYY-MM-DD</span>`), (2) the readiness banner (`<div class="readiness-banner">`), (3) the article-meta dl (`<div class="meta"><dl>`), (4) the per-§ biologist-voice scoreboard row (`<td>Biologist-voice per-§ checklist</td>`), (5) the Readiness-scoreboard one-line summary (`<p class="one-line-summary">`), and (6) the footer render-stamp (`<footer class="site-footer">`). From each site it extracts the iteration numbers mentioned (matched by the regex `\biter(?:ation)?\s+(\d+)\b`), then additionally from the one-line summary the "N / M biologist-voiced §§" count (`(\d+)\s*/\s*(\d+)\s+biologist-voiced\s+§§`) and the `N <code>placeholder-value</code> spans open` count (`(\d+)\s+<code>placeholder-value</code>\s+spans?\s+open`), and from the per-§ row the set of biologist-voiced §N chips (format: `<span class="status-met">§N v0.2 iter M</span>` for §§1-8 body slice and `§N Discussion implications <span class="status-met">v0.2 biologist-voice iter M</span>` for trailing §9 / §10 chips) and the set of Gate-G-pending §N chips (format: `<span class="status-pending">§N teaching|clinical|collaboration</span>`).
+
+For each extracted claim the tool runs an authoritative-source cross-check: the one-line summary's "X / Y" count is checked against the actual per-§ row chip count (two slices accepted — the §§1-8 body slice `X / 8` and the full §§1-10 slice `X / 10`); the one-line's placeholder-value span count is checked against `validate_manuscript.py`'s emitted count (parsed from the tool's stdout via `placeholder-value\s+spans?\s*=\s*(\d+)`); the highest iteration number mentioned in each meta surface (banner, meta, footer) is checked against the highest iteration number in the last 40 commits' `git log -n 40 --pretty=%s`; the highest "Nth application of the engineering-infrastructure iteration kind" word-ordinal claim (*first* · *second* · ... · *sixth*) is checked against the count of `.py` files in `tools/`. The one-line summary's parenthetical after "biologist-voiced §§" (format: `biologist-voiced §§ (+ Abstract / Cover letter / Research Briefing / §N)`) is checked for listing every §M ≥ 9 that the per-§ row flags as biologist-voiced.
+
+### Claim sites audited and authoritative sources
+
+| # | Claim site                                              | Claim                                       | Authoritative source                                                    |
+|---|---------------------------------------------------------|---------------------------------------------|-------------------------------------------------------------------------|
+| 1 | Header chip `.chip.draft`                               | `Working draft vX.Y`                        | canonical version bumped at iteration commit                            |
+| 2 | Readiness banner `.readiness-banner`                    | iteration number chain                      | `git log -n 40 --pretty=%s` latest iter                                 |
+| 3 | Article-meta dl `Draft version` dd lead                 | latest iteration landed                     | `git log` latest iter                                                   |
+| 4 | Article-meta dl `Regression guard ...` dt compound      | Nth application of engineering-infra kind   | count of `.py` files in `tools/`                                        |
+| 5 | Per-§ row td                                            | §§ biologist-voiced chips                   | `preprint.md` Drafted-prose v0.2 biologist-voice blocks                 |
+| 6 | Scoreboard one-line p                                   | "N / M biologist-voiced §§"                 | per-§ row chip count                                                     |
+| 7 | Scoreboard one-line p parenthetical                     | `(+ Abstract / ... / §9 / §10)`             | per-§ row chip count of trailing §9+ surfaces                           |
+| 8 | Scoreboard one-line p                                   | "N placeholder-value spans open"            | `validate_manuscript.py` output                                         |
+| 9 | Footer render-stamp `footer.site-footer` lead           | latest iteration landed                     | `git log` latest iter                                                   |
+
+### Modes
+
+`python3 tools/chain_of_voice_audit.py --self-test` — runs a built-in smoke test against a synthetic HTML fixture and asserts the tool extracts §§1/2/3/4/8/9/10 voiced + §§5/6/7 pending, that the body-slice drift check fires on a `3 / 8` claim (actual body 5/8), that the parenthetical drift fires when `§10` is omitted, and that the parenthetical-drift detector correctly identifies the missing surface. Exits 0 on PASS.
+
+`python3 tools/chain_of_voice_audit.py` — runs against `manuscript_html/index.html`. Emits a text report showing the extracted HTML version, banner/meta/footer iteration numbers (top-5), git-latest-iter, tools/ file count, one-line biologist-voice numerator/denominator, per-§ voiced and pending lists, one-line placeholder count alongside the validator's count, and a DRIFTS section listing each site that claims a value different from the authoritative source. Exits 0 by default; with `--strict`, exits 1 if any drift is present. `--json` emits the full report as JSON for scripting.
+
+### First application — six drifts surfaced
+
+First application at iter 42 surfaced six drifts, all closed in the same iter-42 commit:
+
+1. **One-line-summary parenthetical supplementary list** — the one-line `biologist-voiced §§ (+ Abstract / Cover letter / Research Briefing / §9)` parenthetical had been written at iter 37 when §9 first became biologist-voiced; iter 40 landed §10 but the parenthetical was not updated. The audit surfaces the drift: §10 is biologist-voiced (per-§ row shows `§10 Availability <span class="status-met">v0.2 biologist-voice iter 40</span>`) but absent from the parenthetical. Fix: `/ §9` → `/ §9 / §10`.
+
+2. **One-line-summary placeholder-value span count** — the one-line claimed `185 placeholder-value spans open`, matching the iter-39 baseline; iter 40's drop-restoration (the v0.1 HTML silently omitted a sentence `preprint.md` v0.1 carried; iter 40 restored it, bumping the placeholder inventory by +1) had moved the validator's count to 186. The audit surfaces the drift by comparing the one-line's `185` against `validate_manuscript.py`'s emitted `placeholder-value spans=186`. Fix: `185` → `186`.
+
+3. **Readiness banner latest-iteration mention** — the banner extended through iter 40 but not iter 41 (the `check_render_fidelity.py` commit landed the tool + seven drift closures but did not bump the banner — a silent regression of the iter-34 dashboard rule that says source-without-dashboard is a silent regression). Fix: append an iter-41 clause to the banner's chain-of-iteration list.
+
+4. **Article-meta dl `Draft version` dd lead paragraph** — the dd lead still opened with the iter-39 `check_discipline.py` landing, missing iter 40 (§10 biologist-voice), iter 41 (`check_render_fidelity.py`), and by iter 42 itself. Fix: rewrite the dd lead to open with the iter-42 `chain_of_voice_audit.py` landing and fold iter 40 / iter 41 into the history segment.
+
+5. **Footer render-stamp lead paragraph** — same drift class as (4), on the parallel footer surface. Fix: parallel rewrite of the footer lead.
+
+6. **"Nth application of the engineering-infrastructure iteration kind" claim** — the highest ordinal cited across the meta surfaces was *fourth* (iter-39 check_discipline.py), but at iter 42 there are six `.py` files in `tools/` (validate_manuscript.py, propagate_placeholders.py, recheck_references.py, check_discipline.py, check_render_fidelity.py, chain_of_voice_audit.py) — i.e. six applications of the iter-28 template. Fix: extend the Regression-guard dt compound to include the fifth and sixth applications; update each meta surface's history clause to cite the correct Nth claim in each iteration context.
+
+### Matched-suite evolution — five tools → six tools
+
+Before iter 42 the matched suite was five tools; iter 42 makes it six. The six tools together cover five distinct check classes plus one review-time class:
+
+1. **validate_manuscript.py** (iter 28) — authoring-time: HTML well-formedness, anchor integrity, placeholder inventory, placeholder-value scope.
+2. **propagate_placeholders.py** (iter 35) — authoring-time: mechanical single-token evidence-landing rewriter.
+3. **recheck_references.py** (iter 36) — authoring-time: bibliographic currency against Crossref.
+4. **check_discipline.py** (iter 39) — authoring-time: claim-preservation audit between `preprint.md` Drafted-prose v_n → v_{n+1} pairs.
+5. **check_render_fidelity.py** (iter 41) — authoring-time: preprint↔HTML prose fidelity via difflib fuzzy matching.
+6. **chain_of_voice_audit.py** (iter 42) — **review-time**: rendered-HTML self-descriptive claims vs authoritative sources.
+
+Reproducible six-tool workflow (all used at end of an iteration):
+
+```bash
+# 1. Discover Crossref metadata that has landed since last audit
+python3 tools/recheck_references.py --online --report-file tools/recheck_report.json
+
+# 2. Mechanically apply single-token resolutions (numeric values, URLs, DOIs)
+python3 tools/propagate_placeholders.py --apply --resolution '[48]%=37%' --resolution '[N]=42'
+
+# 3. Confirm no authoring-time HTML / anchor / placeholder regressions
+python3 tools/validate_manuscript.py
+
+# 4. Confirm no silent claim-token additions between v_n and v_{n+1} of any block
+python3 tools/check_discipline.py --strict
+
+# 5. Confirm no silent prose drops between preprint.md v-latest and the HTML render
+python3 tools/check_render_fidelity.py
+
+# 6. Confirm chain-of-voice self-descriptive claims match authoritative sources
+python3 tools/chain_of_voice_audit.py --strict
+```
+
+### Invariants preserved at iter 42
+
+- HTML render v0.33 → v0.34; four canonical version strings bumped (Open-Access published-line chip; status-chip Working-draft chip; sidebar Article-info Draft-version dd lead; footer Rendered-from div lead).
+- Regression-guard dd dt extended from "Regression guard (iter 28) + mechanical rewriter (iter 35) + bibliographic re-checker (iter 36) + discipline linter (iter 39) + biologist-voice coverage (iter 40)" to "... + render-fidelity checker (iter 41) + chain-of-voice audit (iter 42)".
+- Readiness banner chain-of-iteration list extended with two clauses (iter 41 `check_render_fidelity.py` description; iter 42 `chain_of_voice_audit.py` description with six-drift list).
+- Article-meta Draft-version dd lead rewritten to open with the iter-42 landing; iter-40 / iter-41 / iter-39 folded into the history segment; prior v0.31 baseline preserved as inline HTML comment matching the iter-29/30/31/32/33/34/35/36/37/38/39/40 sibling-comment idiom.
+- Footer Rendered-from div lead similarly rewritten.
+- Scoreboard one-line summary `p.one-line-summary` updated in three places: parenthetical extended with `/ §10`; placeholder-value count 185 → 186; three new iter-landing chips (iter 40 / iter 41 / iter 42) appended before the structurally-READY / empirically-EVIDENCE-GATED chips at the tail.
+- All iter-41 state preserved: `validate_manuscript.py` PASS at v0.34 — 0 HTML errors · 228+ anchors / 50 unique / 90+ ids / 0 broken · **186 `placeholder-value` spans** (unchanged since iter 40) · 382+ bracketed tokens · 0 scope violations. Sixteenth consecutive iteration running the validator.
+- `check_render_fidelity.py` continues to PASS at 16 verbatim surfaces checked, 0 drops; 8 summary surfaces listed.
+- `check_discipline.py` continues to report the iter-41 expected violation count — the iter-32 / iter-36 bibliographic-resolution back-ports in `preprint.md` v-latest blocks are a documented, by-design exception to the iter-23 claim-preservation rule (iter-32 Patterns entry calls out bibliographic resolution as an allowed exception; iter-41 Patterns entry supersedes the "HTML-only resolution" rule with the "both surfaces updated" rule).
+- Placeholder-value inventory count held at 186 through the iteration; iter-27 placeholder-value-scope rule preserved (all iter-42 `[token]` documentation is in inline `<code>` not `<span class="placeholder-value">`).
+
+### What this audit tool unlocks
+
+A future iteration that touches body prose or editorial-machinery scorecards but forgets to update the rendered-HTML self-descriptive meta surfaces (the iter-37 / iter-39 silent-drift class) will be caught by `tools/chain_of_voice_audit.py --strict` at the end of the iteration rather than at iter_n+k manual self-review or reviewer-facing read-through. Pre-submission readiness script can run all six tools as a single shell-script gate; the author-team sign-off at Gate I can cite the `--strict` exit code as evidence that every meta surface is internally consistent.
+
+A future iteration that adds a *seventh* meta surface to the rendered HTML (e.g. a new scoreboard row tracking per-figure evidence-source status, or a new dd under article-meta tracking the Gate-status numerator / denominator as a separate claim) must update the extractor list in `chain_of_voice_audit.py` in the same pass — otherwise the new surface's claims go unaudited, a silent regression of the iter-34 dashboard-expansion rule carried forward into the iter-42 audit template.
+
+The audit tool is deliberately narrow: it audits self-descriptive *chain-of-voice* claims (iteration numbers, §§ counts, placeholder counts, Nth-application claims) and does not audit *substantive* claims (the 48% / 48% / 20% survey headlines, the [X] foundation-model IoU, the [N] replay-corpus count — those are guarded by the iter-17 Nature Methods Reporting Summary and the iter-18 / iter-19 structural-commitment prose). The split between self-descriptive and substantive claims mirrors the split between review-time and authoring-time tools: substantive claims are authored, self-descriptive claims are emitted.
+
+### Usage cheatsheet
+
+```bash
+# Quick smoke-test on a synthetic fixture
+python3 tools/chain_of_voice_audit.py --self-test
+
+# Text report against the current HTML
+python3 tools/chain_of_voice_audit.py
+
+# Strict mode (exit non-zero on any drift — use in pre-commit or CI)
+python3 tools/chain_of_voice_audit.py --strict
+
+# JSON report (pipe into a scorecard dashboard or delta tracker)
+python3 tools/chain_of_voice_audit.py --json > /tmp/audit.json
+```
+
+---
