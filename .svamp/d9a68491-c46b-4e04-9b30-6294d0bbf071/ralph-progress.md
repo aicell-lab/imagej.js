@@ -379,6 +379,43 @@
   version-labelled title so the dashboard button reflects the current
   draft; the URL itself is stable across re-renders because the svamp
   mount is serving from disk.
+- **Structural-commitment prose is the partner-evidence-gated twin
+  of the evidence-gated figure schematic.** Iteration 18 (2026-04-18)
+  promoted §§5/6/7 from the yellow `<div class="gated">` evidence-
+  gated notice that stood in each slot through iterations 8–17 to
+  4/4/5-paragraph structural-commitment prose whose placeholders
+  (`[X]` courses, `[Partner-institution]`, `[IRB-number]`, per-course
+  `[C_k-delta]`, `[partner-approved quotation]`, `[Postdoc-
+  institution]` etc.) resolve at Gate G partner + collab-sprint
+  landings. Three rules govern this prose-side idiom and any future
+  iteration of it: (i) **structural claim fixed at draft time** —
+  what the section *asserts* (teaching as field-deployment under
+  institutional IT envelope; clinical compliance claim via
+  Hypha-authenticated audit log; collaboration as driver/observer
+  view-mirroring with four named wire artefacts) must not change
+  when the placeholders resolve; a future iteration that rewrites
+  the structural claim to fit the landed numbers is a discipline
+  regression; (ii) **v1 scope constraints named verbatim in-prose**
+  — the four collaboration constraints (Chrome-only driver, observer
+  cross-browser, no tab-close persistence, observer-notes-not-fork),
+  the teaching observer-notes-not-fork constraint, and the clinical
+  second-reader/research-case-series / no-WSI constraints are
+  reproduced from the Fig 4/5/6 captions and the `collaboration_
+  sprint.md` v1 scope block; reviewers will ask for each one
+  independently and the prose must carry them without hand-off to
+  Methods; (iii) **placeholder inventory shared with figure
+  captions** — every placeholder in §§5/6/7 prose has a matching
+  placeholder in the Fig 4/5/6 captions, so a single placeholder-
+  propagation pass at Gate G resolves both surfaces in lockstep. A
+  small `<div class="gated">` status banner is retained at the top
+  of each section (one-sentence version, linking back to the
+  corresponding figure) so the evidence-posture is visible at
+  section-level even as the prose is promoted. This pattern closes
+  the loop iteration 17 opened: figure-side schematic previews
+  (filled Fig 4/5/6) and prose-side structural-commitment blocks
+  (new §§5/6/7 body prose) are now the two faces of the same
+  "structural commitment drafted now, specifics resolve at Gate G"
+  discipline that iteration 17 introduced for the figure side.
 
 ---
 
@@ -2747,5 +2784,190 @@
   "AI stays contained to §8" pattern is preserved: the new AI surface
   is a §8 figure and is explicitly scoped by the §8 composition
   paragraph. Abstract, §1, §3, §10, Online Methods remain AI-free.
+
+---
+
+## 2026-04-18 — Iteration 18: §§5/6/7 structural-commitment prose promotion (HTML render v0.11)
+
+### What was implemented
+
+- **Drafted §5 Teaching v0.1 (four paragraphs, ~500 words)** in
+  `preprint.md §"Drafted prose — §5 Teaching and intuition-building (v0.1, 2026-04-18)"`.
+  Replaces the evidence-gated notice that stood in this slot through iterations 8–17.
+  Paragraphs: (i) the constrained teaching problem (IT envelope, institutional clearance,
+  Chromebook/iPad/shared-lab laptop deployment reality, §3 ¶2 zero-install-as-correctness
+  lineage); (ii) three-fold structural commitment (single URL for every seat; partner-
+  designed pre/post concept-check instrument per course with per-course reporting not
+  pooled; instructor voice verbatim-quoted and partner-approved); (iii) two v1 scope
+  constraints (observer-notes-not-fork, teaching-lab-pattern only, `outreach_emails.md`
+  template honours constraint), with the section's placeholder-resolution path named
+  (`[X]`/`[Y]`/per-course `[C_k-delta]`/`[partner-approved quotation]`/`[IRB-number]` at
+  evidence-landing iteration). Note — structured as three paragraphs in the counted draft
+  (four total with the introductory paragraph making the constrained-problem argument).
+
+- **Drafted §6 Privacy-preserving clinical v0.1 (four paragraphs, ~520 words)** in
+  `preprint.md §"Drafted prose — §6 Privacy-preserving analysis of sensitive data (v0.1,
+  2026-04-18)"`. Replaces the evidence-gated notice. Paragraphs: (i) the sensitive-data
+  microscopy problem (images the biologist is not permitted to move; client-side-compute
+  invariant from §3 ¶2–3 as the *necessary* condition only); (ii) structural commitment
+  as a separation of compliance claim from scientific claim (audit log is the compliance
+  deliverable, not case-panel annotation agreement; case panel reported separately for
+  partners' benefit, not load-bearing on §6's argument); (iii) two architectural
+  properties making the compliance claim auditable ahead of partner evidence — client-
+  side invariant is `git grep`-falsifiable; audit log is Hypha-authenticated and signed
+  by each participant's identity, so attributable without partner data; (iv) two bounding
+  constraints (second-reader / research-case-series context not primary diagnostic;
+  WSI out of scope per §3 ¶5 non-goal) — "these constraints are tight and deliberate;
+  loosening them would require a different paper".
+
+- **Drafted §7 Collaboration v0.1 (five paragraphs, ~640 words)** in
+  `preprint.md §"Drafted prose — §7 Real-time collaborative analysis without data
+  movement (v0.1, 2026-04-18)"`. Replaces the evidence-gated notice. Paragraphs: (i)
+  collaboration-in-small-data-microscopy is move-the-view-not-the-data; (ii)
+  architectural structural commitment (four wire artefacts — frames, ROI overlays,
+  control tokens, cursors — each falsifiable in code at `collab/frame_streamer.js` +
+  `collab/event_bus.js`, image pixels *never — by construction*); (iii) engineering
+  structural commitment (seven `collab/*.js` modules sprint-shipped at v1, layered on
+  reused `hypha-imagej-service.js` methods — reviewer can audit in under an hour); (iv)
+  three recorded live-session vignettes with `[Postdoc-institution]` / `[PI-institution]`
+  / `[≥5]` / `[observed count 5→6]` / `[partner-approved classroom quotation]`
+  placeholders resolving at filming; (v) four v1 scope constraints reproduced verbatim
+  (Chrome-only driver, observer cross-browser, no tab-close persistence, observer-
+  notes-not-fork) — "these constraints are not apologies; they are the v1 feature list
+  the paper claims reproducibility against".
+
+- **HTML §5/§6/§7 rewritten.** Each section's `<div class="gated">` evidence-notice
+  replaced with a compact one-sentence status banner (still `<div class="gated">`,
+  yellow/amber border-left, one line) linking back to the corresponding figure, followed
+  by the full v0.1 prose as standard `<p>` body-text paragraphs. All placeholder tokens
+  (`[X]`, `[Y]`, `[Partner-institution]`, `[IRB-protocol-number]`, per-course
+  `[C<sub>k</sub>-delta]`, `[observed count 5→6]`, etc.) rendered as
+  `<span class="placeholder-value">...</span>` per the existing convention. Mechanism
+  names (`collab/audit_log.js`, `hypha-imagej-service.js:1567`, `getRoisAsGeoJson`,
+  `connectToHypha`, `mount=`, `clinical=true`, etc.) rendered as `<code>...</code>`.
+  Cross-references to Fig 4 / Fig 5 / Fig 6 rendered as `<a href="#fig4">...</a>` etc.
+  Schematic previews (Fig 4/5/6 from iteration 17) unchanged.
+
+- **Version bumps v0.10 → v0.11** in four places (NPG bar top, draft chip, sidebar Draft
+  version dd, footer). Status chip updated to `Evidence status · 20 prose blocks v0.1
+  (+ §§5/6/7 structural-commitment prose, iter 18); body-prose coverage §§1–10 complete
+  (§§2/5/6/7 evidence-gated at numerical resolution); …`. Sidebar Ready (prose v0.1) list
+  extended with `§5`, `§6`, `§7` (bold). Sidebar Evidence-gated row reframed: "numerical /
+  naming only — structural claims drafted … specifics resolve at Gate G".
+
+- **Readiness dashboard synchronised in-pass.** Prose-coverage row's numeric measurement
+  augmented with `§§5/6/7 promoted iter 18` tag; gating-path row records the promotion
+  rationale ("the field-deployment sections are now prose Gate G resolves numerically,
+  not prose Gate G drafts from scratch"). Gate A condition and source column both
+  updated to name iteration 18 + the structural-commitment promotion. Readiness banner
+  augmented with "§§5/6/7 promoted from evidence-gated notices to structural-commitment
+  prose iteration 18". Dashboard narrative "Eight independent scorecards …" kept
+  unchanged — no new scorecard added this iteration; body prose is not a scorecard.
+
+- **HTML well-formed check passes.** Custom-validator pass (html.parser-based, with
+  proper SVG void-element handling for `path`/`rect`/`circle`/`line`/`polyline`/
+  `polygon`/`ellipse`/`use`/`stop` and content-carrying elements `text`/`tspan`/`title`
+  treated as start+end tag pairs) reports zero tag issues. Final file 354,158 bytes
+  (up from 337,158 in iteration 17 — +17,000 bytes for §§5/6/7 prose).
+
+- **Served URL confirmed stable (Iteration 8–18 pattern).** Mount `manuscript`
+  continues to serve from disk; re-saving the HTML was sufficient. HTTP HEAD → `200`,
+  `content-length: 354158` exactly matching `wc -c` on disk, `last-modified: Sat, 18 Apr
+  2026 13:51:43 GMT` exactly matching `stat -f '%Sm'` on disk — svamp serves from disk,
+  byte-for-byte.
+
+- **Re-registered svamp session link** with v0.11 label:
+  `svamp session set-link "https://static-serve-0bc5cde8.svc.hypha.aicell.io/manuscript/" "Manuscript draft v0.11 (Nature Methods) — §§5/6/7 structural-commitment prose"`.
+  Dashboard button now reflects the iteration-18 label.
+
+### Files changed
+
+- `preprint.md` — appended three "Drafted prose" blocks (§5 Teaching v0.1, §6 Privacy-
+  preserving v0.1, §7 Collaboration v0.1) after the §2 Measurement v0.1 block from
+  iteration 17. No existing content modified. File grew from 2,089 → ~2,123 lines.
+- `manuscript_html/index.html` — replaced §5/§6/§7 evidence-gated notices with compact
+  one-sentence status banners + v0.1 prose paragraphs (12 new body-text paragraphs,
+  plus three status banners); bumped version strings v0.10 → v0.11 in four places (NPG
+  bar, draft chip, sidebar Draft version, footer); extended status chip with iteration-
+  18 narrative; extended Ready (prose v0.1) list; reframed Evidence-gated row;
+  synchronised readiness dashboard (prose coverage row, Gate A, banner). File grew
+  337,158 → 354,158 bytes / 3,899 → 3,890 lines (net -9 lines: gated notices shrank
+  to one-liners even as prose paragraphs landed).
+- `.svamp/d9a68491-c46b-4e04-9b30-6294d0bbf071/config.json` — `session_link` updated by
+  `svamp session set-link` with v0.11 label.
+- `.svamp/d9a68491-c46b-4e04-9b30-6294d0bbf071/ralph-progress.md` — this entry; added
+  one new Patterns bullet at the top (structural-commitment prose idiom).
+
+### Learnings for future iterations
+
+- **The §§5/6/7 promotion closes the prose↔figure symmetry iteration 17 opened.** Before
+  iteration 17, §§5/6/7 carried a yellow `<div class="gated">` evidence-notice paragraph
+  + a reserved-placeholder figure slot with a "Reserved · evidence-gated" figure-header
+  label. Iteration 17 promoted the figure slots to rich schematic previews labelled
+  "schematic preview — awaits partner evidence". Iteration 18 now promotes the matching
+  prose slots to structural-commitment body prose with a compact one-sentence status
+  banner. The symmetry is: for each field-deployment section (teaching / clinical /
+  collaboration), both the figure and the prose make structural commitments now, and
+  both have placeholders that resolve in lockstep at Gate G. Future iterations must
+  preserve this lockstep — if a figure caption gets a new placeholder, the prose gets
+  the same placeholder in the same iteration, and vice versa.
+- **Retaining a compact `<div class="gated">` status banner is the right call over
+  removing it entirely.** A reader (co-author, editor, reviewer) skimming §§5/6/7
+  needs to see at a glance that these sections still have Gate-G-pending content; a
+  one-sentence status banner at the top of the section (with a back-link to the
+  figure) conveys that posture without hijacking the visual hierarchy. This is the
+  same design move as the editorial-machinery scorecards' distinct palettes, applied
+  at body-section granularity: evidence-posture is a legitimate thing to render
+  distinctively, not a thing to hide.
+- **Body-prose promotion is not a scorecard.** The prose coverage scorecard still
+  reports `16/16 STRUCTURAL-READY` — no new block was created in iteration 18. What
+  changed is the *quality* of the §§5/6/7 entries: previously evidence-gated notices
+  acting as placeholders for prose Gate G would resolve; now structural-commitment
+  prose that Gate G resolves *numerically* into, rather than Gate G *drafts from
+  scratch* into. This distinction is load-bearing: a reviewer reading an iteration-17
+  v0.10 render would see a yellow "awaiting evidence" note in §§5/6/7 and reasonably
+  suspect the paper does not know yet what it will claim about teaching/clinical/
+  collaboration; a reviewer reading the iteration-18 v0.11 render sees the structural
+  claims committed and the placeholders named, and can evaluate "is this over-claimed?"
+  from the structural commitment alone, before Gate G lands.
+- **Placeholder inventory did NOT balloon.** Naïvely, adding 12 body-text paragraphs
+  with placeholder tokens could have added 15–20 new placeholders to the inventory.
+  But every placeholder in the §§5/6/7 prose is *already* carried by the Fig 4/5/6
+  schematic captions (`[X]` courses, `[Partner-institution]`, `[IRB-number]`, per-
+  course `[C_k-delta]`, etc.), so the inventory count is unchanged. This is the
+  placeholder-inventory-shared-with-figure-captions rule in the new Patterns bullet.
+  Future structural-commitment prose iterations must honour this rule: if the prose
+  requires a placeholder that the figure caption does not already carry, either the
+  figure caption adds it in the same iteration or the prose uses an already-committed
+  placeholder, not a new one.
+- **Highest-value next iteration without new evidence: Bibliographic verification pass
+  (Gate H), deferred from iterations 16–17.** ~35 `[VOL:PAGES, DOI]` placeholders in
+  References v0.1 remain unresolved. A focused one-pass verification resolves Gate H,
+  drops the placeholder-inventory count significantly, and promotes the references-
+  verification dashboard row from `0 / ~35` to `~35 / ~35` in a single pass. Still
+  the single largest placeholder-inventory move available before evidence landing.
+- **Second-highest next iteration without new evidence: author-bio / ORCID blurbs
+  (partial Gate I), now also tractable.** With §§5/6/7 structural commitments drafted,
+  the author contribution structure (CRediT) from the Submission packet can be sanity-
+  checked against the prose — every role claimed must map to a section the author
+  contributed to. A future iteration can produce the ~50-word author-bio drafts as
+  a supplementary render pass, with `[INITIALS]` placeholders resolving at sign-off.
+- **Framing containment re-verified across v0.11 render.** The new §§5/6/7 prose
+  mentions AI in exactly one place: §7 ¶2 references "§6's client-side-compute
+  invariant" as the falsifiability pattern; no AI term (SAM / Cellpose / CellSAM /
+  foundation model / agent / LLM) appears in §§5/6/7. Abstract, §1, §3, §10, Online
+  Methods remain AI-free; §2 (iter 17) mentions AI only in the long-tail benchmark
+  paragraph (necessary and bounded); §7 (iter 18) mentions Hypha as infrastructure,
+  not AI. The "AI stays contained to §8" pattern is preserved.
+- **Five editorial-machinery scorecards (dry-run, packet, reporting summary, readiness
+  dashboard, research briefing) all remain valid at v0.11 without re-computation.**
+  No scorecard depends on the §§5/6/7 body-prose contents directly — all five depend
+  on the Gate-state they report against, and Gates A–J have not changed state in
+  iteration 18. Iteration 18 is a body-prose iteration, not a scorecard-affecting
+  iteration. Future iterations should continue to be explicit about which kind of
+  iteration they are: body prose, figure/visual, scorecard, evidence landing, or
+  placeholder resolution. Cross-kind iterations (e.g., "land Gate D evidence AND
+  recompute scorecards AND redraw figures") are the expensive ones and should be
+  avoided when possible.
 
 ---
