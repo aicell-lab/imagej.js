@@ -2546,3 +2546,206 @@
   link on the Svamp dashboard.
 
 ---
+
+## 2026-04-18 — Iteration 17: §2 Measurement prose v0.1 + biologist-facing visual pass (HTML render v0.10)
+
+### What was implemented
+
+- **Drafted §2 Measurement v0.1 (six paragraphs, ~780 words)** in
+  `preprint.md §"Drafted prose — §2 Measuring the small-data majority (v0.1, 2026-04-18)"`.
+  Replaces the evidence-gated notice that stood in this slot through iterations 8–16.
+  Paragraphs: (i) three measurement instruments, committed to artefacts before examination;
+  (ii) survey design (stratification, 9 subdomains × 14 journals, A/B/C axis decomposition);
+  (iii) interim 80-row results (48/48/20/11 % bracketed); (iv) v2 reframing
+  ("ImageJ is the substrate every biologist still opens"); (v) 30-task long-tail benchmark
+  design (seven inclusion criteria, zero-shot DL config, mean IoU [X], [Y]/30 vs [Z]/30);
+  (vi) replay pilot on 3 candidates + two findings (Drosophila bundle inconsistency,
+  Find-Edges drift) preserved into production corpus.
+- **HTML §2 rewritten** to biologist voice. Replaced the `<div class="gated">` notice +
+  opening paragraph with the six-paragraph prose block; opening paragraph rephrased from
+  "regime claim warrants regime measurement" to three biologist-addressed questions
+  ("who is the typical microscopy paper's author…", "when a problem is rare…", "if we
+  re-ran a published Fiji analysis today…").
+- **Five new / rich figures** added to the HTML:
+  1. **Graphical Abstract (Fig. 0)** — inserted between Abstract and §1. Four-panel inline
+     SVG: (a) ImageJ.JS browser UI mockup (window chrome, toolbar, canvas with cells +
+     ROIs + Results pane); (b) device strip (laptop, Chromebook, iPad, phone);
+     (c) URL-share flow (PI → URL carrying `open=&macro=&rois=&plugins.dir=` → collaborator);
+     (d) driver/observer Hypha architecture with "no image bytes egress" badge.
+  2. **Fig 1-supplement** — subdomain montage, inserted before Fig 1 inside §2.
+     Nine-panel inline-SVG grid of typical small-data imagery per stratum:
+     cell biology (DAPI cells), developmental (3 embryos), neuroscience (dendrite
+     trace), pathology (H&E with pathologist ROI), plant (leaves + veins),
+     ecology/field (tablet-photo agar plate), infection (intracellular parasites),
+     microbiology (rods + cocci), structural (cryo-EM 2D class average).
+  3. **Fig 4 filled** — teaching deployments, rich SVG replacing placeholder.
+     Four panels: (a) classroom with 30 Chromebooks + instructor URL;
+     (b) pre/post concept-check bars (C1/C2/C3, placeholder values); (c) instructor
+     quotation boxes; (d) devices IT allowed vs blocked.
+  4. **Fig 5 filled** — on-device clinical pathology, rich SVG. Four panels:
+     (a) H&E slide in ImageJ.JS vs pathologist annotation overlay;
+     (b) audit-trail excerpt (timestamped Hypha-authenticated actions, including
+     `image.egress.check false`); (c) per-session data-governance confirmation
+     (ROIs/measurements/log egress ✓; image pixels/PHI/file handles ✗);
+     (d) architecture (hospital laptop ↔ Hypha ↔ remote consultant).
+  5. **Fig 6 filled** — collaboration vignettes. Four panels:
+     (a) driver/observer architecture (driver + Hypha + 3 observers) with
+     egress-legend (frames/ROIs/tokens ✓; pixels ✗); (b) cross-institution
+     PI-review vignette (postdoc driver → PI observer "try Otsu?" → count
+     5→6); (c) teaching-lab observer cohort (instructor driver, 5 students
+     mirror-view); (d) pathology consultation (primary + 2nd reader +
+     audit excerpt).
+  6. **Fig 7 new** — "Composable, not captive" composition architecture,
+     inserted at the end of §8. Three columns: left (DL services: SAM,
+     Cellpose, StarDist/CellSAM, lab's private model; emits GeoJSON ROIs);
+     centre (ImageJ.JS: human-analyst canvas + Hypha-RPC service layer with
+     the four method signatures + MCP endpoint via `convertToMcpUrl:880`);
+     right (agent runtimes: LLM orchestrator, napari-mcp, companion paper).
+     Bidirectional arrows for WebSocket ROIs (DL↔ImageJ.JS) and MCP
+     (ImageJ.JS↔agents). §8 prose updated to cite Fig 7 at the composition
+     paragraph.
+- **Version bumps v0.9 → v0.10** in four places (NPG bar top, draft chip,
+  sidebar Draft version dd, footer). Status chip updated to
+  `17 prose blocks v0.1 (+ §2 Measurement); biologist-facing visual pass
+  landed iter 17 (Graphical Abstract, Fig 1-supplement subdomain montage,
+  rich SVG schematics for Fig 4/5/6, new Fig 7 composition); …`.
+- **ToC updated**: added Graphical Abstract (GA) entry; added sub-entries
+  for Fig 1-supplement and Fig 1 (indented under §2); added Fig 7 sub-entry
+  (indented under §8).
+- **Sidebar Evidence status extended**: `Ready (prose v0.1)` list now
+  includes `<strong>§2</strong>`; new `Figures (biologist pass iter 17)` row
+  reports `Graphical Abstract + Fig 1 + Fig 1-suppl (subdomains) + Fig 2
+  + Fig 3 + Fig 4 + Fig 5 + Fig 6 + Fig 7 composition · all in-HTML SVG`.
+- **HTML well-formed check passes.** Python `html.parser` reports 0
+  unmatched start/end tags. Final file size 337,158 bytes (up from 248,628
+  in iteration 16 — +88,530 bytes of new SVG + prose).
+- **Served URL confirmed stable (Iteration 8–17 pattern).** Mount
+  `manuscript` continues to serve from disk; re-saving the HTML was
+  sufficient. Post-edit HTTP HEAD → `200`, `content-length: 337,158`,
+  `last-modified: Sat, 18 Apr 2026 13:36:17 GMT`.
+- **Re-registered svamp session link** with v0.10 label:
+  `svamp session set-link "https://static-serve-0bc5cde8.svc.hypha.aicell.io/manuscript/" "Manuscript draft v0.10 (Nature Methods) — biologist-facing visual pass"`.
+  Dashboard button now shows the biologist-facing label.
+
+### Files changed
+
+- `preprint.md` — appended `§"Drafted prose — §2 Measuring the small-data
+  majority (v0.1, 2026-04-18)"`. No existing content modified. File grew
+  from 2,069 → ~2,089 lines.
+- `manuscript_html/index.html` — replaced §2 gated-notice + opener with
+  biologist-voiced prose (6 paragraphs); inserted Graphical Abstract inline
+  SVG figure between Abstract and §1; inserted Fig 1-supplement subdomain
+  montage inline SVG before Fig 1 inside §2; replaced Fig 4/5/6
+  placeholders with rich inline-SVG schematics (each marked "schematic
+  preview — awaits partner evidence" rather than "reserved"); appended new
+  Fig 7 composition figure at the end of §8; bumped version strings
+  (NPG bar, draft chip, sidebar Draft version, footer); extended status
+  chip; updated ToC (GA entry, Fig 1-suppl/Fig 1/Fig 7 sub-entries);
+  extended sidebar Evidence-status `dl` (§2 marked strong; new Figures
+  row). File grew 248,628 → 337,158 bytes / 2,908 → 3,899 lines.
+- `.svamp/d9a68491-c46b-4e04-9b30-6294d0bbf071/config.json` —
+  `session_link` updated by `svamp session set-link` with v0.10 label.
+- `.svamp/d9a68491-c46b-4e04-9b30-6294d0bbf071/ralph-progress.md` —
+  this entry.
+
+### Learnings for future iterations
+
+- **Biologist-facing visual density is a different pass from prose
+  density.** Up to iteration 16, the manuscript grew primarily by drafted-
+  prose blocks and editorial-machinery scorecards (1→17 blocks, 1→9
+  editorial appendices). Iteration 17 is the first iteration whose
+  delta is visual: six new or significantly enriched figures. The
+  iteration pattern is therefore distinct — no new prose block landed,
+  no new scorecard was introduced, §2 was promoted from placeholder to
+  body prose, and the HTML gained ~90 KB of inline-SVG schematic.
+  Future biologist-readiness iterations should continue this pattern:
+  (i) one §N prose promotion per iteration rather than several, so each
+  section gets the care it needs; (ii) figure enrichment tied to the
+  §N being promoted (§2 ↔ Fig 1-supplement; §§5/6/7 ↔ Fig 4/5/6;
+  §8 ↔ Fig 7); (iii) no new editorial-machinery scorecards introduced
+  in the same iteration as a visual pass — the HTML diff is already
+  dense enough that adding a scorecard would hide behind it.
+- **Inline SVG is the right primitive for self-contained schematic
+  figures.** Every new figure in iteration 17 is inline SVG, not an
+  external file, not an embedded PNG. This keeps the rendered page
+  self-contained (no missing-asset risk when served via svamp mount),
+  uses the reader's browser as the rendering engine (vector, resolution-
+  independent, accessible via the `<title>` element), and keeps the
+  render regeneration pipeline one-file (edit `index.html`, save, served
+  via svamp mount). Future figure iterations should follow this pattern
+  unless an actual photograph is landed from a partner institution, in
+  which case an explicit `figure.figure.photo` CSS class and a
+  `manuscript_html/images/` directory should be introduced in the same
+  iteration as the first photograph.
+- **"Schematic preview — awaits partner evidence" replaces "Reserved ·
+  evidence-gated" as the figure placeholder idiom.** The v0.1 figure
+  slots block used the Reserved-Evidence-Gated vocabulary matching the
+  other editorial-machinery placeholders. For biologist-facing figures,
+  this reads as "there is nothing here yet" and wastes the visual real
+  estate a reader scans first. The iteration-17 replacement idiom —
+  "schematic preview · awaits partner evidence" — commits a concrete
+  structural claim (what the panels will show, what shape the numbers
+  will take) while making explicit that the specific numbers, partner
+  names, and quotations resolve at evidence-landing. This is the
+  figure-side counterpart to the prose-side AUTHOR-GATED / EVIDENCE-
+  GATED vocabulary: structural claim fixed at draft time, resolution
+  path deferred.
+- **Graphical Abstract is the biologist's entry point to the paper.**
+  Nature Methods publishes graphical abstracts on the journal homepage
+  and in accepted-article previews. The iteration-17 Graphical Abstract
+  (Fig 0 / "GA") is specifically designed to be readable by a biologist
+  who has not opened the PDF: its four panels answer the four questions
+  a working biologist asks about a new tool — *what does it look like?*
+  (UI), *does it run on my hardware?* (devices), *can I share what I
+  did?* (URL), *can I use it with my collaborators?* (driver/observer).
+  Future iterations must preserve this as the biologist-facing cover
+  of the paper; if §§5/6/7 land with different partner domains, the
+  GA panel d (collaboration) updates to match, but the four-question
+  structure stays fixed.
+- **Biologist-voice opening paragraphs are allowed and valuable.** The
+  §2 opening was rewritten from methodology-paper voice ("A regime
+  claim warrants a regime measurement") to biologist-addressed voice
+  ("Who is the typical microscopy paper's author, and what tools do
+  they actually use?"). The three italicised questions the new opening
+  asks are the three the three measurement instruments answer — so
+  the rewrite is argumentatively identical but addressed to a
+  biologist reader rather than to a methodology reviewer. This voice
+  move is legitimate in biologist-facing surfaces (Abstract, §1, §2
+  opening, Graphical Abstract, Research Briefing) but NOT in
+  methodology-facing surfaces (Online Methods, §8 limits, §9
+  discussion, References). Future iterations that want to pivot a
+  specialist paragraph to biologist-voice must keep that surface-
+  discrimination in mind.
+- **Svamp session set-link should be re-run whenever the manuscript
+  version bumps.** Iteration 16 and now iteration 17 both re-ran
+  `svamp session set-link` with a version-labelled title; the pattern
+  bullet confirming this is preserved. The served URL itself does not
+  change (mount is stable); the link label on the session dashboard
+  updates so that a co-author scrolling the dashboard sees the current
+  draft version at a glance.
+- **Highest-value next iteration without new evidence: Bibliographic
+  verification pass (Gate H), deferred from iteration 16.** Still ~35
+  `[VOL:PAGES, DOI]` placeholders in References v0.1; one focused pass
+  drops the placeholder-inventory count and promotes the references-
+  verification dashboard row from `0 / ~35` to `~35 / ~35`. The hard
+  rule that no DOI or volume is invented holds; any entry whose
+  metadata cannot be verified remains `[DOI]`. This is the single
+  largest placeholder-inventory move available before evidence
+  landing.
+- **Second-highest next iteration without new evidence: §§5, 6, 7
+  prose promotion from gated-notice to evidence-gated prose with
+  "awaits partner evidence" structural commitments.** With Fig 4/5/6
+  filled in as schematic previews, the prose sections upstream of
+  them can be promoted to the same idiom: structural claims drafted
+  at v0.1, specific numbers/names/quotations deferred to partner
+  landings. This pairs with the iteration-17 figure-side pivot.
+- **Framing containment re-verified across v0.10 render.** The new
+  §2 prose mentions AI only in the context of the long-tail benchmark
+  paragraph (necessary — §2 is where the benchmark is introduced);
+  the five new figures contain AI only in Fig 7 (necessary — Fig 7
+  *is* the composition-with-DL-and-agents figure). The
+  "AI stays contained to §8" pattern is preserved: the new AI surface
+  is a §8 figure and is explicitly scoped by the §8 composition
+  paragraph. Abstract, §1, §3, §10, Online Methods remain AI-free.
+
+---

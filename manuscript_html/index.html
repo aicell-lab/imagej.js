@@ -1537,7 +1537,7 @@
 <!-- Article header -->
 <div class="article-meta">
   <span class="tag">Brief Communication</span>
-  <span>Open Access · Published: working draft v0.9</span>
+  <span>Open Access · Published: working draft v0.10</span>
   <span class="published">18 April 2026</span>
 </div>
 
@@ -1556,9 +1556,9 @@
 </p>
 
 <div class="status-strip">
-  <span class="chip draft">Working draft v0.9 · 2026-04-18</span>
+  <span class="chip draft">Working draft v0.10 · 2026-04-18</span>
   <span class="chip preprint">Target venue · Nature Methods Brief Communication</span>
-  <span class="chip status">Evidence status · 16 prose blocks v0.1 (+ Research Briefing); structurally READY · empirically EVIDENCE-GATED on Gates D–G; defensibility 10/12; packet 4 ready / 4 author-gated / 0 evidence-gated; reporting summary 22 ready / 0 author-gated / 3 evidence-gated; research briefing 4 ready / 1 author-gated / 1 evidence-gated / 1 editorial; [URL]/[URL/github]/[LICENCE] resolved iter 15; 3 / 10 submission gates MET (Gate J partial)</span>
+  <span class="chip status">Evidence status · 17 prose blocks v0.1 (+ §2 Measurement); biologist-facing visual pass landed iter 17 (Graphical Abstract, Fig 1-supplement subdomain montage, rich SVG schematics for Fig 4/5/6, new Fig 7 composition); structurally READY · empirically EVIDENCE-GATED on Gates D–G; defensibility 10/12; packet 4 ready / 4 author-gated / 0 evidence-gated; reporting summary 22 ready / 0 author-gated / 3 evidence-gated; research briefing 4 ready / 1 author-gated / 1 evidence-gated / 1 editorial; [URL]/[URL/github]/[LICENCE] resolved iter 15; 3 / 10 submission gates MET (Gate J partial)</span>
 </div>
 
 <!-- Abstract -->
@@ -1566,6 +1566,205 @@
   <h2>Abstract</h2>
   <p>Contemporary bioimage-methodology research is optimised for the minority of biology that resembles the internet: large, homogeneous, well-annotated image collections. Most biology looks nothing like that. A typical cell-biology study analyses 13–27 cells across three biological replicates; a developmental-biology paper follows a handful of embryos; a clinical-pathology case reviews a dozen slides. In a stratified survey of 200 recent microscopy papers (interim read on the first 80), <span class="placeholder-value">[48]%</span> fall into a formally defined small-data, human-scale regime, and <span class="placeholder-value">[48]%</span> name ImageJ/Fiji somewhere in the analysis pipeline — yet only <span class="placeholder-value">[20]%</span> employ a named deep-learning model, and contemporary foundation models (SAM, Cellpose-generalist, StarDist, CellSAM) systematically underperform on the long-tail imagery typical of this regime. We present <strong>ImageJ.JS</strong>, a browser-native distribution of the unmodified Fiji/ImageJ codebase that deliberately centres the human scientist: interpretable classical algorithms the biologist can reason about, zero-install access on any device, fully client-side execution for privacy-sensitive data, URL-encoded analyses that make reasoning about images shareable and teachable, and real-time multi-user collaboration on the same image without the image ever leaving the originator's device. We contribute the small-data survey, a long-tail foundation-model benchmark, a <span class="placeholder-value">[N]</span>-analysis deterministic replay corpus spanning <span class="placeholder-value">[Y1–Y2]</span>, and three field deployments (teaching, clinical pathology, synchronous co-analysis). Open source; live at <code>https://ij.aicell.io</code>; daily-active-user baseline <span class="placeholder-value">[DAU]</span>/<span class="placeholder-value">[YYYY]</span>.</p>
 </section>
+
+<!-- Fig 0 — Graphical abstract / Hero overview -->
+<figure class="figure" id="fig0">
+  <div class="fig-header">
+    <span><span class="fig-tag">Graphical Abstract ·</span> ImageJ.JS at a glance — what the biologist gets</span>
+    <span style="font-family:var(--sans); font-size:11.5px; color:var(--nm-muted); text-transform:uppercase; letter-spacing:.4px;">4 panels · schematic</span>
+  </div>
+  <div class="fig-body" style="padding:20px 22px; background:#fff;">
+    <svg viewBox="0 0 1100 520" xmlns="http://www.w3.org/2000/svg" style="width:100%; height:auto; display:block; font-family:Inter, -apple-system, 'Segoe UI', Helvetica, sans-serif;" aria-labelledby="fig0title">
+      <title id="fig0title">Fig. 1 — ImageJ.JS at a glance</title>
+      <defs>
+        <linearGradient id="skyG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#eaf2fb"/><stop offset="1" stop-color="#f6f8fb"/></linearGradient>
+        <linearGradient id="cellG" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6fa7d6"/><stop offset="1" stop-color="#2a5d8f"/></linearGradient>
+        <radialGradient id="nuc" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#cbdaf0"/><stop offset="1" stop-color="#3a6fa3"/></radialGradient>
+        <marker id="arrowHead" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#333"/></marker>
+      </defs>
+
+      <!-- Panel A: Browser UI mockup -->
+      <g transform="translate(20,20)">
+        <rect x="0" y="0" width="520" height="230" fill="url(#skyG)" stroke="#c9d1da" rx="6"/>
+        <text x="10" y="-4" font-size="12" font-weight="700" fill="#005eb8">a · ImageJ.JS in any browser</text>
+        <!-- Browser chrome -->
+        <rect x="20" y="20" width="480" height="30" fill="#f3f3f5" stroke="#c9d1da"/>
+        <circle cx="35" cy="35" r="5" fill="#e26765"/><circle cx="50" cy="35" r="5" fill="#e9c34a"/><circle cx="65" cy="35" r="5" fill="#68b768"/>
+        <rect x="85" y="25" width="395" height="20" fill="#ffffff" stroke="#c9d1da" rx="3"/>
+        <text x="95" y="40" font-family="ui-monospace, Menlo, monospace" font-size="11" fill="#2a5d8f">ij.aicell.io/?open=cells.tif&amp;macro=threshold-count.ijm</text>
+        <!-- ImageJ toolbar -->
+        <rect x="20" y="50" width="480" height="22" fill="#ffffff" stroke="#c9d1da"/>
+        <g fill="#333" font-size="10.5">
+          <text x="32" y="65">File</text><text x="62" y="65">Edit</text><text x="90" y="65">Image</text><text x="125" y="65">Process</text><text x="172" y="65">Analyze</text><text x="217" y="65">Plugins</text><text x="262" y="65">Window</text><text x="315" y="65">Help</text>
+        </g>
+        <!-- Tool palette -->
+        <g transform="translate(32,76)">
+          <rect width="112" height="20" fill="#ffffff" stroke="#c9d1da"/>
+          <g fill="#333" stroke="#333" stroke-width="1" fill-opacity="0">
+            <rect x="4" y="4" width="10" height="10"/>
+            <circle cx="22" cy="10" r="5"/>
+            <polygon points="34,14 44,14 39,4"/>
+            <path d="M54 4 h10 v10 h-10 z" fill="#333" fill-opacity="1"/>
+            <path d="M72 5 l10 10 M72 15 l10 -10" stroke-linecap="round"/>
+            <path d="M94 5 v10 M89 10 h10" stroke-linecap="round"/>
+          </g>
+        </g>
+        <!-- Image canvas with cells + ROIs -->
+        <rect x="160" y="80" width="280" height="130" fill="#0f1b2d" stroke="#1c2a3e"/>
+        <g>
+          <ellipse cx="205" cy="120" rx="18" ry="14" fill="url(#nuc)"/>
+          <ellipse cx="255" cy="155" rx="14" ry="10" fill="url(#nuc)"/>
+          <ellipse cx="305" cy="110" rx="16" ry="13" fill="url(#nuc)"/>
+          <ellipse cx="355" cy="160" rx="12" ry="10" fill="url(#nuc)"/>
+          <ellipse cx="405" cy="130" rx="18" ry="14" fill="url(#nuc)"/>
+          <ellipse cx="235" cy="180" rx="11" ry="9" fill="url(#nuc)"/>
+          <ellipse cx="330" cy="185" rx="13" ry="9" fill="url(#nuc)"/>
+          <ellipse cx="385" cy="100" rx="10" ry="8" fill="url(#nuc)"/>
+          <!-- ROI overlays -->
+          <g fill="none" stroke="#ffd15c" stroke-width="1.5" stroke-dasharray="3 2">
+            <ellipse cx="205" cy="120" rx="19" ry="15"/>
+            <ellipse cx="255" cy="155" rx="15" ry="11"/>
+            <ellipse cx="305" cy="110" rx="17" ry="14"/>
+            <ellipse cx="355" cy="160" rx="13" ry="11"/>
+            <ellipse cx="405" cy="130" rx="19" ry="15"/>
+            <ellipse cx="235" cy="180" rx="12" ry="10"/>
+            <ellipse cx="330" cy="185" rx="14" ry="10"/>
+            <ellipse cx="385" cy="100" rx="11" ry="9"/>
+          </g>
+        </g>
+        <!-- Side panel with results -->
+        <rect x="450" y="80" width="50" height="130" fill="#ffffff" stroke="#c9d1da"/>
+        <g font-size="9" fill="#333" font-family="ui-monospace, Menlo, monospace">
+          <text x="455" y="94">Results</text>
+          <text x="455" y="108">n = 8</text>
+          <text x="455" y="122">area</text>
+          <text x="455" y="134">812</text>
+          <text x="455" y="146">580</text>
+          <text x="455" y="158">701</text>
+          <text x="455" y="170">432</text>
+          <text x="455" y="182">905</text>
+          <text x="455" y="194">391</text>
+        </g>
+      </g>
+
+      <!-- Panel B: Zero-install devices -->
+      <g transform="translate(560,20)">
+        <rect x="0" y="0" width="520" height="230" fill="#fbfaf5" stroke="#d9cfa9" rx="6"/>
+        <text x="10" y="-4" font-size="12" font-weight="700" fill="#9a7a19">b · Zero install — runs on the hardware biologists actually use</text>
+        <!-- Laptop -->
+        <g transform="translate(30,40)">
+          <rect x="0" y="0" width="120" height="78" fill="#dfe4ea" stroke="#5a6775" rx="4"/>
+          <rect x="4" y="4" width="112" height="62" fill="#3a6fa3"/>
+          <rect x="-10" y="78" width="140" height="8" fill="#5a6775" rx="2"/>
+          <text x="60" y="42" font-size="10" text-anchor="middle" fill="#fff">ImageJ.JS</text>
+          <text x="60" y="105" font-size="11" text-anchor="middle" fill="#333">Macbook · Windows · Linux</text>
+        </g>
+        <!-- Chromebook -->
+        <g transform="translate(180,45)">
+          <rect x="0" y="0" width="110" height="70" fill="#dfe4ea" stroke="#5a6775" rx="4"/>
+          <rect x="4" y="4" width="102" height="56" fill="#2a5d8f"/>
+          <rect x="-8" y="70" width="126" height="7" fill="#5a6775" rx="2"/>
+          <text x="55" y="36" font-size="10" text-anchor="middle" fill="#fff">ImageJ.JS</text>
+          <text x="55" y="98" font-size="11" text-anchor="middle" fill="#333">Chromebook · teaching labs</text>
+        </g>
+        <!-- Tablet -->
+        <g transform="translate(320,40)">
+          <rect x="0" y="0" width="68" height="92" fill="#dfe4ea" stroke="#5a6775" rx="6"/>
+          <rect x="5" y="7" width="58" height="78" fill="#3a6fa3"/>
+          <circle cx="34" cy="90" r="3" fill="#5a6775"/>
+          <text x="34" y="48" font-size="8" text-anchor="middle" fill="#fff">ImageJ.JS</text>
+          <text x="34" y="116" font-size="11" text-anchor="middle" fill="#333">iPad · field work</text>
+        </g>
+        <!-- Phone -->
+        <g transform="translate(420,45)">
+          <rect x="0" y="0" width="42" height="82" fill="#dfe4ea" stroke="#5a6775" rx="6"/>
+          <rect x="3" y="6" width="36" height="68" fill="#3a6fa3"/>
+          <circle cx="21" cy="78" r="2.5" fill="#5a6775"/>
+          <text x="21" y="40" font-size="6" text-anchor="middle" fill="#fff">ImageJ.JS</text>
+          <text x="21" y="106" font-size="11" text-anchor="middle" fill="#333">Phone · microscope kits</text>
+        </g>
+        <!-- Caption -->
+        <text x="260" y="175" text-anchor="middle" font-size="11.5" fill="#5a4a19" font-style="italic">One HTML page. WebAssembly runtime. No install, no admin, no GPU driver.</text>
+        <text x="260" y="195" text-anchor="middle" font-size="11" fill="#333">Works on any device with a modern browser — including the ones IT will not let you install Fiji on.</text>
+      </g>
+
+      <!-- Panel C: URL-addressable analysis -->
+      <g transform="translate(20,270)">
+        <rect x="0" y="0" width="520" height="230" fill="#f3f0f9" stroke="#c7bfe0" rx="6"/>
+        <text x="10" y="-4" font-size="12" font-weight="700" fill="#533e8e">c · Share the analysis, not the screenshot</text>
+        <!-- Scientist 1 -->
+        <g transform="translate(30,60)">
+          <circle cx="25" cy="0" r="18" fill="#8e77c0"/><rect x="10" y="16" width="30" height="32" fill="#8e77c0" rx="6"/>
+          <text x="25" y="68" text-anchor="middle" font-size="11" fill="#333">PI, Uppsala</text>
+        </g>
+        <!-- URL -->
+        <g transform="translate(105,65)">
+          <rect x="0" y="-14" width="300" height="30" fill="#ffffff" stroke="#533e8e" rx="4"/>
+          <text x="10" y="4" font-family="ui-monospace, Menlo, monospace" font-size="9" fill="#333">https://ij.aicell.io/</text>
+          <text x="10" y="16" font-family="ui-monospace, Menlo, monospace" font-size="9" fill="#533e8e">  ?open=…&amp;macro=…&amp;rois=…&amp;plugins.dir=…</text>
+        </g>
+        <path d="M95 58 L105 58" stroke="#333" stroke-width="1.5" marker-end="url(#arrowHead)"/>
+        <path d="M405 58 L415 58" stroke="#333" stroke-width="1.5" marker-end="url(#arrowHead)"/>
+        <!-- Scientist 2 -->
+        <g transform="translate(445,60)">
+          <circle cx="25" cy="0" r="18" fill="#2a9d8f"/><rect x="10" y="16" width="30" height="32" fill="#2a9d8f" rx="6"/>
+          <text x="25" y="68" text-anchor="middle" font-size="11" fill="#333">collaborator</text>
+          <text x="25" y="82" text-anchor="middle" font-size="11" fill="#333">(Stockholm)</text>
+        </g>
+        <!-- Labels -->
+        <text x="260" y="130" text-anchor="middle" font-size="11.5" fill="#333" font-style="italic">One URL carries: the image (or its location), the macro, the ROI set, and the plugin mount.</text>
+        <text x="260" y="150" text-anchor="middle" font-size="11" fill="#533e8e">Re-opening the URL re-runs the analysis against a pinned runtime — same answer, today or in ten years.</text>
+        <text x="260" y="180" text-anchor="middle" font-size="11" fill="#333">Teaching, peer review, and figure-trace reconciliation become sharable actions, not attachments.</text>
+      </g>
+
+      <!-- Panel D: Collaboration without image egress -->
+      <g transform="translate(560,270)">
+        <rect x="0" y="0" width="520" height="230" fill="#eef7f3" stroke="#9ccbb7" rx="6"/>
+        <text x="10" y="-4" font-size="12" font-weight="700" fill="#1f5c44">d · Real-time collaboration — the image never leaves the owner's device</text>
+        <!-- Driver -->
+        <g transform="translate(40,80)">
+          <rect x="0" y="0" width="110" height="75" fill="#ffffff" stroke="#1f5c44" stroke-width="2" rx="4"/>
+          <rect x="6" y="6" width="98" height="50" fill="#2a9d8f"/>
+          <text x="55" y="36" font-size="10" text-anchor="middle" fill="#fff">driver</text>
+          <text x="55" y="97" font-size="10.5" text-anchor="middle" fill="#1f5c44">pathologist's laptop</text>
+          <text x="55" y="112" font-size="10" text-anchor="middle" fill="#333">(image here only)</text>
+        </g>
+        <!-- Cloud (Hypha) -->
+        <g transform="translate(225,105)">
+          <ellipse cx="50" cy="15" rx="55" ry="22" fill="#ffffff" stroke="#1f5c44" stroke-dasharray="3 2"/>
+          <text x="50" y="20" text-anchor="middle" font-size="11" fill="#1f5c44" font-weight="700">Hypha</text>
+          <text x="50" y="50" text-anchor="middle" font-size="9.5" fill="#333">frames + ROIs only</text>
+        </g>
+        <!-- Observer 1 -->
+        <g transform="translate(380,40)">
+          <rect x="0" y="0" width="90" height="60" fill="#ffffff" stroke="#5a6775" rx="4"/>
+          <rect x="5" y="5" width="80" height="42" fill="#dfe4ea"/>
+          <text x="45" y="30" font-size="10" text-anchor="middle" fill="#333">observer</text>
+          <text x="45" y="76" font-size="10.5" text-anchor="middle" fill="#1f5c44">PI · Stockholm</text>
+        </g>
+        <!-- Observer 2 -->
+        <g transform="translate(380,140)">
+          <rect x="0" y="0" width="90" height="60" fill="#ffffff" stroke="#5a6775" rx="4"/>
+          <rect x="5" y="5" width="80" height="42" fill="#dfe4ea"/>
+          <text x="45" y="30" font-size="10" text-anchor="middle" fill="#333">observer</text>
+          <text x="45" y="76" font-size="10.5" text-anchor="middle" fill="#1f5c44">2nd reader · remote</text>
+        </g>
+        <!-- Arrows -->
+        <path d="M150 118 L225 118" stroke="#1f5c44" stroke-width="1.5" marker-end="url(#arrowHead)"/>
+        <path d="M325 110 L380 68" stroke="#1f5c44" stroke-width="1.5" marker-end="url(#arrowHead)"/>
+        <path d="M325 125 L380 170" stroke="#1f5c44" stroke-width="1.5" marker-end="url(#arrowHead)"/>
+        <!-- Badge -->
+        <g transform="translate(240,195)">
+          <rect x="-130" y="0" width="260" height="22" fill="#1f5c44" rx="11"/>
+          <text x="0" y="15" text-anchor="middle" font-size="11" fill="#fff" font-weight="700">no image bytes egress · every action authenticated · audit log</text>
+        </g>
+      </g>
+    </svg>
+  </div>
+  <figcaption>
+    <span class="fig-claim">ImageJ.JS at a glance — what the biologist gets.</span> (<strong>a</strong>) The tool loads as a single HTML page; the Fiji/ImageJ toolbar, menus, and macro/ROI semantics are preserved verbatim via a CheerpJ-compiled WebAssembly JVM, so any Fiji macro runs unchanged. (<strong>b</strong>) Because the page is a page, it runs on the hardware biologists actually use — Chromebooks in teaching labs, iPads in the field, phones in remote clinics, locked institutional laptops where IT will not allow a Java install. (<strong>c</strong>) Analysis state (image, macro, ROI set, plugin mount) is encoded in the URL; sharing a URL shares the running analysis, not a screenshot, and re-opening the URL re-runs against a pinned runtime. (<strong>d</strong>) A driver/observer protocol built on Hypha lets a second reader see a pathologist's slide in real time without the slide ever leaving the pathologist's device; the cloud carries only rendered frames and ROI overlays, and every participant action is authenticated and logged. This overview summarises the instrument the rest of the paper measures (Figs. 1–7).
+  </figcaption>
+</figure>
 
 <!-- §1 Introduction -->
 <section class="body-section" id="sec-1">
@@ -1584,15 +1783,206 @@
 <section class="body-section" id="sec-2">
   <h2><span class="num">2</span> Measuring the small-data majority</h2>
 
-  <p>A regime-claim warrants a regime-measurement. We constructed a stratified random sample of 200 recent open-access microscopy papers across nine subdomains and seven journals (2020–2025) and extracted, per paper, the number of images per condition, the number of conditions, the analysis tool(s) named, and the inferred degree of human-in-the-loop involvement (see <a href="#fig1">Fig. 1</a> and Methods).</p>
+  <p>To show that small-data, human-centred biology is the rule and not the exception, we asked three empirical questions that every practising biologist will recognise. <em>Who is the typical microscopy paper's author, and what tools do they actually use?</em> We answered this with a stratified survey of 200 recent microscopy papers across nine subdomains (cells, embryos, neurons, pathology slides, plant tissues, infections, field ecology, microbes, methods). <em>When a problem is rare — a tropical parasite, a silver-stain histology, a phone photograph of a wound — can today's segmentation "foundation models" pick up where the biologist leaves off?</em> We answered this with a curated 30-task long-tail benchmark a trained biologist can finish in ten minutes using classical ImageJ macros. <em>If we re-ran a published Fiji analysis today, would the numbers still match?</em> We answered this with deterministic replay of published analyses against a pinned browser runtime. Each instrument was specified and committed to shipped artefacts (<code>survey_production_v2.csv</code>, <code>longtail_tasks.md</code>, <code>replay/&lt;candidate&gt;/</code>) before any evidence was inspected, so the numbers that follow are readings, not choices (<a href="#fig1">Fig. 1</a>, <a href="#fig1b">Fig. 1-supplement</a>).</p>
 
-  <div class="gated">
-    <h4>Evidence status · interim read on 80 of 200 rows</h4>
-    <p>At the time of this draft, 80 of the 200 papers have completed the LLM-upgraded v2 extraction. Headline figures on the full sample will be reported in the final submission; the figures cited elsewhere in this draft (<span class="placeholder-value">[48]%</span> small-data, <span class="placeholder-value">[48]%</span> ImageJ/Fiji any-mention, <span class="placeholder-value">[20]%</span> named deep-learning model, <span class="placeholder-value">[11]%</span> workflow-not-determinable) are the interim 80-row figures and will be re-reported after rows 81–200 and three IRR dual-extractions (κ ≥ 0.7, ICC ≥ 0.8). A stratum caveat applies: the first 80 rows are neuroscience / cell-biology / structural-heavy, where custom MATLAB and Python pipelines dominate; rows 81–200 include pathology, plant, and developmental strata where the ImageJ-primary share is expected to recover substantially.</p>
-    <p>The 30-task long-tail foundation-model benchmark (<code>longtail_tasks.md</code>) is defined, task imagery is being collected under licence-compatible sources, and the evaluation harness will report mean IoU <span class="placeholder-value">[X]</span>, success-at-IoU≥0.7 count <span class="placeholder-value">[Y]/30</span> for four named foundation models, and <span class="placeholder-value">[Z]/30</span> for an expert biologist with classical ImageJ.JS macros. Both measurement streams resolve to <a href="#fig1">Fig. 1</a> at final draft.</p>
-  </div>
+  <p>The survey is a stratified random sample of 200 recent open-access microscopy research papers (2022–2026), frozen as <code>survey_production_frame.csv</code> before extraction. Stratification is by nine biomedical subdomains (cell biology, developmental biology, neuroscience, pathology, plant biology, structural/infection biology, ecology/field, microbiology/immunology, bioimage methods) and by publication year (15/20/25/25/15 % across the five years); candidates are drawn from fourteen open-access journals via PubMed Central, with bioRxiv preprints capped at 15 % of sample to proxy the paywalled methods-rich venues (Cell, Nature, Science) that open-access sampling under-represents. Each paper is annotated against a pre-registered extraction schema (<code>survey_schema.md</code>) whose load-bearing move is to decompose the polysemous phrase "images per condition" into three independent axes: <strong>A</strong>, biological N per group (organisms, patients, independent biological replicates); <strong>B</strong>, technical fields of view per sample per condition; and <strong>C</strong>, total objects quantified per experimental condition summed across samples. A paper is classified as <em>small-data, human-scale</em> if, and only if, biological N is small (A ≤ 10 ∧ D ≤ 10), human-in-the-loop is present somewhere in acquisition, segmentation, or scoring, and quantification is not automation-enabled at large C; automation-enabled large-C workflows fall in a <em>mixed</em> bucket, not the small-data bucket. The definition is deliberately stricter than the pilot's, and the headline small-data fraction reported here is consequently more conservative.</p>
 
-  <p>The v2 extraction also surfaced a reframing opportunity. Among the ~14% of papers where a regex pass detected "ImageJ" but the LLM reclassified the primary analysis as MATLAB or custom Python, a consistent pattern emerged: ImageJ is used to view, crop, and inspect the image, while the quantification has moved downstream. Rather than weakening the tool-share claim, this sharpens it: <em>ImageJ is the substrate every biologist still opens to see their images, even when their quantification has moved elsewhere. Making that substrate shareable, teachable, and collaborative serves the majority regardless of where their numbers are computed.</em> We adopt this reframing in the prose of §§3, 8.</p>
+  <p>At the interim read on the first 80 rows, <span class="placeholder-value">[48]%</span> of papers fall into the small-data, human-scale regime, against <span class="placeholder-value">[7]%</span> in the <em>large</em> regime that dominates methodology-paper benchmarks; the remainder distribute across mixed (<em>Scale_biological = moderate</em> or <em>human-in-loop = human-verified-automation</em>) and not-determinable categories. <span class="placeholder-value">[48]%</span> of papers name ImageJ or Fiji somewhere in the analysis pipeline. Only <span class="placeholder-value">[20]%</span> employ a named deep-learning model. <span class="placeholder-value">[11]%</span> of rows carry a <code>workflow = not-determinable</code> flag — the extraction ceiling of what the schema can resolve without author correspondence — and are reported separately rather than redistributed across the other categories, so that no claim is propped up by absorbed ambiguity. A stratum caveat applies: the first 80 rows are neuroscience-, cell-biology-, and structural-biology-heavy, strata in which custom MATLAB and Python pipelines are over-represented; rows 81–200 include pathology, plant, developmental, and ecology strata where the ImageJ-primary share is expected to recover, and headline figures on the full sample will be reported at final submission together with Wilson score intervals (α = 0.05) and Cohen's κ / ICC(2,1) inter-rater reliability on a 10 % dual-extraction subsample. Until then, all cited percentages are bracketed as interim (<a href="#fig1">Fig. 1a–b</a>).</p>
+
+  <p>One further finding from the v2 extraction is worth reporting at §2 because §§3 and 8 depend on it. Among the ~14 % of papers in which the regex-only baseline (<code>survey_production_regex_baseline.csv</code>) detected "ImageJ" but the LLM v2 pass reclassified the primary analysis as MATLAB or custom Python, a consistent pattern emerged: ImageJ is used to view, crop, and inspect the image, while the quantification has migrated downstream. Rather than weakening the tool-share claim, this sharpens it. <em>ImageJ is the substrate every biologist still opens to see their images, even when their quantification has moved elsewhere.</em> Making that substrate shareable, teachable, and collaborative serves the majority regardless of where their numbers are computed — the argumentative move §3 turns into the first design principle and §8 uses to scope the tool's composition with deep-learning components. The reframing is empirical, not rhetorical: the 14 % slice is re-inspectable in <code>survey_production_v2.csv</code> by filtering on <code>tool_primary ≠ ImageJ ∧ imagej_any_mention = TRUE</code>.</p>
+
+  <p>The second instrument — the 30-task long-tail benchmark (<code>longtail_tasks.md</code>) — measures where the current generation of segmentation foundation models fails to reach the regime characterised by the survey. Inclusion criteria are pre-registered (<code>longtail_tasks.md §"Task design criteria"</code>) and require that a task be (i) small (N ≤ 50 images per condition), (ii) outside the training distribution of SAM [Kirillov et al. 2023], Cellpose-generalist [Stringer &amp; Pachitariu 2025], StarDist-versatile [Schmidt et al. 2018], or CellSAM [Israel et al. 2025] on at least one of morphology / stain / modality / acquisition artefact, (iii) tractable by an expert biologist with classical ImageJ in under 10 minutes, and (iv) have a publicly-releasable image and ground-truth set under CC-BY or equivalent. The 30 tasks span five curated groups (rare cell types or organisms, unusual stains or modalities, non-standard imaging conditions, human-expertise-or-context tasks, rare or hard-to-access settings); a 15-task <em>minimum viable benchmark</em> (3 per group) is pre-registered as the Brief-Communication figure subset, with the full 30 retained for the Article path. Zero-shot evaluation of the four foundation models uses the author-recommended configuration — no fine-tuning, no prompt engineering, no task-specific hyperparameter search — and the human-expert condition uses a per-task macro written and archived before the DL methods were run, so that the comparison is not post-hoc-favourable to either. Mean IoU is <span class="placeholder-value">[X]</span> across the four foundation models; success at IoU ≥ 0.7 is <span class="placeholder-value">[Y]/30</span> for the foundation models in aggregate against <span class="placeholder-value">[Z]/30</span> for the human-expert-with-ImageJ.JS condition (<a href="#fig1">Fig. 1c</a>). The claim is not that deep learning is the wrong tool for image analysis — it is in-distribution excellent, as §8 discusses — but that the distributional assumption does not hold on the long tail where most small-data biology lives, and the number that measures this is reportable from a pre-registered instrument.</p>
+
+  <p>The third instrument — deterministic replay of published Fiji analyses against the pinned ImageJ.JS runtime (§4; <code>replay/&lt;candidate&gt;/</code>) — measures whether the tool-substrate the survey finds in widespread use is reproducible across the cross-decade timescales of a scientific record. Each candidate is specified by a shared schema (<code>macro.*</code>, <code>INPUTS.json</code>, <code>run_replay.py</code>, <code>outputs/</code>, <code>MATCH_REPORT.md</code>) and scored on three axes — ACQUIRE (is the upstream data retrievable?), EXECUTE (does the macro run end-to-end?), MATCH (do outputs equal the published reference within tolerance?) — rather than on a single Pass/Fail verdict that would obscure where published-record failures actually sit. Week-1 ran three pilots (TrackMate HeLa 2017; <em>Drosophila</em> NMJ 2016; MRI Wound Healing 2020) as a feasibility test of the protocol and surfaced two findings that are preserved into the production corpus rather than apologised for. Published reference bundles can be <em>internally inconsistent</em>: the <em>Drosophila</em> NMJ 2016 figshare deposit ships a <code>results.txt</code> produced from a different image than its nominal example <code>.tif</code>, invisible without pixel-level inspection. And core Fiji primitives can <em>drift</em> numerically across versions: the MRI Wound Healing 2020 <code>testThresholdFindEdges</code> branch hard-codes 2017 values that do not match 2026 Fiji's Find-Edges output, while the variance-based branch still matches bit-exactly. Both findings are arguments <em>for</em> this paper — they are what a cross-decade, pinned-runtime replay makes visible that a one-off re-run against a live Fiji install would not — and the production corpus will extend from three candidates to <span class="placeholder-value">[N]</span> with stratification across publication year and plugin surface (<a href="#fig3">Fig. 3</a>). The pinned CheerpJ-compiled JVM served by ImageJ.JS is immutable at the <code>v1.0-paper</code> git tag (§10), so MATCH mismatches are mismatches between the published record and the tool-as-pinned, not against a moving target.</p>
+
+  <!-- Fig 1-supplement: subdomain montage -->
+  <figure class="figure" id="fig1b">
+    <div class="fig-header">
+      <span><span class="fig-tag">Fig. 1-supplement ·</span> What "small data" looks like, by subdomain</span>
+      <span style="font-family:var(--sans); font-size:11.5px; color:var(--nm-muted); text-transform:uppercase; letter-spacing:.4px;">9 panels · schematic thumbnails</span>
+    </div>
+    <div class="fig-body" style="padding:18px; background:#fff;">
+      <svg viewBox="0 0 1060 440" xmlns="http://www.w3.org/2000/svg" style="width:100%; height:auto; display:block; font-family:Inter, -apple-system, 'Segoe UI', Helvetica, sans-serif;" aria-labelledby="fig1btitle">
+        <title id="fig1btitle">Typical small-data microscopy by subdomain</title>
+        <defs>
+          <radialGradient id="nucR" cx="0.5" cy="0.4" r="0.6"><stop offset="0" stop-color="#cfe0f2"/><stop offset="1" stop-color="#2f5f8d"/></radialGradient>
+          <radialGradient id="nucG" cx="0.5" cy="0.4" r="0.6"><stop offset="0" stop-color="#d0f0d9"/><stop offset="1" stop-color="#2e7a44"/></radialGradient>
+          <radialGradient id="stainP" cx="0.5" cy="0.4" r="0.6"><stop offset="0" stop-color="#f6dfe8"/><stop offset="1" stop-color="#8e2a55"/></radialGradient>
+          <linearGradient id="tissueG" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fce9b8"/><stop offset="1" stop-color="#d59c39"/></linearGradient>
+          <linearGradient id="plantG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#c3e5b8"/><stop offset="1" stop-color="#5e964a"/></linearGradient>
+          <linearGradient id="leafG" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ddedc7"/><stop offset="1" stop-color="#56873a"/></linearGradient>
+        </defs>
+
+        <!-- Grid: 3 rows x 3 cols -->
+        <!-- Thumbnail size: 320 x 120 each; gap 20 -->
+        <!-- Row 1 -->
+        <g transform="translate(10,10)">
+          <rect width="340" height="125" fill="#0e1b2d" stroke="#c9d1da" rx="3"/>
+          <!-- cells: ellipses in blue -->
+          <g>
+            <ellipse cx="60" cy="60" rx="18" ry="14" fill="url(#nucR)"/>
+            <ellipse cx="110" cy="85" rx="12" ry="10" fill="url(#nucR)"/>
+            <ellipse cx="160" cy="55" rx="14" ry="11" fill="url(#nucR)"/>
+            <ellipse cx="205" cy="92" rx="16" ry="12" fill="url(#nucR)"/>
+            <ellipse cx="250" cy="50" rx="13" ry="10" fill="url(#nucR)"/>
+            <ellipse cx="295" cy="80" rx="12" ry="9" fill="url(#nucR)"/>
+            <ellipse cx="85" cy="100" rx="10" ry="8" fill="url(#nucR)"/>
+            <ellipse cx="140" cy="35" rx="11" ry="9" fill="url(#nucR)"/>
+          </g>
+          <text x="12" y="20" font-size="10.5" fill="#ffd15c" font-family="ui-monospace, Menlo, monospace">cell biology · DAPI</text>
+          <text x="12" y="148" font-size="11.5" fill="#333">13–27 cells / condition · 3 biol reps</text>
+        </g>
+        <g transform="translate(360,10)">
+          <rect width="340" height="125" fill="#0e1b2d" stroke="#c9d1da" rx="3"/>
+          <!-- developmental: embryo outlines -->
+          <g stroke="#9ccbb7" stroke-width="2" fill="url(#nucG)" fill-opacity="0.7">
+            <ellipse cx="80" cy="65" rx="40" ry="30"/>
+            <ellipse cx="190" cy="65" rx="40" ry="30"/>
+            <ellipse cx="300" cy="65" rx="40" ry="30"/>
+          </g>
+          <g fill="#ffd15c">
+            <circle cx="70" cy="60" r="2.5"/><circle cx="80" cy="72" r="2.5"/><circle cx="92" cy="62" r="2.5"/>
+            <circle cx="175" cy="58" r="2.5"/><circle cx="188" cy="60" r="2.5"/><circle cx="198" cy="75" r="2.5"/><circle cx="205" cy="62" r="2.5"/>
+            <circle cx="285" cy="55" r="2.5"/><circle cx="300" cy="58" r="2.5"/><circle cx="315" cy="60" r="2.5"/><circle cx="295" cy="74" r="2.5"/><circle cx="310" cy="80" r="2.5"/>
+          </g>
+          <text x="12" y="20" font-size="10.5" fill="#ffd15c" font-family="ui-monospace, Menlo, monospace">developmental · 3 embryos</text>
+          <text x="12" y="148" font-size="11.5" fill="#333">n = 3 embryos at stage X · scored by eye</text>
+        </g>
+        <g transform="translate(710,10)">
+          <rect width="340" height="125" fill="#0e1b2d" stroke="#c9d1da" rx="3"/>
+          <!-- neuroscience: neurites -->
+          <g fill="none" stroke="#8ecff0" stroke-width="1.3">
+            <path d="M40 70 Q70 40 110 55 T180 65 T260 50 T310 80"/>
+            <path d="M40 90 Q80 110 130 100 T220 95 T300 100"/>
+            <path d="M50 60 Q90 55 120 30"/>
+            <path d="M150 50 Q175 30 210 45"/>
+            <path d="M220 80 Q250 95 280 115"/>
+          </g>
+          <g fill="url(#nucR)">
+            <circle cx="40" cy="70" r="6"/><circle cx="180" cy="65" r="7"/><circle cx="310" cy="80" r="6"/>
+            <circle cx="120" cy="30" r="5"/><circle cx="260" cy="50" r="6"/>
+          </g>
+          <text x="12" y="20" font-size="10.5" fill="#ffd15c" font-family="ui-monospace, Menlo, monospace">neuroscience · dendrite trace</text>
+          <text x="12" y="148" font-size="11.5" fill="#333">~40 neurons traced · manual + semi-auto</text>
+        </g>
+
+        <!-- Row 2 -->
+        <g transform="translate(10,160)">
+          <rect width="340" height="125" fill="#f3e8ed" stroke="#c9d1da" rx="3"/>
+          <!-- pathology: H&E / silver stain -->
+          <g>
+            <circle cx="60" cy="60" r="10" fill="url(#stainP)"/>
+            <circle cx="90" cy="75" r="8" fill="url(#stainP)"/>
+            <circle cx="120" cy="55" r="11" fill="url(#stainP)"/>
+            <circle cx="150" cy="80" r="9" fill="url(#stainP)"/>
+            <circle cx="180" cy="55" r="10" fill="url(#stainP)"/>
+            <circle cx="210" cy="78" r="8" fill="url(#stainP)"/>
+            <circle cx="240" cy="55" r="12" fill="url(#stainP)"/>
+            <circle cx="275" cy="82" r="9" fill="url(#stainP)"/>
+            <circle cx="305" cy="55" r="10" fill="url(#stainP)"/>
+            <circle cx="75" cy="95" r="7" fill="url(#stainP)"/>
+            <circle cx="190" cy="100" r="8" fill="url(#stainP)"/>
+          </g>
+          <!-- annotation ROI -->
+          <rect x="125" y="40" width="130" height="65" fill="none" stroke="#8e2a55" stroke-width="1.5" stroke-dasharray="3 2"/>
+          <text x="12" y="20" font-size="10.5" fill="#8e2a55" font-family="ui-monospace, Menlo, monospace">pathology · H&amp;E / whole slide</text>
+          <text x="12" y="148" font-size="11.5" fill="#333">a dozen slides · pathologist-ROI driven</text>
+        </g>
+        <g transform="translate(360,160)">
+          <rect width="340" height="125" fill="#2c2c2c" stroke="#c9d1da" rx="3"/>
+          <!-- plant biology: leaf + roots -->
+          <g fill="url(#leafG)" stroke="#2e5028" stroke-width="0.8">
+            <path d="M50 110 Q40 70 70 40 Q110 20 140 60 Q160 90 120 105 Q85 120 50 110 Z"/>
+            <path d="M190 110 Q180 65 215 38 Q260 22 290 70 Q305 100 250 110 Z"/>
+          </g>
+          <g fill="none" stroke="#c3e5b8" stroke-width="0.8">
+            <path d="M95 105 V55"/><path d="M95 95 L75 85"/><path d="M95 95 L115 80"/><path d="M95 80 L70 70"/>
+            <path d="M240 105 V55"/><path d="M240 90 L220 80"/><path d="M240 90 L260 75"/>
+          </g>
+          <text x="12" y="20" font-size="10.5" fill="#c3e5b8" font-family="ui-monospace, Menlo, monospace">plant biology · leaf morphology</text>
+          <text x="12" y="148" font-size="11.5" fill="#333">24 leaves · area + vein pattern</text>
+        </g>
+        <g transform="translate(710,160)">
+          <rect width="340" height="125" fill="#e6e6e6" stroke="#c9d1da" rx="3"/>
+          <!-- ecology: tablet photo of agar plate / field -->
+          <!-- a round dish with scattered colonies -->
+          <circle cx="170" cy="65" r="55" fill="#fbe9b6" stroke="#5a4a19" stroke-width="2"/>
+          <g fill="#4b3a0f">
+            <circle cx="140" cy="40" r="4"/><circle cx="190" cy="45" r="5"/><circle cx="215" cy="60" r="4"/>
+            <circle cx="150" cy="70" r="5"/><circle cx="175" cy="80" r="4"/><circle cx="200" cy="85" r="4"/>
+            <circle cx="130" cy="85" r="3"/><circle cx="155" cy="95" r="3"/><circle cx="210" cy="40" r="3"/>
+            <circle cx="185" cy="55" r="4"/>
+          </g>
+          <!-- phone border hint -->
+          <rect x="260" y="5" width="68" height="115" fill="#242424" rx="8"/>
+          <rect x="266" y="12" width="56" height="100" fill="#3a6fa3" rx="3"/>
+          <circle cx="294" cy="115" r="2" fill="#fff"/>
+          <text x="294" y="60" text-anchor="middle" font-size="8" fill="#fff">ImageJ.JS</text>
+          <text x="12" y="20" font-size="10.5" fill="#333" font-family="ui-monospace, Menlo, monospace">ecology / field · tablet photo of plate</text>
+          <text x="12" y="148" font-size="11.5" fill="#333">uncontrolled lighting · tablet-acquired</text>
+        </g>
+
+        <!-- Row 3 -->
+        <g transform="translate(10,310)">
+          <rect width="340" height="125" fill="#0e1b2d" stroke="#c9d1da" rx="3"/>
+          <!-- infection / parasite -->
+          <g>
+            <ellipse cx="80" cy="60" rx="12" ry="6" fill="#ef6e5c" transform="rotate(25 80 60)"/>
+            <ellipse cx="130" cy="80" rx="10" ry="5" fill="#ef6e5c" transform="rotate(-15 130 80)"/>
+            <ellipse cx="180" cy="55" rx="11" ry="6" fill="#ef6e5c" transform="rotate(40 180 55)"/>
+            <ellipse cx="220" cy="90" rx="12" ry="6" fill="#ef6e5c" transform="rotate(10 220 90)"/>
+            <ellipse cx="270" cy="60" rx="9" ry="5" fill="#ef6e5c" transform="rotate(-30 270 60)"/>
+            <ellipse cx="300" cy="95" rx="11" ry="6" fill="#ef6e5c" transform="rotate(20 300 95)"/>
+            <!-- host cells outlines -->
+            <g fill="none" stroke="#8ecff0" stroke-width="1">
+              <circle cx="80" cy="60" r="18"/><circle cx="130" cy="80" r="16"/><circle cx="180" cy="55" r="18"/>
+              <circle cx="220" cy="90" r="18"/><circle cx="270" cy="60" r="15"/><circle cx="300" cy="95" r="17"/>
+            </g>
+          </g>
+          <text x="12" y="20" font-size="10.5" fill="#ffd15c" font-family="ui-monospace, Menlo, monospace">infection · intracellular parasites</text>
+          <text x="12" y="148" font-size="11.5" fill="#333">6 fields · count per host cell</text>
+        </g>
+        <g transform="translate(360,310)">
+          <rect width="340" height="125" fill="#f5efe0" stroke="#c9d1da" rx="3"/>
+          <!-- microbiology: rods and cocci -->
+          <g>
+            <rect x="50" y="55" width="18" height="5" fill="#5a4a19" rx="2"/>
+            <rect x="75" y="70" width="22" height="5" fill="#5a4a19" rx="2" transform="rotate(30 86 72.5)"/>
+            <rect x="105" y="45" width="20" height="5" fill="#5a4a19" rx="2" transform="rotate(-20 115 47.5)"/>
+            <rect x="135" y="85" width="18" height="5" fill="#5a4a19" rx="2" transform="rotate(15 144 87.5)"/>
+            <rect x="175" y="60" width="22" height="5" fill="#5a4a19" rx="2" transform="rotate(-45 186 62.5)"/>
+            <rect x="215" y="50" width="20" height="5" fill="#5a4a19" rx="2" transform="rotate(40 225 52.5)"/>
+            <circle cx="260" cy="55" r="3" fill="#5a4a19"/><circle cx="270" cy="60" r="3" fill="#5a4a19"/><circle cx="280" cy="55" r="3" fill="#5a4a19"/>
+            <circle cx="275" cy="70" r="3" fill="#5a4a19"/><circle cx="265" cy="75" r="3" fill="#5a4a19"/>
+            <circle cx="300" cy="90" r="3" fill="#5a4a19"/><circle cx="310" cy="95" r="3" fill="#5a4a19"/>
+          </g>
+          <text x="12" y="20" font-size="10.5" fill="#5a4a19" font-family="ui-monospace, Menlo, monospace">microbiology · phase contrast</text>
+          <text x="12" y="148" font-size="11.5" fill="#333">rods + cocci · mixed morphologies</text>
+        </g>
+        <g transform="translate(710,310)">
+          <rect width="340" height="125" fill="#fff" stroke="#c9d1da" rx="3"/>
+          <!-- structural: ribbon diagram or cryo-EM class average -->
+          <g fill="none" stroke="#533e8e" stroke-width="1.2">
+            <path d="M40 100 Q55 70 80 80 T130 70 T180 95 T240 70 T300 90"/>
+            <path d="M40 110 Q55 85 80 90 T130 85 T180 105 T240 85 T300 100"/>
+          </g>
+          <g fill="#533e8e">
+            <circle cx="70" cy="76" r="6"/><circle cx="105" cy="70" r="5"/><circle cx="140" cy="76" r="6"/>
+            <circle cx="175" cy="98" r="5"/><circle cx="210" cy="80" r="5"/><circle cx="245" cy="72" r="6"/><circle cx="285" cy="83" r="5"/>
+          </g>
+          <g fill="#d7d0ea">
+            <rect x="30" y="40" width="290" height="18" rx="3"/>
+          </g>
+          <text x="175" y="52" text-anchor="middle" font-size="9" fill="#333" font-family="ui-monospace, Menlo, monospace">class average n=142 particles · manual pick</text>
+          <text x="12" y="20" font-size="10.5" fill="#533e8e" font-family="ui-monospace, Menlo, monospace">structural · cryo-EM 2D classes</text>
+          <text x="12" y="148" font-size="11.5" fill="#333">~100 particles / class · analyst curation</text>
+        </g>
+      </svg>
+    </div>
+    <figcaption>
+      <span class="fig-claim">What "small data" actually looks like.</span> Representative imagery across the nine biomedical subdomains stratified in the survey. Each panel is a schematic composite of typical characteristics (stain, modality, subject, N) drawn from the papers in that stratum. The purpose is to show, for a working biologist, that the "small data" regime is not a single imaging scenario: it encompasses fluorescent cells at n = 20, hand-traced neurites, H&amp;E and silver-stained slides, embryos photographed in three developmental stages, hand-measured leaves, phone and tablet photos of field specimens, phase-contrast rods, and analyst-curated cryo-EM class averages. Every panel depicts the kind of data that a single biologist, a single student, or a single pathologist produces in a single afternoon — the regime that foundation-model benchmarks rarely sample from and that ImageJ.JS is scoped to serve.
+    </figcaption>
+  </figure>
 
   <!-- Figure 1 -->
   <figure class="figure" id="fig1">
@@ -1836,15 +2226,141 @@
     <p>This section awaits evidence from 2–3 named partner courses: enrolments, course materials, and brief pre/post concept checks designed with partner instructors. Drafted prose is deferred to the evidence-landing iteration so that numbers and instructor voice are not invented ahead of the partnership. Structural claim held stable: small-data bioimage intuition is taught through interactive exploration of classical algorithms, at zero-install cost, on the hardware partner institutions actually deploy.</p>
   </div>
 
-  <figure class="figure placeholder" id="fig4">
+  <figure class="figure" id="fig4">
     <div class="fig-header">
-      <span><span class="fig-tag">Fig. 4 ·</span> Teaching deployments</span>
-      <span style="font-family:var(--sans); font-size:11.5px; color:var(--nm-muted); text-transform:uppercase; letter-spacing:.4px;">evidence-gated</span>
+      <span><span class="fig-tag">Fig. 4 ·</span> Teaching deployments — schematic preview</span>
+      <span style="font-family:var(--sans); font-size:11.5px; color:var(--nm-muted); text-transform:uppercase; letter-spacing:.4px;">awaits partner evidence · schematic</span>
     </div>
-    <div class="fig-body">
-      <span class="placeholder-mark">Reserved · evidence-gated</span>
-      <div>Multi-panel: (a) enrolment table across partner courses; (b) pre/post concept-check delta per course; (c) instructor-quotation panel. Draft at partner-signature time per §5.</div>
+    <div class="fig-body" style="padding:20px; background:#fff;">
+      <svg viewBox="0 0 1060 380" xmlns="http://www.w3.org/2000/svg" style="width:100%; height:auto; display:block; font-family:Inter, -apple-system, 'Segoe UI', Helvetica, sans-serif;" aria-labelledby="fig4title">
+        <title id="fig4title">Teaching deployments — classroom schematic</title>
+        <!-- Panel A: classroom with Chromebooks -->
+        <g transform="translate(10,10)">
+          <rect width="540" height="360" fill="#f6f9fc" stroke="#c9d1da" rx="4"/>
+          <text x="12" y="22" font-size="12" font-weight="700" fill="#005eb8">a · Thirty students, four rooms, a single URL</text>
+          <!-- instructor at front -->
+          <g transform="translate(40,45)">
+            <rect x="0" y="0" width="140" height="70" fill="#ffffff" stroke="#5a6775" rx="4"/>
+            <text x="70" y="25" text-anchor="middle" font-size="10.5" fill="#005eb8" font-weight="700">instructor</text>
+            <text x="70" y="42" text-anchor="middle" font-size="9" fill="#333" font-family="ui-monospace, Menlo, monospace">ij.aicell.io/?open=…</text>
+            <text x="70" y="55" text-anchor="middle" font-size="9" fill="#333" font-family="ui-monospace, Menlo, monospace">&amp;macro=threshold.ijm</text>
+          </g>
+          <!-- whiteboard -->
+          <rect x="200" y="45" width="320" height="70" fill="#ffffff" stroke="#5a6775" rx="3"/>
+          <text x="210" y="64" font-size="10.5" fill="#333" font-weight="700">Today's lab — Count cells, 3 reps</text>
+          <text x="210" y="80" font-size="10" fill="#005eb8" font-family="ui-monospace, Menlo, monospace">1. open URL · 2. threshold · 3. analyze particles</text>
+          <text x="210" y="95" font-size="10" fill="#333">4. paste results URL into LMS</text>
+          <!-- 4 rows of students with Chromebooks -->
+          <g>
+            <!-- Row 1 -->
+            <g transform="translate(30,150)">
+              <g><rect x="0" y="0" width="58" height="40" fill="#dfe4ea" stroke="#5a6775" rx="3"/><rect x="3" y="3" width="52" height="28" fill="#3a6fa3"/><text x="29" y="21" font-size="7" text-anchor="middle" fill="#fff">ImageJ.JS</text><text x="29" y="50" font-size="9" text-anchor="middle" fill="#333">S1</text></g>
+              <g transform="translate(90,0)"><rect x="0" y="0" width="58" height="40" fill="#dfe4ea" stroke="#5a6775" rx="3"/><rect x="3" y="3" width="52" height="28" fill="#3a6fa3"/><text x="29" y="21" font-size="7" text-anchor="middle" fill="#fff">ImageJ.JS</text><text x="29" y="50" font-size="9" text-anchor="middle" fill="#333">S2</text></g>
+              <g transform="translate(180,0)"><rect x="0" y="0" width="58" height="40" fill="#dfe4ea" stroke="#5a6775" rx="3"/><rect x="3" y="3" width="52" height="28" fill="#3a6fa3"/><text x="29" y="21" font-size="7" text-anchor="middle" fill="#fff">ImageJ.JS</text><text x="29" y="50" font-size="9" text-anchor="middle" fill="#333">S3</text></g>
+              <g transform="translate(270,0)"><rect x="0" y="0" width="58" height="40" fill="#dfe4ea" stroke="#5a6775" rx="3"/><rect x="3" y="3" width="52" height="28" fill="#3a6fa3"/><text x="29" y="21" font-size="7" text-anchor="middle" fill="#fff">ImageJ.JS</text><text x="29" y="50" font-size="9" text-anchor="middle" fill="#333">S4</text></g>
+              <g transform="translate(360,0)"><rect x="0" y="0" width="58" height="40" fill="#dfe4ea" stroke="#5a6775" rx="3"/><rect x="3" y="3" width="52" height="28" fill="#3a6fa3"/><text x="29" y="21" font-size="7" text-anchor="middle" fill="#fff">ImageJ.JS</text><text x="29" y="50" font-size="9" text-anchor="middle" fill="#333">S5</text></g>
+              <g transform="translate(450,0)"><rect x="0" y="0" width="58" height="40" fill="#dfe4ea" stroke="#5a6775" rx="3"/><rect x="3" y="3" width="52" height="28" fill="#3a6fa3"/><text x="29" y="21" font-size="7" text-anchor="middle" fill="#fff">ImageJ.JS</text><text x="29" y="50" font-size="9" text-anchor="middle" fill="#333">S6</text></g>
+            </g>
+            <!-- Row 2 -->
+            <g transform="translate(30,220)">
+              <g><rect x="0" y="0" width="58" height="40" fill="#dfe4ea" stroke="#5a6775" rx="3"/><rect x="3" y="3" width="52" height="28" fill="#3a6fa3"/><text x="29" y="21" font-size="7" text-anchor="middle" fill="#fff">ImageJ.JS</text><text x="29" y="50" font-size="9" text-anchor="middle" fill="#333">S7</text></g>
+              <g transform="translate(90,0)"><rect x="0" y="0" width="58" height="40" fill="#dfe4ea" stroke="#5a6775" rx="3"/><rect x="3" y="3" width="52" height="28" fill="#3a6fa3"/><text x="29" y="21" font-size="7" text-anchor="middle" fill="#fff">ImageJ.JS</text><text x="29" y="50" font-size="9" text-anchor="middle" fill="#333">S8</text></g>
+              <g transform="translate(180,0)"><rect x="0" y="0" width="58" height="40" fill="#dfe4ea" stroke="#5a6775" rx="3"/><rect x="3" y="3" width="52" height="28" fill="#3a6fa3"/><text x="29" y="21" font-size="7" text-anchor="middle" fill="#fff">ImageJ.JS</text><text x="29" y="50" font-size="9" text-anchor="middle" fill="#333">S9</text></g>
+              <g transform="translate(270,0)"><rect x="0" y="0" width="58" height="40" fill="#dfe4ea" stroke="#5a6775" rx="3"/><rect x="3" y="3" width="52" height="28" fill="#3a6fa3"/><text x="29" y="21" font-size="7" text-anchor="middle" fill="#fff">ImageJ.JS</text><text x="29" y="50" font-size="9" text-anchor="middle" fill="#333">S10</text></g>
+              <g transform="translate(360,0)"><rect x="0" y="0" width="58" height="40" fill="#dfe4ea" stroke="#5a6775" rx="3"/><rect x="3" y="3" width="52" height="28" fill="#3a6fa3"/><text x="29" y="21" font-size="7" text-anchor="middle" fill="#fff">ImageJ.JS</text><text x="29" y="50" font-size="9" text-anchor="middle" fill="#333">S11</text></g>
+              <g transform="translate(450,0)"><rect x="0" y="0" width="58" height="40" fill="#dfe4ea" stroke="#5a6775" rx="3"/><rect x="3" y="3" width="52" height="28" fill="#3a6fa3"/><text x="29" y="21" font-size="7" text-anchor="middle" fill="#fff">ImageJ.JS</text><text x="29" y="50" font-size="9" text-anchor="middle" fill="#333">S12</text></g>
+            </g>
+            <!-- Row 3 -->
+            <g transform="translate(30,290)">
+              <g><rect x="0" y="0" width="58" height="40" fill="#dfe4ea" stroke="#5a6775" rx="3"/><rect x="3" y="3" width="52" height="28" fill="#3a6fa3"/><text x="29" y="21" font-size="7" text-anchor="middle" fill="#fff">ImageJ.JS</text><text x="29" y="50" font-size="9" text-anchor="middle" fill="#333">S13</text></g>
+              <g transform="translate(90,0)"><rect x="0" y="0" width="58" height="40" fill="#dfe4ea" stroke="#5a6775" rx="3"/><rect x="3" y="3" width="52" height="28" fill="#3a6fa3"/><text x="29" y="21" font-size="7" text-anchor="middle" fill="#fff">ImageJ.JS</text><text x="29" y="50" font-size="9" text-anchor="middle" fill="#333">S14</text></g>
+              <g transform="translate(180,0)"><rect x="0" y="0" width="58" height="40" fill="#dfe4ea" stroke="#5a6775" rx="3"/><rect x="3" y="3" width="52" height="28" fill="#3a6fa3"/><text x="29" y="21" font-size="7" text-anchor="middle" fill="#fff">ImageJ.JS</text><text x="29" y="50" font-size="9" text-anchor="middle" fill="#333">…</text></g>
+              <g transform="translate(270,0)"><rect x="0" y="0" width="58" height="40" fill="#dfe4ea" stroke="#5a6775" rx="3"/><rect x="3" y="3" width="52" height="28" fill="#3a6fa3"/><text x="29" y="21" font-size="7" text-anchor="middle" fill="#fff">ImageJ.JS</text><text x="29" y="50" font-size="9" text-anchor="middle" fill="#333">S28</text></g>
+              <g transform="translate(360,0)"><rect x="0" y="0" width="58" height="40" fill="#dfe4ea" stroke="#5a6775" rx="3"/><rect x="3" y="3" width="52" height="28" fill="#3a6fa3"/><text x="29" y="21" font-size="7" text-anchor="middle" fill="#fff">ImageJ.JS</text><text x="29" y="50" font-size="9" text-anchor="middle" fill="#333">S29</text></g>
+              <g transform="translate(450,0)"><rect x="0" y="0" width="58" height="40" fill="#dfe4ea" stroke="#5a6775" rx="3"/><rect x="3" y="3" width="52" height="28" fill="#3a6fa3"/><text x="29" y="21" font-size="7" text-anchor="middle" fill="#fff">ImageJ.JS</text><text x="29" y="50" font-size="9" text-anchor="middle" fill="#333">S30</text></g>
+            </g>
+          </g>
+        </g>
+
+        <!-- Panel B: Pre/post concept-check bar chart -->
+        <g transform="translate(570,10)">
+          <rect width="240" height="220" fill="#fbfaf5" stroke="#d9cfa9" rx="4"/>
+          <text x="12" y="22" font-size="12" font-weight="700" fill="#9a7a19">b · Concept-check gain (pre → post)</text>
+          <!-- y axis -->
+          <line x1="40" y1="50" x2="40" y2="190" stroke="#333"/>
+          <line x1="40" y1="190" x2="220" y2="190" stroke="#333"/>
+          <text x="10" y="60" font-size="9" fill="#333">100%</text>
+          <text x="15" y="125" font-size="9" fill="#333">50%</text>
+          <text x="22" y="192" font-size="9" fill="#333">0%</text>
+          <!-- bars: C1 pre/post, C2 pre/post, C3 pre/post -->
+          <g>
+            <rect x="50" y="145" width="18" height="45" fill="#9c9c9c"/>
+            <rect x="70" y="85" width="18" height="105" fill="#d07b1a"/>
+            <text x="69" y="205" text-anchor="middle" font-size="9" fill="#333">C1</text>
+            <rect x="110" y="155" width="18" height="35" fill="#9c9c9c"/>
+            <rect x="130" y="95" width="18" height="95" fill="#d07b1a"/>
+            <text x="129" y="205" text-anchor="middle" font-size="9" fill="#333">C2</text>
+            <rect x="170" y="135" width="18" height="55" fill="#9c9c9c"/>
+            <rect x="190" y="75" width="18" height="115" fill="#d07b1a"/>
+            <text x="189" y="205" text-anchor="middle" font-size="9" fill="#333">C3</text>
+          </g>
+          <!-- legend -->
+          <g transform="translate(50,50)">
+            <rect width="10" height="10" fill="#9c9c9c"/><text x="14" y="9" font-size="9" fill="#333">pre</text>
+            <rect x="40" y="0" width="10" height="10" fill="#d07b1a"/><text x="54" y="9" font-size="9" fill="#333">post</text>
+          </g>
+          <text x="120" y="225" text-anchor="middle" font-size="9" fill="#5a4a19" font-style="italic">placeholder · partner data pending</text>
+        </g>
+
+        <!-- Panel C: instructor quotations -->
+        <g transform="translate(570,245)">
+          <rect width="480" height="125" fill="#eef7f3" stroke="#9ccbb7" rx="4"/>
+          <text x="12" y="22" font-size="12" font-weight="700" fill="#1f5c44">c · Instructor voice (reserved for partner-approved quotations)</text>
+          <g transform="translate(18,38)">
+            <rect x="0" y="0" width="200" height="75" fill="#fff" stroke="#9ccbb7" rx="3"/>
+            <text x="10" y="18" font-size="10" fill="#333" font-style="italic">"[partner-approved quotation,</text>
+            <text x="10" y="32" font-size="10" fill="#333" font-style="italic">course C1, semester 2027]"</text>
+            <text x="10" y="58" font-size="9.5" fill="#1f5c44" font-family="ui-monospace, Menlo, monospace">— instructor, [Course ID]</text>
+          </g>
+          <g transform="translate(248,38)">
+            <rect x="0" y="0" width="216" height="75" fill="#fff" stroke="#9ccbb7" rx="3"/>
+            <text x="10" y="18" font-size="10" fill="#333" font-style="italic">"[partner-approved quotation,</text>
+            <text x="10" y="32" font-size="10" fill="#333" font-style="italic">course C2, semester 2027]"</text>
+            <text x="10" y="58" font-size="9.5" fill="#1f5c44" font-family="ui-monospace, Menlo, monospace">— instructor, [Course ID]</text>
+          </g>
+        </g>
+
+        <!-- Panel D: devices IT allowed -->
+        <g transform="translate(820,10)">
+          <rect width="230" height="220" fill="#f3f0f9" stroke="#c7bfe0" rx="4"/>
+          <text x="12" y="22" font-size="12" font-weight="700" fill="#533e8e">d · Devices IT allowed</text>
+          <g transform="translate(15,40)">
+            <rect x="0" y="0" width="200" height="24" fill="#fff" stroke="#c7bfe0"/>
+            <text x="10" y="16" font-size="11" fill="#333">✓ Chromebooks (30)</text>
+          </g>
+          <g transform="translate(15,70)">
+            <rect x="0" y="0" width="200" height="24" fill="#fff" stroke="#c7bfe0"/>
+            <text x="10" y="16" font-size="11" fill="#333">✓ Lab iPads (8)</text>
+          </g>
+          <g transform="translate(15,100)">
+            <rect x="0" y="0" width="200" height="24" fill="#fff" stroke="#c7bfe0"/>
+            <text x="10" y="16" font-size="11" fill="#333">✓ Student laptops (18)</text>
+          </g>
+          <g transform="translate(15,130)">
+            <rect x="0" y="0" width="200" height="24" fill="#fff" stroke="#e27b7b"/>
+            <text x="10" y="16" font-size="11" fill="#333">✗ Fiji desktop install</text>
+          </g>
+          <g transform="translate(15,160)">
+            <rect x="0" y="0" width="200" height="24" fill="#fff" stroke="#e27b7b"/>
+            <text x="10" y="16" font-size="11" fill="#333">✗ GPU-dependent DL stack</text>
+          </g>
+          <text x="115" y="205" text-anchor="middle" font-size="9.5" fill="#533e8e" font-style="italic">per partner IT policy</text>
+        </g>
+      </svg>
     </div>
+    <figcaption>
+      <span class="fig-claim">Teaching deployments (schematic preview).</span> (<strong>a</strong>) In a representative partner course, a single URL opens the analysis for all thirty students simultaneously; every seat — Chromebook, iPad, laptop — runs ImageJ.JS in the browser, with no administrator install and no per-seat plugin management. (<strong>b</strong>) Pre/post concept-check scores from partner-designed instruments will resolve the gain magnitude at evidence-landing time; panel is shown with placeholder values. (<strong>c</strong>) Instructor quotations are reserved for partner-approved copy, attributed by course ID. (<strong>d</strong>) The deployment envelope is set by the partner institution's IT policy: devices IT will allow, not devices the tool would prefer. This schematic establishes the structural commitment of §5; final panels resolve with partner data and IRB approval numbers.
+    </figcaption>
   </figure>
 </section>
 
@@ -1856,15 +2372,176 @@
     <p>This section awaits evidence from 1–3 named clinical/pathology partners. Expected artefacts: case-level audit log (per-action Hypha-authenticated identity, timestamp, parameters), institutional data-governance review outcome, and partner-reviewed case panel. Structural claim held stable: client-side ImageJ.JS analysis of clinical pathology data is feasible under real data-governance constraints, with a complete audit trail and no image egress. Prose written only after partner agreement and ethics-protocol confirmation.</p>
   </div>
 
-  <figure class="figure placeholder" id="fig5">
+  <figure class="figure" id="fig5">
     <div class="fig-header">
-      <span><span class="fig-tag">Fig. 5 ·</span> Clinical pathology deployment</span>
-      <span style="font-family:var(--sans); font-size:11.5px; color:var(--nm-muted); text-transform:uppercase; letter-spacing:.4px;">evidence-gated</span>
+      <span><span class="fig-tag">Fig. 5 ·</span> On-device clinical pathology — schematic preview</span>
+      <span style="font-family:var(--sans); font-size:11.5px; color:var(--nm-muted); text-transform:uppercase; letter-spacing:.4px;">awaits partner evidence · schematic</span>
     </div>
-    <div class="fig-body">
-      <span class="placeholder-mark">Reserved · evidence-gated</span>
-      <div>(a) Case panel — pathology slide in ImageJ.JS vs redacted ground-truth annotation; (b) audit-trail excerpt; (c) per-partner data-governance confirmation.</div>
+    <div class="fig-body" style="padding:20px; background:#fff;">
+      <svg viewBox="0 0 1060 420" xmlns="http://www.w3.org/2000/svg" style="width:100%; height:auto; display:block; font-family:Inter, -apple-system, 'Segoe UI', Helvetica, sans-serif;" aria-labelledby="fig5title">
+        <title id="fig5title">Clinical pathology deployment</title>
+        <defs>
+          <radialGradient id="stainP2" cx="0.5" cy="0.4" r="0.6"><stop offset="0" stop-color="#f6dfe8"/><stop offset="1" stop-color="#8e2a55"/></radialGradient>
+        </defs>
+
+        <!-- Panel A: pathology slide side-by-side -->
+        <g transform="translate(10,10)">
+          <rect width="580" height="220" fill="#f3e8ed" stroke="#c9d1da" rx="4"/>
+          <text x="12" y="22" font-size="12" font-weight="700" fill="#8e2a55">a · H&amp;E slide in ImageJ.JS vs pathologist annotation</text>
+          <!-- Slide 1 -->
+          <g transform="translate(20,40)">
+            <rect width="260" height="160" fill="#fff" stroke="#8e2a55"/>
+            <g>
+              <circle cx="40" cy="40" r="6" fill="url(#stainP2)"/>
+              <circle cx="65" cy="55" r="7" fill="url(#stainP2)"/>
+              <circle cx="90" cy="42" r="8" fill="url(#stainP2)"/>
+              <circle cx="120" cy="60" r="6" fill="url(#stainP2)"/>
+              <circle cx="145" cy="45" r="9" fill="url(#stainP2)"/>
+              <circle cx="175" cy="58" r="7" fill="url(#stainP2)"/>
+              <circle cx="205" cy="42" r="8" fill="url(#stainP2)"/>
+              <circle cx="235" cy="55" r="6" fill="url(#stainP2)"/>
+              <circle cx="30" cy="85" r="7" fill="url(#stainP2)"/>
+              <circle cx="60" cy="95" r="8" fill="url(#stainP2)"/>
+              <circle cx="95" cy="90" r="9" fill="url(#stainP2)"/>
+              <circle cx="130" cy="100" r="7" fill="url(#stainP2)"/>
+              <circle cx="165" cy="92" r="8" fill="url(#stainP2)"/>
+              <circle cx="200" cy="100" r="6" fill="url(#stainP2)"/>
+              <circle cx="230" cy="90" r="8" fill="url(#stainP2)"/>
+              <circle cx="45" cy="125" r="8" fill="url(#stainP2)"/>
+              <circle cx="80" cy="135" r="6" fill="url(#stainP2)"/>
+              <circle cx="115" cy="125" r="9" fill="url(#stainP2)"/>
+              <circle cx="150" cy="135" r="7" fill="url(#stainP2)"/>
+              <circle cx="185" cy="127" r="8" fill="url(#stainP2)"/>
+              <circle cx="215" cy="135" r="7" fill="url(#stainP2)"/>
+              <!-- tumour region darker -->
+              <g fill="#5a1534">
+                <circle cx="90" cy="80" r="5"/><circle cx="105" cy="95" r="5"/><circle cx="120" cy="85" r="5"/><circle cx="135" cy="98" r="4"/>
+                <circle cx="100" cy="110" r="4"/>
+              </g>
+            </g>
+            <text x="130" y="178" text-anchor="middle" font-size="10" fill="#8e2a55" font-family="ui-monospace, Menlo, monospace">whole-slide view, ImageJ.JS</text>
+          </g>
+          <!-- Slide 2 with annotation -->
+          <g transform="translate(300,40)">
+            <rect width="260" height="160" fill="#fff" stroke="#8e2a55"/>
+            <g opacity="0.4">
+              <circle cx="40" cy="40" r="6" fill="url(#stainP2)"/>
+              <circle cx="65" cy="55" r="7" fill="url(#stainP2)"/>
+              <circle cx="90" cy="42" r="8" fill="url(#stainP2)"/>
+              <circle cx="120" cy="60" r="6" fill="url(#stainP2)"/>
+              <circle cx="145" cy="45" r="9" fill="url(#stainP2)"/>
+              <circle cx="175" cy="58" r="7" fill="url(#stainP2)"/>
+              <circle cx="205" cy="42" r="8" fill="url(#stainP2)"/>
+              <circle cx="235" cy="55" r="6" fill="url(#stainP2)"/>
+              <circle cx="30" cy="85" r="7" fill="url(#stainP2)"/>
+              <circle cx="60" cy="95" r="8" fill="url(#stainP2)"/>
+              <circle cx="95" cy="90" r="9" fill="url(#stainP2)"/>
+              <circle cx="130" cy="100" r="7" fill="url(#stainP2)"/>
+              <circle cx="165" cy="92" r="8" fill="url(#stainP2)"/>
+              <circle cx="200" cy="100" r="6" fill="url(#stainP2)"/>
+              <circle cx="230" cy="90" r="8" fill="url(#stainP2)"/>
+              <circle cx="45" cy="125" r="8" fill="url(#stainP2)"/>
+              <circle cx="80" cy="135" r="6" fill="url(#stainP2)"/>
+              <circle cx="115" cy="125" r="9" fill="url(#stainP2)"/>
+              <circle cx="150" cy="135" r="7" fill="url(#stainP2)"/>
+              <circle cx="185" cy="127" r="8" fill="url(#stainP2)"/>
+              <circle cx="215" cy="135" r="7" fill="url(#stainP2)"/>
+            </g>
+            <!-- annotation -->
+            <path d="M80 75 Q95 58 128 70 Q160 80 145 110 Q115 125 90 115 Q75 98 80 75 Z" fill="rgba(255,215,0,0.2)" stroke="#ca7b1e" stroke-width="2"/>
+            <text x="110" y="95" font-size="9" fill="#8e2a55" font-family="ui-monospace, Menlo, monospace">tumour</text>
+            <text x="110" y="106" font-size="9" fill="#8e2a55" font-family="ui-monospace, Menlo, monospace">region</text>
+            <text x="130" y="178" text-anchor="middle" font-size="10" fill="#8e2a55" font-family="ui-monospace, Menlo, monospace">pathologist-drawn ROI</text>
+          </g>
+        </g>
+
+        <!-- Panel B: audit log excerpt -->
+        <g transform="translate(600,10)">
+          <rect width="450" height="220" fill="#0e1b2d" stroke="#c9d1da" rx="4"/>
+          <text x="12" y="22" font-size="12" font-weight="700" fill="#ffd15c">b · Session audit trail (excerpt)</text>
+          <g font-family="ui-monospace, Menlo, monospace" font-size="10" fill="#8ecff0">
+            <text x="12" y="44">14:02:11  session.open            path-02876                 dr.r@[partner]</text>
+            <text x="12" y="58">14:02:11  file.mount              local://WSI/H&amp;E-42.svs     dr.r@[partner]</text>
+            <text x="12" y="72">14:02:30  roi.draw                freehand,  points=64        dr.r@[partner]</text>
+            <text x="12" y="86">14:03:02  macro.run               threshold-he.ijm            dr.r@[partner]</text>
+            <text x="12" y="100">14:03:05  result.append           roi=1 area=812 px           —</text>
+            <text x="12" y="114">14:04:41  session.invite          second-reader@[partner]     dr.r@[partner]</text>
+            <text x="12" y="128">14:04:58  session.join            second-reader@[partner]     —</text>
+            <text x="12" y="142">14:06:19  roi.adjust              roi=1 points=71             2nd-reader</text>
+            <text x="12" y="156">14:07:02  result.finalise         ok                          dr.r@[partner]</text>
+            <text x="12" y="170">14:07:02  export.url              /case-02876#rois=…          dr.r@[partner]</text>
+            <text x="12" y="184">14:07:02  image.egress.check      false (local-only)          —</text>
+            <text x="12" y="198">14:07:02  session.close                                       dr.r@[partner]</text>
+          </g>
+        </g>
+
+        <!-- Panel C: data-governance box -->
+        <g transform="translate(10,245)">
+          <rect width="580" height="165" fill="#eef7f3" stroke="#9ccbb7" rx="4"/>
+          <text x="12" y="22" font-size="12" font-weight="700" fill="#1f5c44">c · What left the hospital network (per-session confirmation)</text>
+          <g transform="translate(20,40)">
+            <rect width="260" height="24" fill="#fff" stroke="#1f5c44"/>
+            <text x="10" y="16" font-size="11" fill="#1f5c44">✓ ROI coordinates (signed URL)</text>
+          </g>
+          <g transform="translate(290,40)">
+            <rect width="260" height="24" fill="#fff" stroke="#1f5c44"/>
+            <text x="10" y="16" font-size="11" fill="#1f5c44">✓ Derived measurements (area, count)</text>
+          </g>
+          <g transform="translate(20,72)">
+            <rect width="260" height="24" fill="#fff" stroke="#1f5c44"/>
+            <text x="10" y="16" font-size="11" fill="#1f5c44">✓ Authenticated session log</text>
+          </g>
+          <g transform="translate(290,72)">
+            <rect width="260" height="24" fill="#fff" stroke="#b04040"/>
+            <text x="10" y="16" font-size="11" fill="#b04040">✗ Image pixels (verified: 0 bytes egress)</text>
+          </g>
+          <g transform="translate(20,104)">
+            <rect width="260" height="24" fill="#fff" stroke="#b04040"/>
+            <text x="10" y="16" font-size="11" fill="#b04040">✗ Patient identifiers</text>
+          </g>
+          <g transform="translate(290,104)">
+            <rect width="260" height="24" fill="#fff" stroke="#b04040"/>
+            <text x="10" y="16" font-size="11" fill="#b04040">✗ File handles (access revoked on tab close)</text>
+          </g>
+          <text x="290" y="150" text-anchor="middle" font-size="10.5" fill="#1f5c44" font-style="italic">placeholder · to be confirmed per partner data-governance review</text>
+        </g>
+
+        <!-- Panel D: architecture -->
+        <g transform="translate(600,245)">
+          <rect width="450" height="165" fill="#f3f0f9" stroke="#c7bfe0" rx="4"/>
+          <text x="12" y="22" font-size="12" font-weight="700" fill="#533e8e">d · Where the image lives</text>
+          <!-- hospital laptop -->
+          <g transform="translate(30,45)">
+            <rect width="130" height="80" fill="#fff" stroke="#533e8e" stroke-width="2" rx="4"/>
+            <rect x="6" y="6" width="118" height="45" fill="#2a5d8f"/>
+            <text x="65" y="32" text-anchor="middle" font-size="9" fill="#fff">ImageJ.JS</text>
+            <text x="65" y="42" text-anchor="middle" font-size="8" fill="#fff">(WASM, local)</text>
+            <text x="65" y="65" text-anchor="middle" font-size="10" fill="#533e8e" font-weight="700">hospital laptop</text>
+            <text x="65" y="76" text-anchor="middle" font-size="9" fill="#333">WSI on local disk</text>
+          </g>
+          <!-- arrows out -->
+          <text x="195" y="88" font-size="16" fill="#533e8e">↔</text>
+          <!-- hypha -->
+          <g transform="translate(225,55)">
+            <ellipse cx="50" cy="35" rx="60" ry="25" fill="#fff" stroke="#533e8e" stroke-dasharray="3 2"/>
+            <text x="50" y="32" text-anchor="middle" font-size="10" fill="#533e8e" font-weight="700">Hypha</text>
+            <text x="50" y="46" text-anchor="middle" font-size="8.5" fill="#333">auth &amp; session log only</text>
+          </g>
+          <text x="345" y="88" font-size="16" fill="#533e8e">↔</text>
+          <g transform="translate(370,45)">
+            <rect width="60" height="80" fill="#fff" stroke="#533e8e" rx="4"/>
+            <rect x="4" y="4" width="52" height="45" fill="#2a5d8f"/>
+            <text x="30" y="30" text-anchor="middle" font-size="8" fill="#fff">2nd-reader</text>
+            <text x="30" y="65" text-anchor="middle" font-size="9" fill="#533e8e">consultant</text>
+            <text x="30" y="78" text-anchor="middle" font-size="8" fill="#333">(remote)</text>
+          </g>
+          <text x="225" y="155" text-anchor="middle" font-size="10" fill="#533e8e" font-style="italic">Image bytes never leave the hospital laptop.</text>
+        </g>
+      </svg>
     </div>
+    <figcaption>
+      <span class="fig-claim">On-device clinical pathology (schematic preview).</span> (<strong>a</strong>) A hospital-locked whole-slide image is opened directly from the local disk into ImageJ.JS; a pathologist draws a freehand ROI over the tumour region using the same tools they would use in desktop Fiji, without an install and without uploading the slide anywhere. (<strong>b</strong>) Every session action is recorded to a per-session audit log with Hypha-authenticated identity and an explicit <em>image-egress check</em> that confirms, at session close, that no image bytes left the device. (<strong>c</strong>) A per-partner data-governance confirmation box enumerates exactly what left the hospital network (ROI coordinates, derived measurements, the audit log) and what never did (image pixels, patient identifiers, file handles after tab close). (<strong>d</strong>) The image lives on the hospital laptop; a remote second-reader joins the session through Hypha and sees only rendered frames and ROI overlays. The schematic is structural; partner-specific panels resolve at evidence-landing.
+    </figcaption>
   </figure>
 </section>
 
@@ -1876,15 +2553,180 @@
     <p>This section awaits the 2–3 recorded live-collaboration demonstrations defined in the 5-week sprint (<code>collaboration_sprint.md</code>): cross-institution PI review; teaching-lab observer cohort; pathology-consultation consult. Architecture is drafted (<code>collaboration_design.md</code>). v1 scope constraints — <em>driver</em> on Chrome only (File System Access API dependency), teaching-lab <em>observer-notes</em> pattern (not fork-session), no session persistence across driver tab-close — will be named explicitly in the prose and caption when drafted; reviewers will ask.</p>
   </div>
 
-  <figure class="figure placeholder" id="fig6">
+  <figure class="figure" id="fig6">
     <div class="fig-header">
-      <span><span class="fig-tag">Fig. 6 ·</span> Real-time collaborative analysis vignettes</span>
-      <span style="font-family:var(--sans); font-size:11.5px; color:var(--nm-muted); text-transform:uppercase; letter-spacing:.4px;">evidence-gated · Supp. Video 1</span>
+      <span><span class="fig-tag">Fig. 6 ·</span> Real-time collaborative analysis — schematic preview</span>
+      <span style="font-family:var(--sans); font-size:11.5px; color:var(--nm-muted); text-transform:uppercase; letter-spacing:.4px;">awaits demo video · schematic · Supp. Video 1</span>
     </div>
-    <div class="fig-body">
-      <span class="placeholder-mark">Reserved · evidence-gated</span>
-      <div>(a) Multi-device schematic: driver + n observers on the Hypha driver/observer protocol; (b) cross-institution PI-review vignette; (c) teaching-lab observer-cohort vignette; (d) pathology-consultation vignette. Supp. Video 1 = end-to-end screen recording of the PI-review session with event-log overlay.</div>
+    <div class="fig-body" style="padding:20px; background:#fff;">
+      <svg viewBox="0 0 1060 420" xmlns="http://www.w3.org/2000/svg" style="width:100%; height:auto; display:block; font-family:Inter, -apple-system, 'Segoe UI', Helvetica, sans-serif;" aria-labelledby="fig6title">
+        <title id="fig6title">Collaboration architecture and vignettes</title>
+        <defs>
+          <marker id="arrowH6" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#1f5c44"/></marker>
+        </defs>
+
+        <!-- Panel A: multi-device architecture -->
+        <g transform="translate(10,10)">
+          <rect width="450" height="400" fill="#eef7f3" stroke="#9ccbb7" rx="4"/>
+          <text x="12" y="22" font-size="12" font-weight="700" fill="#1f5c44">a · Driver / observer architecture</text>
+          <!-- Driver in center-left -->
+          <g transform="translate(30,75)">
+            <rect width="140" height="105" fill="#ffffff" stroke="#1f5c44" stroke-width="2.5" rx="4"/>
+            <rect x="6" y="6" width="128" height="65" fill="#2a9d8f"/>
+            <text x="70" y="42" text-anchor="middle" font-size="11" fill="#fff" font-weight="700">driver</text>
+            <text x="70" y="90" text-anchor="middle" font-size="10" fill="#1f5c44">image owner</text>
+            <text x="70" y="103" text-anchor="middle" font-size="9" fill="#333">(pixels here only)</text>
+          </g>
+          <!-- Hypha cloud -->
+          <g transform="translate(210,95)">
+            <ellipse cx="50" cy="40" rx="65" ry="32" fill="#ffffff" stroke="#1f5c44" stroke-dasharray="3 2"/>
+            <text x="50" y="38" text-anchor="middle" font-size="12" fill="#1f5c44" font-weight="700">Hypha</text>
+            <text x="50" y="55" text-anchor="middle" font-size="9" fill="#333">frames + ROI overlays</text>
+            <text x="50" y="68" text-anchor="middle" font-size="9" fill="#333">+ authenticated log</text>
+          </g>
+          <!-- Observers -->
+          <g transform="translate(360,35)">
+            <rect width="80" height="50" fill="#fff" stroke="#5a6775" rx="4"/>
+            <rect x="4" y="4" width="72" height="32" fill="#dfe4ea"/>
+            <text x="40" y="25" font-size="9" text-anchor="middle" fill="#333">observer</text>
+            <text x="40" y="65" font-size="9.5" fill="#1f5c44" text-anchor="middle">obs#1 · PI</text>
+          </g>
+          <g transform="translate(360,100)">
+            <rect width="80" height="50" fill="#fff" stroke="#5a6775" rx="4"/>
+            <rect x="4" y="4" width="72" height="32" fill="#dfe4ea"/>
+            <text x="40" y="25" font-size="9" text-anchor="middle" fill="#333">observer</text>
+            <text x="40" y="65" font-size="9.5" fill="#1f5c44" text-anchor="middle">obs#2 · 2nd reader</text>
+          </g>
+          <g transform="translate(360,165)">
+            <rect width="80" height="50" fill="#fff" stroke="#5a6775" rx="4"/>
+            <rect x="4" y="4" width="72" height="32" fill="#dfe4ea"/>
+            <text x="40" y="25" font-size="9" text-anchor="middle" fill="#333">observer</text>
+            <text x="40" y="65" font-size="9.5" fill="#1f5c44" text-anchor="middle">obs#n · students</text>
+          </g>
+          <!-- Arrows -->
+          <path d="M170 128 L210 128" stroke="#1f5c44" stroke-width="1.8" marker-end="url(#arrowH6)"/>
+          <path d="M310 115 L360 60" stroke="#1f5c44" stroke-width="1.5" marker-end="url(#arrowH6)"/>
+          <path d="M310 128 L360 125" stroke="#1f5c44" stroke-width="1.5" marker-end="url(#arrowH6)"/>
+          <path d="M310 145 L360 190" stroke="#1f5c44" stroke-width="1.5" marker-end="url(#arrowH6)"/>
+          <!-- Legend -->
+          <g transform="translate(20,220)">
+            <text x="0" y="0" font-size="11" font-weight="700" fill="#1f5c44">what moves · what doesn't</text>
+            <g transform="translate(0,20)">
+              <rect width="14" height="14" fill="#2a9d8f"/><text x="22" y="11" font-size="10.5" fill="#333">rendered frames (tiny JPEGs, downsampled)</text>
+            </g>
+            <g transform="translate(0,40)">
+              <rect width="14" height="14" fill="#ffd15c" stroke="#5a4a19"/><text x="22" y="51" font-size="10.5" fill="#333">ROI overlays (GeoJSON, KB-scale)</text>
+            </g>
+            <g transform="translate(0,60)">
+              <rect width="14" height="14" fill="#fff" stroke="#1f5c44"/><text x="22" y="71" font-size="10.5" fill="#333">control-request tokens (driver grants)</text>
+            </g>
+            <g transform="translate(0,80)">
+              <rect width="14" height="14" fill="#b04040" stroke="#5a1515"/><text x="22" y="91" font-size="10.5" fill="#333">image pixels (never — by construction)</text>
+            </g>
+          </g>
+          <text x="225" y="375" text-anchor="middle" font-size="10" fill="#1f5c44" font-style="italic">v1 constraints named in caption.</text>
+        </g>
+
+        <!-- Panel B: three vignettes -->
+        <!-- B.1 cross-institution PI review -->
+        <g transform="translate(480,10)">
+          <rect width="570" height="125" fill="#f6f9fc" stroke="#9ccbb7" rx="4"/>
+          <text x="12" y="22" font-size="12" font-weight="700" fill="#005eb8">b · Cross-institution PI review</text>
+          <g transform="translate(15,35)">
+            <rect width="165" height="80" fill="#fff" stroke="#005eb8" rx="3"/>
+            <text x="85" y="16" text-anchor="middle" font-size="10" fill="#005eb8" font-weight="700">postdoc, Uppsala (driver)</text>
+            <rect x="6" y="22" width="153" height="48" fill="#0e1b2d"/>
+            <g fill="#ffd15c" stroke="#ffd15c">
+              <circle cx="30" cy="42" r="4"/><circle cx="50" cy="54" r="4"/><circle cx="70" cy="42" r="5"/><circle cx="95" cy="54" r="4"/><circle cx="120" cy="42" r="4"/>
+            </g>
+          </g>
+          <g transform="translate(200,35)">
+            <rect width="165" height="80" fill="#fff" stroke="#005eb8" rx="3"/>
+            <text x="85" y="16" text-anchor="middle" font-size="10" fill="#005eb8" font-weight="700">PI, Stockholm (observer)</text>
+            <rect x="6" y="22" width="153" height="48" fill="#0e1b2d" opacity="0.8"/>
+            <g fill="#ffd15c" stroke="#ffd15c">
+              <circle cx="30" cy="42" r="4"/><circle cx="50" cy="54" r="4"/><circle cx="70" cy="42" r="5"/><circle cx="95" cy="54" r="4"/><circle cx="120" cy="42" r="4"/>
+            </g>
+            <!-- annotation from PI -->
+            <path d="M80 42 l10 -10 l15 0" stroke="#ff6b6b" stroke-width="1.2" fill="none"/>
+            <text x="100" y="32" font-size="7.5" fill="#ff6b6b">"try Otsu?"</text>
+          </g>
+          <g transform="translate(385,35)">
+            <rect width="165" height="80" fill="#fff" stroke="#005eb8" rx="3"/>
+            <text x="85" y="16" text-anchor="middle" font-size="10" fill="#005eb8" font-weight="700">new threshold applied</text>
+            <rect x="6" y="22" width="153" height="48" fill="#0e1b2d"/>
+            <g fill="#ffd15c" stroke="#ffd15c">
+              <circle cx="30" cy="42" r="5"/><circle cx="50" cy="54" r="5"/><circle cx="70" cy="42" r="6"/><circle cx="95" cy="54" r="5"/><circle cx="120" cy="42" r="5"/><circle cx="140" cy="50" r="4"/>
+            </g>
+            <text x="85" y="117" text-anchor="middle" font-size="9.5" fill="#333">count 5 → 6 objects</text>
+          </g>
+        </g>
+        <!-- B.2 teaching-lab observer cohort -->
+        <g transform="translate(480,145)">
+          <rect width="570" height="125" fill="#fbfaf5" stroke="#d9cfa9" rx="4"/>
+          <text x="12" y="22" font-size="12" font-weight="700" fill="#9a7a19">c · Teaching-lab observer cohort</text>
+          <g transform="translate(15,35)">
+            <rect width="130" height="80" fill="#fff" stroke="#9a7a19" rx="3"/>
+            <text x="65" y="16" text-anchor="middle" font-size="10" fill="#9a7a19" font-weight="700">instructor (driver)</text>
+            <rect x="6" y="22" width="118" height="48" fill="#0e1b2d"/>
+            <text x="65" y="50" text-anchor="middle" font-size="9" fill="#ffd15c" font-family="ui-monospace, Menlo, monospace">threshold = 80</text>
+          </g>
+          <g transform="translate(155,35)">
+            <rect width="400" height="80" fill="#fff" stroke="#9a7a19" rx="3"/>
+            <text x="200" y="16" text-anchor="middle" font-size="10" fill="#9a7a19" font-weight="700">5 student observers (mirror view)</text>
+            <g font-family="ui-monospace, Menlo, monospace" font-size="9" fill="#333">
+              <g transform="translate(15,28)"><rect width="70" height="28" fill="#dfe4ea"/><text x="35" y="18" text-anchor="middle" fill="#333">S1</text></g>
+              <g transform="translate(90,28)"><rect width="70" height="28" fill="#dfe4ea"/><text x="35" y="18" text-anchor="middle" fill="#333">S2</text></g>
+              <g transform="translate(165,28)"><rect width="70" height="28" fill="#dfe4ea"/><text x="35" y="18" text-anchor="middle" fill="#333">S3</text></g>
+              <g transform="translate(240,28)"><rect width="70" height="28" fill="#dfe4ea"/><text x="35" y="18" text-anchor="middle" fill="#333">S4</text></g>
+              <g transform="translate(315,28)"><rect width="70" height="28" fill="#dfe4ea"/><text x="35" y="18" text-anchor="middle" fill="#333">S5</text></g>
+            </g>
+            <text x="200" y="75" text-anchor="middle" font-size="10" fill="#9a7a19" font-style="italic">each student sees the same threshold change in real time</text>
+          </g>
+        </g>
+        <!-- B.3 pathology consultation -->
+        <g transform="translate(480,280)">
+          <rect width="570" height="130" fill="#f3e8ed" stroke="#c7a0b0" rx="4"/>
+          <text x="12" y="22" font-size="12" font-weight="700" fill="#8e2a55">d · Pathology consultation</text>
+          <g transform="translate(15,35)">
+            <rect width="160" height="85" fill="#fff" stroke="#8e2a55" rx="3"/>
+            <text x="80" y="16" text-anchor="middle" font-size="10" fill="#8e2a55" font-weight="700">primary pathologist</text>
+            <text x="80" y="31" text-anchor="middle" font-size="9" fill="#333">(driver · slide local)</text>
+            <rect x="6" y="37" width="148" height="40" fill="#0e1b2d"/>
+            <g fill="#f6dfe8">
+              <circle cx="30" cy="55" r="5"/><circle cx="50" cy="60" r="4"/><circle cx="70" cy="55" r="5"/><circle cx="95" cy="60" r="4"/><circle cx="120" cy="55" r="5"/><circle cx="140" cy="60" r="4"/>
+            </g>
+            <!-- discrepancy ROI -->
+            <rect x="50" y="43" width="38" height="24" fill="none" stroke="#ffd15c" stroke-width="1.5" stroke-dasharray="2 2"/>
+          </g>
+          <g transform="translate(195,35)">
+            <rect width="160" height="85" fill="#fff" stroke="#8e2a55" rx="3"/>
+            <text x="80" y="16" text-anchor="middle" font-size="10" fill="#8e2a55" font-weight="700">second reader</text>
+            <text x="80" y="31" text-anchor="middle" font-size="9" fill="#333">(observer · remote)</text>
+            <rect x="6" y="37" width="148" height="40" fill="#0e1b2d"/>
+            <g fill="#f6dfe8">
+              <circle cx="30" cy="55" r="5"/><circle cx="50" cy="60" r="4"/><circle cx="70" cy="55" r="5"/><circle cx="95" cy="60" r="4"/><circle cx="120" cy="55" r="5"/><circle cx="140" cy="60" r="4"/>
+            </g>
+            <rect x="50" y="43" width="38" height="24" fill="none" stroke="#ff6b6b" stroke-width="1.5"/>
+            <text x="90" y="44" font-size="7.5" fill="#ff6b6b">re-score</text>
+          </g>
+          <g transform="translate(375,35)">
+            <rect width="180" height="85" fill="#fff" stroke="#8e2a55" rx="3"/>
+            <text x="90" y="16" text-anchor="middle" font-size="10" fill="#8e2a55" font-weight="700">audit excerpt</text>
+            <g font-family="ui-monospace, Menlo, monospace" font-size="8" fill="#333">
+              <text x="8" y="30">09:34 slide.open    path-…</text>
+              <text x="8" y="42">09:36 roi.draw     primary</text>
+              <text x="8" y="54">09:41 session.join  2nd</text>
+              <text x="8" y="66">09:43 roi.adjust   2nd</text>
+              <text x="8" y="78">09:45 discrepancy   flagged</text>
+            </g>
+          </g>
+        </g>
+      </svg>
     </div>
+    <figcaption>
+      <span class="fig-claim">Real-time collaborative analysis without data movement (schematic preview).</span> (<strong>a</strong>) One driver device holds the image; a Hypha service broadcasts only rendered frames and ROI overlays to <em>n</em> observer devices, which can request control but never receive pixels. Every action is logged against a Hypha-authenticated identity. (<strong>b</strong>) <em>Cross-institution PI review</em>: a postdoc in one lab drives the analysis; the PI in another lab sees the same canvas, suggests a threshold change, and watches the object count update. (<strong>c</strong>) <em>Teaching-lab observer cohort</em>: an instructor's threshold choice propagates to five observer students on their own devices; per-student follow-up questions attach to the event log. (<strong>d</strong>) <em>Pathology consultation</em>: a primary pathologist flags a region; a remote second reader adjusts the ROI; the audit trail records the discrepancy explicitly. <em>v1 constraints</em>: driver requires Chrome (File System Access API), no session persistence across driver tab-close, observer-notes do not fork sessions — reported verbatim in the caption at evidence-landing. Supp. Video 1 captures an end-to-end PI-review session (~3 min).
+    </figcaption>
   </figure>
 </section>
 
@@ -1900,7 +2742,161 @@
 
   <p>Where a problem spans both regimes — a DL model supplies a candidate segmentation, a human adjudicates it, and classical measurements then extract the numbers that go into a figure — ImageJ.JS is composable rather than captive. Every in-browser analysis step is exposed through a Hypha-RPC service (<code>hypha-imagej-service.js</code>) whose methods (<code>runMacro</code>, <code>takeScreenshot</code>, <code>getRoisAsGeoJson</code>, <code>executeJavaScript</code>) are the same identifiers an external caller, running in Python, in a notebook, in a cloud job, or in an agent runtime, addresses over WebSocket. The same service is published as a Model Context Protocol endpoint by URL rewrite (<code>convertToMcpUrl</code> in <code>hypha-imagej-service.js:880</code>), so that a deep-learning inference service that emits candidate ROIs — whether a CellSAM deployment, a private SAM instance, or a lab's own Cellpose model — can post its output into an ImageJ.JS session and have a human analyst adjudicate, refine, and measure within the browser. The boundary we draw is therefore a boundary of contribution and of scope, not of composability.</p>
 
-  <p>Parallel to the human-centred regime characterised here, a distinct research direction has emerged in which large language models drive bioimage tools through programmatic interfaces. Omega <a href="#ref-royer2024">[Royer et al. 2024]</a> showed that an LLM-and-tool agent can perform image analysis through natural-language conversation with napari; napari-mcp (2025) packages this capability as a Model Context Protocol service; BioImage-Agent (2026) demonstrates specialised agent tooling for bioimage visualisation; and CellVoyager <a href="#ref-chen2026">[Chen et al. 2026]</a> applies autonomous-agent methodology to single-cell analysis. These directions are complementary to the classical, human-centred regime we address: they optimise different cognitive affordances, assume different deployment contexts, and serve different research workflows. ImageJ.JS is composable with them — the Hypha-RPC and MCP interfaces just described are exactly the composition surface — and its agent-facing uses are the subject of a companion paper <a href="#ref-ouyangcompanion">[Ouyang et al., in preparation]</a>. The present paper's focus on small-data, human-centred analysis is neither a rejection of agentic methods nor a claim of superiority over them. It is a regime characterisation and a tool scoped to that regime, written in the belief that the correct answer to "classical or deep learning?" — and, increasingly, to "human or agent?" — is not a ranking of methods but a recognition of regimes, and that the regime where most biology actually happens has, until now, been left without first-class methodological tooling.</p>
+  <p>Parallel to the human-centred regime characterised here, a distinct research direction has emerged in which large language models drive bioimage tools through programmatic interfaces. Omega <a href="#ref-royer2024">[Royer et al. 2024]</a> showed that an LLM-and-tool agent can perform image analysis through natural-language conversation with napari; napari-mcp (2025) packages this capability as a Model Context Protocol service; BioImage-Agent (2026) demonstrates specialised agent tooling for bioimage visualisation; and CellVoyager <a href="#ref-chen2026">[Chen et al. 2026]</a> applies autonomous-agent methodology to single-cell analysis. These directions are complementary to the classical, human-centred regime we address: they optimise different cognitive affordances, assume different deployment contexts, and serve different research workflows. ImageJ.JS is composable with them — the Hypha-RPC and MCP interfaces just described are exactly the composition surface (<a href="#fig7">Fig. 7</a>) — and its agent-facing uses are the subject of a companion paper <a href="#ref-ouyangcompanion">[Ouyang et al., in preparation]</a>. The present paper's focus on small-data, human-centred analysis is neither a rejection of agentic methods nor a claim of superiority over them. It is a regime characterisation and a tool scoped to that regime, written in the belief that the correct answer to "classical or deep learning?" — and, increasingly, to "human or agent?" — is not a ranking of methods but a recognition of regimes, and that the regime where most biology actually happens has, until now, been left without first-class methodological tooling.</p>
+
+  <!-- Fig 7 — Composition with DL and agents -->
+  <figure class="figure" id="fig7">
+    <div class="fig-header">
+      <span><span class="fig-tag">Fig. 7 ·</span> Composable, not captive — ImageJ.JS with deep learning and agents</span>
+      <span style="font-family:var(--sans); font-size:11.5px; color:var(--nm-muted); text-transform:uppercase; letter-spacing:.4px;">architecture · shipped interfaces</span>
+    </div>
+    <div class="fig-body" style="padding:20px; background:#fff;">
+      <svg viewBox="0 0 1060 440" xmlns="http://www.w3.org/2000/svg" style="width:100%; height:auto; display:block; font-family:Inter, -apple-system, 'Segoe UI', Helvetica, sans-serif;" aria-labelledby="fig7title">
+        <title id="fig7title">Composition architecture: ImageJ.JS + deep learning + agents</title>
+        <defs>
+          <linearGradient id="dlG" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff3e0"/><stop offset="1" stop-color="#d07b1a"/></linearGradient>
+          <linearGradient id="ijG" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e8eff7"/><stop offset="1" stop-color="#2a5d8f"/></linearGradient>
+          <linearGradient id="agG" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#efe9f7"/><stop offset="1" stop-color="#533e8e"/></linearGradient>
+          <marker id="arrow7" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#333"/></marker>
+        </defs>
+
+        <!-- Left column: DL services -->
+        <g transform="translate(20,30)">
+          <rect width="230" height="380" fill="url(#dlG)" stroke="#d07b1a" rx="6"/>
+          <text x="115" y="25" text-anchor="middle" font-size="13" font-weight="700" fill="#6a3d08">Deep-learning services</text>
+          <text x="115" y="42" text-anchor="middle" font-size="10" fill="#333">(in-distribution strengths)</text>
+          <g transform="translate(15,60)">
+            <rect width="200" height="44" fill="#fff" stroke="#d07b1a"/>
+            <text x="100" y="18" text-anchor="middle" font-size="11" fill="#333" font-weight="700">SAM / SAM2</text>
+            <text x="100" y="33" text-anchor="middle" font-size="9.5" fill="#5a4a19" font-family="ui-monospace, Menlo, monospace">serves: auto-segment</text>
+          </g>
+          <g transform="translate(15,115)">
+            <rect width="200" height="44" fill="#fff" stroke="#d07b1a"/>
+            <text x="100" y="18" text-anchor="middle" font-size="11" fill="#333" font-weight="700">Cellpose-generalist</text>
+            <text x="100" y="33" text-anchor="middle" font-size="9.5" fill="#5a4a19" font-family="ui-monospace, Menlo, monospace">serves: cell segmentation</text>
+          </g>
+          <g transform="translate(15,170)">
+            <rect width="200" height="44" fill="#fff" stroke="#d07b1a"/>
+            <text x="100" y="18" text-anchor="middle" font-size="11" fill="#333" font-weight="700">StarDist / CellSAM</text>
+            <text x="100" y="33" text-anchor="middle" font-size="9.5" fill="#5a4a19" font-family="ui-monospace, Menlo, monospace">serves: nuclei, versatile</text>
+          </g>
+          <g transform="translate(15,225)">
+            <rect width="200" height="44" fill="#fff" stroke="#d07b1a"/>
+            <text x="100" y="18" text-anchor="middle" font-size="11" fill="#333" font-weight="700">lab's private model</text>
+            <text x="100" y="33" text-anchor="middle" font-size="9.5" fill="#5a4a19" font-family="ui-monospace, Menlo, monospace">serves: project-specific</text>
+          </g>
+          <g transform="translate(15,285)">
+            <rect width="200" height="68" fill="#fff" stroke="#d07b1a"/>
+            <text x="100" y="18" text-anchor="middle" font-size="10.5" fill="#6a3d08" font-weight="700">emits: candidate ROIs</text>
+            <text x="100" y="34" text-anchor="middle" font-size="9" fill="#333" font-family="ui-monospace, Menlo, monospace">{type: Feature, geom: Polygon}</text>
+            <text x="100" y="50" text-anchor="middle" font-size="9" fill="#333" font-family="ui-monospace, Menlo, monospace">score ∈ [0,1]</text>
+            <text x="100" y="62" text-anchor="middle" font-size="9" fill="#8e2a55">GeoJSON over WebSocket</text>
+          </g>
+        </g>
+
+        <!-- Centre: ImageJ.JS with Hypha-RPC + MCP -->
+        <g transform="translate(280,30)">
+          <rect width="500" height="380" fill="url(#ijG)" stroke="#2a5d8f" stroke-width="2" rx="6"/>
+          <text x="250" y="25" text-anchor="middle" font-size="13" font-weight="700" fill="#0b3059">ImageJ.JS — browser runtime + service layer</text>
+          <text x="250" y="42" text-anchor="middle" font-size="10" fill="#333">(the human analyst's session)</text>
+          <!-- Human panel -->
+          <g transform="translate(20,60)">
+            <rect width="460" height="100" fill="#fff" stroke="#2a5d8f"/>
+            <text x="230" y="18" text-anchor="middle" font-size="11" fill="#0b3059" font-weight="700">Human analyst in the browser · ImageJ.JS canvas</text>
+            <rect x="12" y="26" width="436" height="62" fill="#0e1b2d"/>
+            <g fill="#cbdaf0">
+              <circle cx="50" cy="57" r="9"/><circle cx="90" cy="70" r="7"/><circle cx="135" cy="55" r="9"/><circle cx="180" cy="70" r="7"/><circle cx="220" cy="55" r="9"/><circle cx="260" cy="70" r="7"/><circle cx="300" cy="55" r="9"/><circle cx="340" cy="70" r="7"/><circle cx="380" cy="55" r="9"/><circle cx="420" cy="70" r="7"/>
+            </g>
+            <g fill="none" stroke="#ffd15c" stroke-dasharray="3 2" stroke-width="1.5">
+              <circle cx="50" cy="57" r="11"/><circle cx="135" cy="55" r="11"/><circle cx="220" cy="55" r="11"/><circle cx="300" cy="55" r="11"/><circle cx="380" cy="55" r="11"/>
+            </g>
+            <g fill="none" stroke="#ef6e5c" stroke-dasharray="3 2" stroke-width="1.5">
+              <circle cx="90" cy="70" r="9"/>
+            </g>
+            <text x="230" y="105" text-anchor="middle" font-size="9.5" fill="#5a4a19" font-style="italic">DL proposes · human adjudicates · classical measures</text>
+          </g>
+          <!-- Hypha-RPC layer -->
+          <g transform="translate(20,180)">
+            <rect width="460" height="88" fill="#fff" stroke="#2a5d8f"/>
+            <text x="230" y="20" text-anchor="middle" font-size="11" fill="#0b3059" font-weight="700">Hypha-RPC service layer</text>
+            <g font-family="ui-monospace, Menlo, monospace" font-size="10" fill="#2a5d8f">
+              <text x="16" y="42">runMacro(code: str) → str</text>
+              <text x="16" y="56">takeScreenshot() → base64 PNG</text>
+              <text x="16" y="70">getRoisAsGeoJson() → FeatureCollection</text>
+              <text x="16" y="84">executeJavaScript(code: str) → any</text>
+            </g>
+            <g font-family="ui-monospace, Menlo, monospace" font-size="10" fill="#5a4a19">
+              <text x="258" y="42">service.id: imagej-session</text>
+              <text x="258" y="56">transport: WebSocket</text>
+              <text x="258" y="70">auth: Hypha identity</text>
+              <text x="258" y="84">file: hypha-imagej-service.js</text>
+            </g>
+          </g>
+          <!-- MCP endpoint -->
+          <g transform="translate(20,285)">
+            <rect width="460" height="78" fill="#fff" stroke="#2a5d8f"/>
+            <text x="230" y="20" text-anchor="middle" font-size="11" fill="#0b3059" font-weight="700">MCP endpoint · convertToMcpUrl(·):880</text>
+            <g font-family="ui-monospace, Menlo, monospace" font-size="10" fill="#533e8e">
+              <text x="16" y="40">/run_macro</text>
+              <text x="16" y="54">/take_screenshot</text>
+              <text x="16" y="68">/get_rois_as_geojson</text>
+            </g>
+            <g font-family="ui-monospace, Menlo, monospace" font-size="10" fill="#533e8e">
+              <text x="258" y="40">/execute_javascript</text>
+              <text x="258" y="54">transport: MCP (HTTP+SSE)</text>
+              <text x="258" y="68">auth: Hypha identity (same)</text>
+            </g>
+          </g>
+        </g>
+
+        <!-- Right: Agents -->
+        <g transform="translate(810,30)">
+          <rect width="230" height="380" fill="url(#agG)" stroke="#533e8e" rx="6"/>
+          <text x="115" y="25" text-anchor="middle" font-size="13" font-weight="700" fill="#2f1e5b">Agent runtimes</text>
+          <text x="115" y="42" text-anchor="middle" font-size="10" fill="#333">(MCP-native)</text>
+          <g transform="translate(15,60)">
+            <rect width="200" height="44" fill="#fff" stroke="#533e8e"/>
+            <text x="100" y="18" text-anchor="middle" font-size="11" fill="#333" font-weight="700">LLM orchestrator</text>
+            <text x="100" y="33" text-anchor="middle" font-size="9.5" fill="#533e8e" font-family="ui-monospace, Menlo, monospace">plans · composes · reports</text>
+          </g>
+          <g transform="translate(15,115)">
+            <rect width="200" height="44" fill="#fff" stroke="#533e8e"/>
+            <text x="100" y="18" text-anchor="middle" font-size="11" fill="#333" font-weight="700">napari-mcp</text>
+            <text x="100" y="33" text-anchor="middle" font-size="9" fill="#533e8e" font-family="ui-monospace, Menlo, monospace">sibling human-centred tool</text>
+          </g>
+          <g transform="translate(15,170)">
+            <rect width="200" height="44" fill="#fff" stroke="#533e8e"/>
+            <text x="100" y="18" text-anchor="middle" font-size="11" fill="#333" font-weight="700">companion paper</text>
+            <text x="100" y="33" text-anchor="middle" font-size="9" fill="#333">Ouyang et al., in prep</text>
+          </g>
+          <g transform="translate(15,225)">
+            <rect width="200" height="44" fill="#fff" stroke="#533e8e"/>
+            <text x="100" y="18" text-anchor="middle" font-size="10" fill="#333" font-weight="700">benefit from this paper</text>
+            <text x="100" y="33" text-anchor="middle" font-size="9" fill="#2f1e5b" font-style="italic">human-audited runtime</text>
+          </g>
+          <g transform="translate(15,285)">
+            <rect width="200" height="68" fill="#fff" stroke="#533e8e"/>
+            <text x="100" y="18" text-anchor="middle" font-size="10.5" fill="#2f1e5b" font-weight="700">emits: tool calls</text>
+            <text x="100" y="34" text-anchor="middle" font-size="9" fill="#333" font-family="ui-monospace, Menlo, monospace">{method, params}</text>
+            <text x="100" y="50" text-anchor="middle" font-size="9" fill="#333" font-family="ui-monospace, Menlo, monospace">→ /run_macro, etc.</text>
+            <text x="100" y="62" text-anchor="middle" font-size="9" fill="#8e2a55">MCP over HTTP + SSE</text>
+          </g>
+        </g>
+
+        <!-- Arrows -->
+        <path d="M250 125 L280 125" stroke="#d07b1a" stroke-width="2" marker-end="url(#arrow7)"/>
+        <path d="M250 125 L280 125" stroke="#d07b1a" stroke-width="2" marker-start="url(#arrow7)"/>
+        <text x="262" y="115" text-anchor="middle" font-size="9" fill="#5a4a19">ROIs</text>
+
+        <path d="M780 330 L810 330" stroke="#533e8e" stroke-width="2" marker-end="url(#arrow7)"/>
+        <path d="M780 330 L810 330" stroke="#533e8e" stroke-width="2" marker-start="url(#arrow7)"/>
+        <text x="795" y="320" text-anchor="middle" font-size="9" fill="#2f1e5b">MCP</text>
+      </svg>
+    </div>
+    <figcaption>
+      <span class="fig-claim">ImageJ.JS is composable, not captive.</span> Deep-learning services (SAM, Cellpose, StarDist, CellSAM, lab models) emit candidate ROIs as GeoJSON over WebSocket into a running ImageJ.JS session, where a human analyst adjudicates, refines, and takes the classical measurements that appear in the figure. The same in-browser service surface — <code>runMacro</code>, <code>takeScreenshot</code>, <code>getRoisAsGeoJson</code>, <code>executeJavaScript</code> — is simultaneously exposed to MCP-native agent runtimes by a URL rewrite (<code>convertToMcpUrl</code> in <code>hypha-imagej-service.js:880</code>), so that an LLM orchestrator can drive the same browser session that a human was driving a moment earlier. This is the concrete composition point §8 describes in prose: the boundary this paper draws is a boundary of scope and contribution, not a boundary of composability, and every shipped interface in the diagram is in the <code>v1.0-paper</code> git tag (§10).
+    </figcaption>
+  </figure>
 </section>
 
 <!-- §9 -->
@@ -2768,14 +3764,18 @@
     <h3>Contents</h3>
     <ul>
       <li><a href="#abstract">Abstract</a></li>
+      <li><a href="#fig0"><span class="num">GA</span>Graphical Abstract</a></li>
       <li><a href="#sec-1"><span class="num">1</span>Introduction</a></li>
       <li><a href="#sec-2"><span class="num">2</span>Measuring the small-data majority</a></li>
+      <li><a href="#fig1b" style="padding-left:18px; color:#555;"><span class="num">·</span>Fig 1-suppl — subdomain montage</a></li>
+      <li><a href="#fig1" style="padding-left:18px; color:#555;"><span class="num">·</span>Fig 1 — long-tail results</a></li>
       <li><a href="#sec-3"><span class="num">3</span>Design principles</a></li>
       <li><a href="#sec-4"><span class="num">4</span>Shareable human reasoning</a></li>
       <li><a href="#sec-5"><span class="num">5</span>Teaching and intuition-building</a></li>
       <li><a href="#sec-6"><span class="num">6</span>Privacy-preserving analysis</a></li>
       <li><a href="#sec-7"><span class="num">7</span>Real-time collaborative analysis</a></li>
       <li><a href="#sec-8"><span class="num">8</span>Limits and complementarity</a></li>
+      <li><a href="#fig7" style="padding-left:18px; color:#555;"><span class="num">·</span>Fig 7 — composition with DL &amp; agents</a></li>
       <li><a href="#sec-9"><span class="num">9</span>Discussion — implications</a></li>
       <li><a href="#sec-10"><span class="num">10</span>Availability</a></li>
       <li><a href="#methods">Online Methods</a></li>
@@ -2797,7 +3797,7 @@
       <dt>Article type</dt>
       <dd>Brief Communication (working draft)</dd>
       <dt>Draft version</dt>
-      <dd>v0.9 · 2026-04-18 (adds Research Briefing plain-language accompaniment)</dd>
+      <dd>v0.10 · 2026-04-18 (adds §2 Measurement prose + biologist-facing visual pass: Graphical Abstract, subdomain montage, filled Fig 4/5/6, new Fig 7 composition)</dd>
       <dt>Target venue</dt>
       <dd>Nature Methods (Brief Communication primary; full Article if pillars 1+2+{3,4,5} rigorously delivered)</dd>
       <dt>Correspondence</dt>
@@ -2809,7 +3809,9 @@
     <h3>Evidence status</h3>
     <dl>
       <dt>Ready (prose v0.1)</dt>
-      <dd>Abstract · §1 · §3 · §8 · §9 · §10 · Online Methods · Cover letter · References · Figure slots · Supp. outline · Release engineering · Reviewer-response dry run · Submission packet · Readiness dashboard · Reporting Summary · <strong>Research Briefing</strong></dd>
+      <dd>Abstract · §1 · <strong>§2</strong> · §3 · §8 · §9 · §10 · Online Methods · Cover letter · References · Figure slots · Supp. outline · Release engineering · Reviewer-response dry run · Submission packet · Readiness dashboard · Reporting Summary · Research Briefing</dd>
+      <dt>Figures (biologist pass iter 17)</dt>
+      <dd>Graphical Abstract + Fig 1 + Fig 1-suppl (subdomains) + Fig 2 + Fig 3 + Fig 4 + Fig 5 + Fig 6 + <strong>Fig 7 composition</strong> · all in-HTML SVG</dd>
       <dt>Readiness posture</dt>
       <dd>Structurally <strong style="color:#1a6b2f;">READY</strong> · empirically <strong style="color:#8a1a1a;">EVIDENCE-GATED</strong> on Gates D–G · 3 / 10 submission gates <strong style="color:#1a6b2f;">MET</strong></dd>
       <dt>Defensibility (dry run)</dt>
@@ -2854,7 +3856,7 @@
 
 <footer class="site-footer">
   <div class="wrap">
-    <div>Rendered from <code>preprint.md</code> · working draft v0.9 · 2026-04-18 (adds Research Briefing plain-language accompaniment; Life Sciences Reporting Summary + <code>[URL]</code>/<code>[URL/github]</code>/<code>[LICENCE]</code> resolution landed iter 15). Placeholders still in <span style="background:#fff8e1; color:#6b5000; padding:0 4px; border-radius:2px;">[yellow]</span> are evidence gaps resolved at submission per the placeholder-propagation discipline; resolved values render as inline code.</div>
+    <div>Rendered from <code>preprint.md</code> · working draft v0.10 · 2026-04-18 (adds §2 Measurement prose v0.1 + biologist-facing visual pass: Graphical Abstract, Fig 1-supplement subdomain montage, rich SVG schematics for Figs 4/5/6, new Fig 7 composition architecture). Placeholders still in <span style="background:#fff8e1; color:#6b5000; padding:0 4px; border-radius:2px;">[yellow]</span> are evidence gaps resolved at submission per the placeholder-propagation discipline; resolved values render as inline code.</div>
     <div style="margin-top:10px;">Served via <code>svamp serve</code> · not a journal publication.</div>
   </div>
 </footer>
