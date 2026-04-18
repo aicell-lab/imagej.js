@@ -167,6 +167,33 @@
   other sections keep the old form. When a reference is finalised, update
   both the References entry AND every row of the map AND the in-prose
   citation in each referenced block, in one pass. Do not let the map drift.
+- **Reviewer-response dry run is a defensibility instrument, not a draft
+  letter.** Iteration 12 (2026-04-18) added
+  `preprint.md §"Drafted prose — Reviewer-response dry run (v0.1, 2026-04-18)"`
+  and the corresponding `<section class="dry-run" id="dry-run">` in the
+  HTML render. The block catalogues 12 anticipated objections (9 from
+  the Risks table + 3 out-of-table) and for each names the resolving
+  prose surface or the gating §10 artefact. Two rules govern this
+  artefact and any future iteration of it: (i) the dry run MUST be
+  visually and prose-marked as "DRY RUN" — banner in the HTML, status
+  block at the top of the prose — so it is never mistaken for a draft
+  of the response-to-reviewers letter; (ii) every objection's response
+  must be derivable from already-drafted prose, already-shipped
+  artefacts, or a named §10 artefact label `EVIDENCE-GATED`. The
+  pattern bullet about NOT drafting response-to-reviewer prose before
+  submission still stands; the dry run is the *inverse* artefact —
+  it stress-tests the body's defensive load so the eventual response
+  letter can be derived from body prose rather than added to it. The
+  defensibility scorecard at the bottom of the block (current: 10/12
+  answerable from drafted prose, 1 partial, 1 evidence-gated) MUST
+  be re-computed at every iteration that drafts new prose or lands
+  new evidence; any drop in the answerable count is a regression
+  triggering a prose-pass review. The HTML uses an amber/orange
+  colour scheme distinct from the manuscript-body sections, so the
+  reader (or a future co-author) can see at a glance that the section
+  is submission-engineering not body prose, mirroring the supp-outline
+  green/amber/red allocation legend and the release-engineering blue
+  border.
 - **Release engineering is the Methods ↔ Availability binding at release-
   artefact granularity.** Iteration 11 (2026-04-18) added
   `preprint.md §"Drafted prose — Release engineering (v0.1)"` and the
@@ -1373,4 +1400,164 @@
   re-invocation is needed. This pattern now holds across four
   re-render iterations and should be treated as the stable norm
   through submission.
+
+---
+
+## 2026-04-18 — Iteration 12: Reviewer-response dry run prose (v0.1) + HTML render refresh (v0.5)
+
+### What was implemented
+
+- **Drafted §Reviewer-response dry run (v0.1)** at
+  `preprint.md §"Drafted prose — Reviewer-response dry run (v0.1, 2026-04-18)"` —
+  ~2,000 words, 12 anticipated objections, the second-highest-priority next
+  iteration cited from Iteration 11's learnings. The block is explicitly
+  framed as a pre-submission sanity check, NOT as a draft of the
+  response-to-reviewers letter — a discipline preserved both in the prose
+  banner at the top and in the new pattern bullet at the top of this
+  progress file. Structure:
+  1. **Status banner** marking the block as DRY RUN, naming the
+     containment rule (every response must be grounded in already-drafted
+     prose, shipped artefacts, or a named §10 evidence-gate).
+  2. **Q1–Q9: the Risks-table objections** copied verbatim from
+     `preprint.md §"Risks and reviewer pushback (A+B-specific)"` lines
+     192–202. Each ~150–200 word response cross-references the resolving
+     prose surface (§-and-paragraph or `Online Methods §<n>` or the
+     named code mechanism). Q3 (foundation models on small data) labelled
+     `EVIDENCE-GATED` against `replay/foundation_models/MATCH_REPORT.md`;
+     all others answerable from drafted prose.
+  3. **Q10–Q12: out-of-table objections** anticipated to surface in
+     real review but not in the Risks table. Q10 (survey selection bias)
+     labelled `EVIDENCE-GATED` against the cross-reference promotion of
+     `survey_schema.md` sampling-rule prose into §2 / Online Methods §1.
+     Q11 (CheerpJ choice) and Q12 (tag vs Zenodo) answerable from
+     §3 ¶3 + Methods §4 and Release engineering ¶5 respectively.
+  4. **Defensibility scorecard** — current count: 10 answerable from
+     drafted prose alone, 1 partial (Q10), 1 evidence-gated (Q3).
+     Q3 remains the single highest reason to land Pillar 1's
+     foundation-model benchmark before submission.
+  5. **What the dry run is NOT** — closing paragraph re-asserting that
+     this artefact is not a draft of the response-to-reviewers letter,
+     drawing the parallel to the cover-letter rephrasing-not-new-argument
+     discipline.
+- **HTML render refreshed to v0.5.** `manuscript_html/index.html` now
+  includes a new `<section class="dry-run" id="dry-run">` inserted after
+  the supplementary-material outline (ordering reflects the
+  submission-engineering layer: Cover letter is editor-facing, Supp
+  outline is allocation-side, Dry run is reviewer-facing). Distinct CSS
+  styling with an amber/orange colour scheme (`#c87f1a` accent, `#fff9ef`
+  body bg, `#fbe9c4` banner) so the section is visually marked as
+  submission-engineering, not body prose. New CSS subblocks:
+  `.dryrun-banner` (DRY RUN status); `.objection` (per-Q card with
+  numbered badge `.qnum`, source label `.src`/`.src.gated`, italic
+  quoted objection `.qtext`, formatted response `.qresponse`);
+  `.scorecard` (12-row green/amber/red status table);
+  `.dryrun-legend` (3-tier swatch legend matching scorecard colours).
+  Version strings bumped v0.4 → v0.5 in five places (article-meta
+  published line; status-chip draft; status-chip status; sidebar
+  article-info `Draft version`; footer rendered-from line).
+  Status-chip content extended to include `defensibility 10/12`.
+  Sidebar Evidence-status now lists `Reviewer-response dry run` as the
+  12th Ready-block AND adds a new `Defensibility (dry run)` row reporting
+  the current scorecard. ToC gains `Reviewer-response dry run` entry
+  after `Supp. outline`. Sidebar gains a new `View the reviewer-response
+  dry run ↓` callout (amber-tinted to match the section).
+- **Re-served via svamp.** Same mount name `manuscript`, same URL
+  `https://static-serve-0bc5cde8.svc.hypha.aicell.io/manuscript/`.
+  Post-edit HTTP HEAD → `200`, `content-length: 161,133` (up from
+  135,459), `last-modified: Sat, 18 Apr 2026 12:28:28 GMT`. The
+  string `dry-run` / `dry run` / `Dry run` / `DRY RUN` appears 42×
+  in the rendered page (section id + ToC anchor + sidebar callout +
+  status-chip + 38 intra-document anchors / labels); `v0.5` appears
+  6×; zero residual `v0.4` occurrences. HTML parses well-formed
+  (Python html.parser: zero unclosed tags, zero mismatched tags).
+
+### Files changed
+
+- `preprint.md` — appended Reviewer-response dry run v0.1 block after the
+  Release engineering block. No existing prose or scaffolding modified.
+  File is now 975 lines / ~19,600 words.
+- `manuscript_html/index.html` — added `section.dry-run` CSS block
+  (~150 lines), inserted a new `<section>` after Supplementary outline
+  with a status banner, 12 objection cards, a 12-row scorecard table,
+  and three structural sub-headings. Added ToC entry; bumped version
+  strings in five places; added sidebar callout (amber-tinted);
+  promoted status-chip and Evidence-status block. File is now
+  161,133 bytes (up from 135,459) / 1,766 lines.
+- `.svamp/d9a68491-c46b-4e04-9b30-6294d0bbf071/ralph-progress.md` —
+  this entry; added one pattern bullet at the top of the
+  Patterns block.
+
+### Learnings for future iterations
+
+- **Dry-run scorecard is now a continuous instrument.** The 10/12
+  defensibility score is the first numeric measurement of the paper's
+  defensive load; it should be re-computed at every iteration that
+  drafts new prose or lands new evidence. Two specific update
+  triggers exist: (i) Q3 promotes from `Evidence-gated` to
+  `Answerable` when `replay/foundation_models/MATCH_REPORT.md` lands;
+  (ii) Q10 promotes from `Partial` to `Answerable` when the
+  `survey_schema.md` sampling rule is cross-referenced from §2 or
+  Online Methods §1. Either promotion bumps the answerable count
+  to 11/12 or 12/12 and is the single most progress-meaningful
+  metric the paper has at present (more than placeholder count,
+  more than word count). Future iterations that touch evidence
+  surfaces should update this score in the rendered HTML and in
+  the §status chip. Future iterations that touch prose surfaces
+  should re-verify that no new objection has *opened* (the score
+  drops if a new prose paragraph names a claim no current objection
+  defends against).
+- **Highest-value next iteration without new evidence:
+  placeholder-propagation script.** Now first-priority for *five*
+  iterations running. Placeholders across six surfaces (preprint.md,
+  manuscript_html/index.html, References cross-reference map, Supp
+  outline, Release engineering, Reviewer-response dry run) include
+  `[LICENCE]`, `[DOI]`, `[URL]`, `[YYYY+2]`, `[YYYY]`, `[DAU]`,
+  `[48]%`, `[20]%`, `[X]`, `[Y]`, `[Z]`, `[N]`, `[Y1–Y2]`,
+  `[VOL:PAGES]`. A small regex-over-file script that takes a
+  `placeholders.yaml` resolution dictionary and emits
+  `preprint.md` + `manuscript_html/index.html` with all values
+  substituted is now the unambiguous first-priority engineering
+  primitive before any first-evidence-landing pass. It is also the
+  first iteration whose *output* (a clean, placeholder-free render)
+  will materially change reader experience without changing prose.
+- **Second-highest: §10 ↔ Methods §4 ↔ Release engineering ↔ Dry-run
+  Q3/Q10 four-way cross-check.** Now extended from a three-way to a
+  four-way binding because the dry run names two §10 artefacts that
+  resolve specific objections (`replay/foundation_models/MATCH_REPORT.md`
+  for Q3; `survey_schema.md` cross-reference for Q10). Read the four
+  surfaces together and verify (i) every artefact named in the dry run
+  is reachable from §10 or noted as evidence-gated, (ii) every §10
+  artefact's reviewer-facing purpose is named in the dry-run scorecard
+  (else it lacks an objection-resolving role and should be questioned).
+  This cross-check is the dry-run-extended version of the §10 ↔
+  Methods §4 ↔ Release engineering pass cited in Iteration 11; defer
+  it until after the placeholder-propagation script.
+- **Third-highest: dry-run Q3 promotion plan.** When the foundation-model
+  benchmark lands in `replay/foundation_models/`, the Q3 response in
+  the dry run should be re-edited (status badge: `EVIDENCE-GATED` →
+  green `ANSWERED`; response prose: replace "we will show the
+  benchmark" with the actual numbers from `MATCH_REPORT.md`).
+  Critically, this edit must propagate to the §8 ¶2 prose, the
+  Abstract IoU/`[X]`/`[Y]`/`[Z]` placeholders, the Cover letter Q3
+  rephrasing, and the Figure 1 panel claims — five surfaces in one
+  edit pass. The dry-run scorecard's role is to make this propagation
+  list explicit; without the scorecard, a future iteration would be
+  likely to update §8 alone and miss the four other surfaces.
+- **Framing containment re-verified across the v0.5 render.**
+  Reviewer-response dry-run body discusses AI in Q3, Q4, Q8, Q9 — all
+  routed through the §8 framing-containment discipline (regime
+  characterisation, not methodology ranking). No new AI claim is
+  introduced; every AI-adjacent sentence in the dry run is either a
+  rephrasing of §8 prose or a containment statement (e.g., Q8: "we
+  are unmoving on this. The paper characterises the human-centred,
+  classical regime"). The pattern bullet at the top of this file
+  (*"AI stays contained to §8"*) is preserved.
+- **Served URL is stable across re-renders (Iteration 8 / 9 / 10
+  / 11 / 12).** Mount is in place under the name `manuscript`
+  (registered 2026-04-18 11:54); re-saving the HTML on disk is
+  sufficient — svamp serves from disk. No `svamp serve` re-invocation
+  is needed. This pattern now holds across five re-render iterations
+  and is the stable norm through submission.
+
+---
 

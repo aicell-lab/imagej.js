@@ -748,3 +748,228 @@ releases as a compatibility contract; any breaking change is gated
 behind a major-version bump and is declared explicitly in the release
 notes.
 
+---
+
+## Drafted prose — Reviewer-response dry run (v0.1, 2026-04-18)
+
+> **Status: DRY RUN.** This block is a pre-submission sanity check of the
+> paper's defensibility, NOT a draft of the response-to-reviewers letter.
+> Real reviewer comments will differ in wording, framing, and emphasis;
+> draft the actual response only against the actual reports. The point of
+> the dry run is to verify, before submission, that every objection in
+> `preprint.md §"Risks and reviewer pushback (A+B-specific)"` has at least
+> one defensible response that is grounded in already-drafted prose,
+> already-shipped artefacts, or named evidence-gates. Where a dry-run
+> answer relies on evidence that has not yet landed, the response is
+> labelled `EVIDENCE-GATED` and cross-references the §10 artefact that
+> will resolve it. This containment ensures the dry run does not
+> introduce new claims into the paper through the back door.
+
+**Q1. *"'Small-data biology' is not a defined term."***
+The objection is fair — the phrase as used in §1 is rhetorical until §2
+makes it operational. Our response is to point the reviewer to the
+operational definition the paper already commits to: §2 fixes
+*small-data* as analyses with fewer than 100 images per condition AND
+fewer than 10 conditions, applied per-paper at extraction time in
+`survey_production_v2.csv`. This is not an argument about whether the
+phrase is intuitive; it is a claim that we have a reproducible
+extraction rule. The rule is grounded in Lord 2024's empirical
+sample-size norms across cell-biology subfields and is encoded in the
+extraction schema at `survey_schema.md`. Reviewers can re-extract from
+the same 80-paper corpus and recover the same 48% small-data fraction
+to within sampling error. We further note that the paper does not
+require *small-data* to be the only term that captures the regime; we
+use it because it is the most operational of the candidates we
+considered (others: *long-tail*, *boutique*, *low-throughput*).
+Reviewers preferring an alternative noun should test it against the
+extraction rule, not against the framing prose.
+
+**Q2. *"Human-centred is a value claim, not a methodological one."***
+Correct, and the paper is explicit about this in §1 ¶3 and §3 ¶1: the
+methodological contribution (A) is the empirical small-data measurement
+plus the ImageJ.JS implementation; *human-centred* (B) is the framing
+that makes the measurement matter. Conflating A and B would be the
+error; separating them, as the manuscript does, is the contribution.
+Reviewers concerned that B is a value claim should note that the
+paper's correctness does not depend on B: the small-data fraction
+either replicates from `survey_production_v2.csv` or it does not; the
+replay corpus either re-runs in `v1.0-paper` or it does not. B
+provides the *interpretation* — that under-investing in the small-data
+regime is a methodological choice with stakes for who can do bioimage
+analysis — and that interpretation is argued in §1 ¶4 and §8 with
+reference to the empirical findings, not asserted. We are happy to
+reframe B as a *normative argument grounded in the empirical regime
+characterisation* if the reviewer prefers; the paper does not require
+the word *human-centred* to survive.
+
+**Q3. *"Foundation models (CellSAM, Cellpose) already work on small data via zero-shot."***
+This is the strongest objection in our risk register and we take it
+seriously in §8 ¶2–3. Our response has two parts. First, we agree that
+zero-shot foundation models work well on in-distribution small data —
+H&E sections, fluorescent nuclei, EM membranes — and we cite Stringer
+2025, Greenwald 2024, and Pachitariu 2022 explicitly as evidence. The
+disagreement is not about whether zero-shot works; it is about the
+*regime fit*. Second, we ground the disagreement empirically:
+`longtail_tasks.md` will enumerate ~30 small-data tasks drawn from
+domains the foundation-model training distributions do not cover (rare
+organisms, unusual stains, low-throughput modalities). The
+foundation-model failure benchmark (Pillar 1 supporting; §4
+evidence-gated) reports the failure rate. **EVIDENCE-GATED:** until
+the benchmark lands at `replay/foundation_models/`, this objection is
+incompletely answered; the dry-run response is "we will show the
+benchmark." The §10 artefact that will resolve this is the
+`replay/foundation_models/MATCH_REPORT.md` directory family. No
+reframing is required — only the evidence drop.
+
+**Q4. *"This is nostalgic / anti-AI."***
+We anticipated this objection at the framing-lock pass (2026-04-18,
+`preprint.md §"Core framing"`) and the paper is structurally defended
+against it. §8 ¶1 opens with the regime-fit argument: large-data,
+in-distribution problems → DL; small-data, out-of-distribution problems
+→ classical + ImageJ.JS. §8 ¶4 names the composition substrate
+(Hypha-RPC + `convertToMcpUrl`) by which agentic frameworks compose
+*on top of* ImageJ.JS, and the companion agent-image-viewer paper is
+cited as future work. The framing is *regime characterisation*, not
+methodology ranking. A reviewer reading the paper as anti-AI is
+reading against the §8 prose; we ask reviewers to point to the
+specific sentence that licenses the reading and we will edit it.
+Operationally: the manuscript contains zero claims about AI methods'
+correctness or scientific value; it contains one claim about regime
+fit, which is empirically falsifiable from the foundation-model
+benchmark. We are not anti-AI; we characterise a regime AI-first
+research has under-served, and §1 ¶4 names the stakes (who gets to
+do bioimage analysis) without asserting any methodological superiority.
+
+**Q5. *"Tool paper with a point of view, not a methods paper."***
+True for the Brief Communication form, and we accept the framing — NM
+Brief Communications are routinely tool-with-perspective. For the full
+Article venue (NM Article or eLife Tools & Resources) the
+methodological contributions are: (i) the small-data survey
+methodology (extraction schema + 80-paper corpus + replicable
+counting rule), and (ii) the foundation-model failure benchmark on
+long-tail tasks (curated task list + execution protocol + failure
+metric). Both are methodological in the sense that NM Methods uses
+the term: a reproducible procedure that produces a number a
+disagreeing reader can re-derive. The paper is not a methods paper
+in the algorithm-introduction sense, and we do not claim it is.
+Reviewers preferring the algorithm-introduction sense are cordially
+referred to §9, which articulates *regime fit* and *regime
+correctness* as evaluative criteria methodology review currently
+lacks for tool papers whose contribution is not algorithmic novelty.
+
+**Q6. *"Why not extend Fiji instead?"***
+ImageJ.JS *is* Fiji — unmodified Fiji, executed under CheerpJ
+(Leaning Technologies 2025) in the browser. §3 ¶1 makes this
+explicit: continuity-with-Fiji is the first design principle and
+zero-fork-of-Fiji is its operational signature. The plugin set is
+declared in `plugins/manifest.json` and includes the standard Fiji
+distribution; `runMacro` (`hypha-imagej-service.js`) is the same
+macro language Fiji has shipped since 2008. The contribution is not
+a Fiji fork; it is making the unmodified Fiji ecosystem usable in
+the contexts §1–§2 measure as under-served (browser-only
+environments, classroom settings, clinical handoffs, collaborative
+analysis). Reviewers concerned that we are duplicating Fiji should
+verify that no existing Fiji distribution covers the §1–§2
+contexts: install-gated Fiji on a managed Chromebook is not
+possible; install-gated Fiji on a hospital workstation requires IT
+review; install-gated Fiji on a tablet during a teaching session is
+not possible. §4 (evidence-gated) and §6 (evidence-gated) measure
+these contexts directly.
+
+**Q7. *"napari exists and has a plugin ecosystem."***
+napari is install-gated Python and serves a different
+constituency — researchers with Python environments and
+package-management familiarity. The paper does not claim
+ImageJ.JS exceeds napari on napari's terms; the paper claims that
+the §1–§2 contexts (Chromebook, classroom, clinic, collaborator
+without local install) cannot be served by an install-gated tool
+regardless of how rich its plugin ecosystem is. This is a
+zero-install-as-correctness claim (§3 ¶3): an analysis that
+requires the reader to install Python is not reproducible by the
+audience the paper measures as relevant. napari and ImageJ.JS are
+complementary in the same sense as DL and classical methods: each
+fits a regime; the regimes overlap partially; the methodology
+literature has under-invested in characterising the boundary.
+We will cite napari (Sofroniew 2022) as an exemplar of the
+install-gated, plugin-rich tool class in §3 ¶1 and §8 ¶3, and we
+will not assert relative ranking on any axis other than
+zero-install reach.
+
+**Q8. *"Where is the benchmark against Omega / napari-mcp / BioImage-Agent?"***
+Explicitly out of scope, and we are unmoving on this. The paper
+characterises the human-centred, classical regime; agentic bioimage
+analysis is a distinct research direction addressed in the companion
+paper cited at §8 ¶4. We are not claiming to exceed AI-assisted
+workflows; we are claiming that human-centred small-data analysis
+has been under-invested. A benchmark against agentic frameworks
+would require us to take a position on the relative value of
+agentic vs. human-driven analysis on the long-tail corpus, which
+is exactly the methodology-ranking move §8 declines to make. The
+companion paper is the appropriate venue for such a benchmark; the
+two papers together characterise the regime more completely than
+either could alone. If a reviewer insists on a comparison, we
+propose a supplementary table mapping the agentic frameworks named
+in the objection to the §3 design principles, showing which
+principles each framework satisfies — this is a *regime-fit*
+comparison, not a *methodology-ranking* comparison, and is
+consistent with §8.
+
+**Q9. *"Why mention AI at all if the contribution is AI-free?"***
+§8 acknowledges the agentic-bioimage landscape in one paragraph (§8
+¶4) to show we are deliberate, not oblivious. Without it, reviewers
+assume we have not considered agents and the paper reads as
+unselfconscious. With it, reviewers see a scoped contribution that
+declines to claim what it does not measure. This is the same move
+the §1 framing-lock makes for *human-centred*: name the framing
+explicitly so that reviewers can engage with the scoping decision
+rather than infer it. We expect §8 ¶4 to be the most-edited
+paragraph in response to real reviewer comments; the
+framing-containment discipline (`preprint.md §"Patterns"`,
+*"AI stays contained to §8"*) means edits to §8 ¶4 do not
+propagate to other sections, which keeps the paper
+revision-friendly under reviewer pressure.
+
+**Out-of-table objections we anticipate.** Three objections do not
+appear in the Risks table but are likely to surface in real review;
+including dry-run answers here de-risks the response pass.
+
+*Q10. "How do we know the survey is not biased toward small-data
+papers in the corpus selection?"* The corpus is the 80-paper random
+sample of 2018–2024 Cell journal-family articles tagged with
+microscopy keywords; the sampling protocol is in `survey_schema.md`
+and the random-seed file is in the `survey_production_v2.csv`
+sibling directory. A reviewer can re-sample under the same protocol
+and re-extract. **EVIDENCE-GATED** on the sampling-protocol
+documentation, which is currently in `survey_schema.md` but not yet
+cross-referenced from §2.
+
+*Q11. "Why CheerpJ rather than a native WebAssembly Java VM?"* §3 ¶3
+and Online Methods §4 name the alternatives considered (TeaVM, JWebAssembly,
+JVM-on-Wasm prototypes) and the failure modes that ruled them out
+(plugin-set incompleteness, AWT-rendering gaps, JNI surface mismatches).
+CheerpJ is the only option that ships the unmodified Fiji plugin set
+including AWT-using plugins — the continuity-with-Fiji principle
+forces this choice.
+
+*Q12. "Why the v1.0-paper tag rather than a Zenodo deposit alone?"*
+§Release engineering ¶5 names the answer: subsequent release tags
+(`v1.1`, `v1.2`, …) DO NOT replace `v1.0-paper`; the git tag is the
+release-engineering identity, the Zenodo DOI is the long-term public
+mirror. A reviewer in [YYYY+2] retrieves the paper artefact from
+either the tag or the DOI; both resolve to the same SHA-256 manifest
+root. This is a defence-in-depth choice, not a duplication.
+
+**Defensibility scorecard.** Of the 12 objections drafted above
+(9 from the Risks table + 3 anticipated), 9 are answerable from
+already-drafted prose alone (Q1, Q2, Q4, Q5, Q6, Q7, Q8, Q9, Q11);
+2 are evidence-gated (Q3 on `replay/foundation_models/`, Q10 on
+sampling-protocol cross-reference); 1 is answerable from already-drafted
+prose plus the existing Release engineering block (Q12). No objection in
+the Risks table is unanswerable; one (Q3) is the strongest and remains
+the single highest reason to land Pillar 1's foundation-model
+benchmark before submission. This score should be re-computed at
+every iteration that drafts new prose or lands new evidence; any
+drop in the *answerable from drafted prose alone* count is a
+regression and should trigger a prose-pass review.
+
+
