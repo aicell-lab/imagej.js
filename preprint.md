@@ -2497,3 +2497,65 @@ Three properties distinguish this iteration kind from the seven prior:
 - The seven remaining author- or evidence-gated references listed above, for those whose authors are partners on this paper
 
 ---
+
+## Drafted prose — Box 1 · Fig + Box 2 · Fig schematics (v0.1, narrative-scaffolding figure addition 2026-04-18)
+
+### Iteration 33, HTML render v0.25 → v0.26
+
+Two three-panel SVG schematics are embedded in `manuscript_html/index.html` — one inside `aside.nm-box#box1` (after the box-lede, before the first vignette); one inside `aside.nm-box#box2` (same position). The schematics close the scaffolding-symmetry asymmetry flagged as the third-highest-next-iteration for five iterations in a row (29, 30, 31, 32, and implicitly 27/28 before the ladder was explicitly recorded).
+
+### Design rules (per the iter-20 box-scope rule)
+
+1. **Zero new claim, number, or citation.** Every vignette the schematic visualises is already drafted in the box above it; every method or mechanism named (CheerpJ, Cellpose, CellProfiler, StarDist, FDA-cleared classifier, audit_log.js, Hypha-RPC) is already defined and cited in the body section the vignette points at.
+2. **Every figure element points at a body surface already named.** Box 1 · Fig cross-references §3 (design principles), §4 Fig 3 (reviewer re-run), §5 Fig 4 (teaching), §6 Fig 5 (clinical). Box 2 · Fig cross-references §8 ¶2 (connectomics + HCS), §8 ¶4 (ED triage), Fig 7 (composition surface), `ref-stringer2025`, `ref-schmidt2018`.
+3. **Inline styling scoped to the `aside.nm-box` wrapper.** The iter-21 CSS-scoping regression class (`aside { position:sticky; ... }` breaking `aside.nm-box`) is not re-triggered because no new generic `figure` CSS rule is introduced — every style is inline on the `<figure>`, `<div>` header/body, and `<figcaption>` elements directly.
+
+### Box 1 · Fig — "Three working days, one URL"
+
+SVG viewBox 1000×230, three panels separated by dashed divider lines.
+
+- **Panel A · Monday — teaching laboratory.** One URL bubble at top carrying `?open=cells&macro=count&threshold=65` fans down to three Chromebook screens below (each with a thin keyboard base and a Fiji-window tint); each screen shows the same three-orange-dot count overlay at `t=65`; bottom label reads "15 browsers · 1 URL · 0 installs" with the cross-reference "the assignment is the URL → §5 · Fig. 4".
+- **Panel B · Thursday — pathologist's consult.** Left workstation sits inside a dashed red "HOSPITAL FIREWALL" boundary; inside its screen is the `slide.svs` drawn as a tissue-stain rectangle with six cell-marker dots, captioned "pixels stay local". Right workstation outside the firewall has only a dashed-rectangle "rendered frame" with a blue ROI polygon overlay. An arrow labelled "frame" flows left-to-right; an arrow labelled "ROI" flows right-to-left; below them, a chip reads `audit_log.js`. Bottom label: "image stays · frames cross · audit signs", cross-ref "privacy by default → §6 · Fig. 5".
+- **Panel C · Friday, six months later — reviewer-triggered re-run.** Two rows. Row 1: `?t=65` URL pill → `v1.0-paper · CheerpJ` pinned-runtime chip → figure thumbnail with three red cell markers, labelled "= published" in green. Row 2: `?t=72` URL pill → "same pinned runtime" → figure thumbnail with two smaller cell markers, labelled "tighter @ 72" in blue. Bottom label: "binary-identical @ 65 · reproducible @ 72", cross-ref "URL-addressable → §4 · Fig. 3".
+
+### Box 2 · Fig — "Three regimes where ImageJ.JS is deliberately the wrong tool"
+
+SVG viewBox 1000×230, three panels separated by dashed divider lines, palette earth-tone to distinguish from Box 1's blue-accent palette.
+
+- **Panel A · 50 TB volume — connectomics reconstruction.** Isometric EM-slice stack (five slices, beige/brown gradient, stepped perspective), labelled "50 TB · >10⁴ sections" → black GPU-cluster rack with yellow horizontal fan lines and server indicator dots, labelled "GPU cluster · Cellpose · flood-fill" → connectivity-matrix graph (five nodes, six edges), labelled "connectivity matrix". Bottom label: "server-side DL · not browser-scale", cross-ref "right tool named in §8 ¶2".
+- **Panel B · 384-well HCS — high-content drug screen.** Plate-shaped rectangle with a 16-column × 8-row dot grid (128 dots — simplified from 384 for legibility), labelled "384 wells · 6 ch · 4 fld" → batch-queue stack of four plate cards (`plate_01`, `plate_02`, `plate_03`, `plate_…`) at descending offsets, labelled "batch queue · CellProfiler · Cellpose" → feature-table grid with header row (well · area · int. · hit) and four data rows (A1, A2 ✓, A3, …), labelled "hit list → LIMS". Bottom label: "batch DL · feature matrix · no human in loop", cross-ref "right tool named in §8 ¶2".
+- **Panel C · ED triage < 30 s — emergency department.** Patient silhouette (circular head, torso outline) labelled "patient · cardiac ultrasound" → DL-classifier box labelled "DL classifier · calibrated · logged" with a red-bordered `FDA 510(k)` stamp inside labelled "sens/spec known", and below the classifier the chip reads "hospital EMR · logs decision" → binary investigate/discharge decision chip (green "invest." | red "disch.") beside a red-bordered 30-second timer circle. Bottom label: "calibrated · regulated · EMR-integrated", cross-ref "right tool named in §8 ¶4".
+
+### Why this is a distinct iteration kind
+
+Ninth iteration kind catalogued. Distinct from:
+- (i) body-prose promotion (evidence-gated notice → structural-commitment prose; e.g., iters 18, 19)
+- (ii) biologist-voice copy-edit (already-drafted prose re-voiced; iters 17, 23, 24, 25, 27, 29, 30, 31)
+- (iii) narrative-scaffolding prose addition (new `aside` block carrying narrative text; iters 20, 21, 22)
+- (iv) editorial-machinery scorecard synchronisation (readiness/packet/reporting/briefing; iters 13, 14, 15, 16)
+- (v) working-doc ↔ rendered-surface agreement repair (iters 26, 27)
+- (vi) engineering infrastructure (iter 28 validator)
+- (vii) bibliographic resolution (iter 32 Gate H)
+- (viii) editor-facing surface biologist-voice (iters 29, 30)
+
+This ninth kind — **narrative-scaffolding figure addition** — sits between (iii) narrative-scaffolding prose addition and regular figure-slot addition: it produces a `<figure>` element, but the figure lives inside a narrative-scaffolding `aside.nm-box`, not in the body-prose flow; its content is determined by vignettes that are already drafted inside the same box, not by new evidence; and its claim-preservation invariant is inherited from the iter-20 box-scope rule, not from the iter-23 biologist-voice rule.
+
+### Invariants preserved
+
+- **Placeholder-value span count unchanged at 187.** Thirteenth consecutive empty-claim-diff iteration (iters 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32 also met the invariant; iter 32 was the exception by design — bibliographic resolution dropped the count from 195 → 187, which is the new baseline that holds through iter 33).
+- **HTML well-formed.** 0 errors from `tools/validate_manuscript.py`.
+- **Anchor integrity.** 201 total anchors / 49 unique / 88 ids / 0 broken. New ids introduced: `box1fig`, `box1figtitle`, `box2fig`, `box2figtitle`, plus 7 SVG `<defs>` ids (`b1screenG`, `b1arrow`, `b1arrowB`, `b2sliceG`, `b2gpuG`, `b2plateG`, `b2arrow`). Zero broken cross-references.
+- **Placeholder-value-scope linter.** 0 violations. All placeholder tokens in the iter-33 banner/dd/footer descriptions are `<code>[token]</code>` inline, not `<span class="placeholder-value">`.
+- **Prose-block coverage unchanged at 25/25.** This iteration is a figure-addition, not a prose-addition. Future iteration-kind accounting should distinguish prose blocks from figure blocks in the readiness dashboard.
+
+### Gates resolved / unchanged
+
+- **No Gate resolved.** Gates D (regime-survey rows 81–200 + IRR), E (long-tail benchmark runs), F (replay-corpus scale-up), G (partner landings §§5/6/7), I (author sign-off) all unchanged.
+- **Structural scaffolding complete.** Every body section §§1–10 carries a figure (Fig 0 graphical abstract, Fig 1, Fig 1-suppl, Fig 2, Fig 3, Fig 4, Fig 5, Fig 6, Fig 7). Both narrative-scaffolding boxes now carry preview schematics. The biologist-reader's first-contact path through the paper has no figure-less surface except §9 Discussion implications (genre-design editorial voice) and §10 Availability (fixed-format statement) — where a figure would be out of genre.
+
+### What future iterations of this kind would look like
+
+- **Key Points bullet schematic (if added later).** The five-bullet Key Points aside (iter 22) is a sibling narrative-scaffolding surface to Boxes 1 and 2; a future iteration could add a compact icon-per-bullet schematic following the same three rules. Not urgent — Key Points bullets already read cleanly as text and the burgundy-palette visual treatment distinguishes them without a figure.
+- **Fig 6 schematic update when Gate G lands.** Fig 6 (collaboration) currently carries structural-commitment-only content; when the collab sprint evidence lands (Gate G), the figure's session-log-timeline panel will be drawn. That is a *regular* figure-slot resolution, not a narrative-scaffolding figure addition.
+
+---
