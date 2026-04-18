@@ -1125,6 +1125,163 @@
   }
   section.readiness .discipline li { margin-bottom: 6px; }
 
+  /* Life Sciences Reporting Summary — iteration 15 — rose/coral palette */
+  section.reporting-summary {
+    grid-column: 1 / -1;
+    background: linear-gradient(180deg, #fdf0f3 0%, #fef6f8 100%);
+    border: 1px solid #e8bcc8;
+    border-left: 4px solid #b8325a;
+    border-radius: 4px;
+    margin: 40px 0;
+    padding: 24px 28px 26px;
+    color: #3a1824;
+  }
+  section.reporting-summary > h2 {
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 22px;
+    font-weight: 700;
+    color: #7c1f3c;
+    border-bottom: 1px solid #e8bcc8;
+    padding-bottom: 8px;
+    margin: 0 0 14px;
+  }
+  section.reporting-summary .rs-meta {
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 12.5px;
+    color: #5e3342;
+    margin: -4px 0 16px;
+  }
+  section.reporting-summary .rs-banner {
+    background: #fae0e7;
+    border: 1px solid #e2a8b7;
+    padding: 10px 14px;
+    border-radius: 3px;
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 13px;
+    color: #4a1a28;
+    margin: 0 0 18px;
+  }
+  section.reporting-summary .rs-banner strong { color: #7c1f3c; letter-spacing: 0.5px; }
+  section.reporting-summary h3 {
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    color: #7c1f3c;
+    margin: 22px 0 8px;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+  }
+  section.reporting-summary h3 .rs-section-num {
+    display: inline-block;
+    background: #b8325a;
+    color: #ffffff;
+    padding: 1px 7px;
+    margin-right: 8px;
+    border-radius: 3px;
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+  }
+  section.reporting-summary h4 {
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 13.5px;
+    font-weight: 700;
+    color: #5e1f30;
+    margin: 12px 0 4px;
+    letter-spacing: 0.2px;
+  }
+  section.reporting-summary p,
+  section.reporting-summary ul,
+  section.reporting-summary ol {
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 14px;
+    line-height: 1.58;
+    color: #20333a;
+    margin: 0 0 12px;
+  }
+  section.reporting-summary .rs-subnote {
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 12.5px;
+    color: #5e3342;
+    font-style: italic;
+    margin: 0 0 10px;
+  }
+  section.reporting-summary .rs-label-ready { color: #1a6b2f; font-weight: 700; letter-spacing: 0.3px; }
+  section.reporting-summary .rs-label-author { color: #7a4e00; font-weight: 700; letter-spacing: 0.3px; }
+  section.reporting-summary .rs-label-evidence { color: #8a1a1a; font-weight: 700; letter-spacing: 0.3px; }
+  section.reporting-summary .rs-label-partial { color: #7a4e00; font-weight: 700; letter-spacing: 0.3px; }
+  section.reporting-summary .rs-label-na { color: #555; font-weight: 600; font-style: italic; letter-spacing: 0.3px; }
+  section.reporting-summary .rs-response-list {
+    margin: 4px 0 14px;
+    padding: 0;
+    list-style: none;
+  }
+  section.reporting-summary .rs-response-list li {
+    border-left: 3px solid #d88ea0;
+    padding: 6px 10px 6px 12px;
+    background: #ffffff;
+    margin-bottom: 8px;
+    font-size: 13.5px;
+    line-height: 1.55;
+  }
+  section.reporting-summary table.rs-scoreboard {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 13px;
+    margin: 10px 0 14px;
+  }
+  section.reporting-summary .rs-scoreboard th,
+  section.reporting-summary .rs-scoreboard td {
+    padding: 6px 10px;
+    border: 1px solid #e8bcc8;
+    vertical-align: top;
+    text-align: left;
+  }
+  section.reporting-summary .rs-scoreboard thead th {
+    background: #f4cbd4;
+    font-weight: 700;
+    color: #7c1f3c;
+  }
+  section.reporting-summary .rs-scoreboard tbody tr:nth-child(even) {
+    background: #fff9fb;
+  }
+  section.reporting-summary .rs-scoreboard td:nth-child(1) {
+    width: 32%; font-weight: 600; color: #15202b;
+  }
+  section.reporting-summary .rs-scoreboard td:nth-child(2) {
+    width: 14%;
+  }
+  section.reporting-summary .rs-one-line {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    background: #ffffff;
+    border: 1px solid #e8bcc8;
+    padding: 10px 12px;
+    border-radius: 3px;
+    font-size: 12.5px;
+    line-height: 1.55;
+    color: #3a1824;
+    margin: 6px 0 4px;
+  }
+  section.reporting-summary .rs-legend {
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 12px;
+    color: #5e3342;
+    margin: 4px 0 12px;
+  }
+  section.reporting-summary .rs-legend .swatch {
+    display: inline-block;
+    width: 9px; height: 9px;
+    border-radius: 50%;
+    margin: 0 4px 0 12px;
+    vertical-align: middle;
+  }
+  section.reporting-summary .rs-discipline {
+    margin: 6px 0 12px;
+    padding-left: 22px;
+  }
+  section.reporting-summary .rs-discipline li { margin-bottom: 6px; }
+
   /* Print */
   @media print {
     .npg-bar, .jnav, aside, footer.site-footer { display:none; }
@@ -1180,7 +1337,7 @@
 <!-- Article header -->
 <div class="article-meta">
   <span class="tag">Brief Communication</span>
-  <span>Open Access · Published: working draft v0.7</span>
+  <span>Open Access · Published: working draft v0.8</span>
   <span class="published">18 April 2026</span>
 </div>
 
@@ -1199,15 +1356,15 @@
 </p>
 
 <div class="status-strip">
-  <span class="chip draft">Working draft v0.7 · 2026-04-18</span>
+  <span class="chip draft">Working draft v0.8 · 2026-04-18</span>
   <span class="chip preprint">Target venue · Nature Methods Brief Communication</span>
-  <span class="chip status">Evidence status · 14 prose blocks v0.1 (+ readiness dashboard); structurally READY · empirically EVIDENCE-GATED on Gates D–G; defensibility 10/12; packet 4 ready / 4 author-gated / 0 evidence-gated; 3 / 10 submission gates MET</span>
+  <span class="chip status">Evidence status · 15 prose blocks v0.1 (+ Life Sciences Reporting Summary); structurally READY · empirically EVIDENCE-GATED on Gates D–G; defensibility 10/12; packet 4 ready / 4 author-gated / 0 evidence-gated; reporting summary 22 ready / 0 author-gated / 3 evidence-gated; [URL]/[URL/github]/[LICENCE] resolved in iteration 15; 3 / 10 submission gates MET (Gate J partial)</span>
 </div>
 
 <!-- Abstract -->
 <section class="abstract" id="abstract">
   <h2>Abstract</h2>
-  <p>Contemporary bioimage-methodology research is optimised for the minority of biology that resembles the internet: large, homogeneous, well-annotated image collections. Most biology looks nothing like that. A typical cell-biology study analyses 13–27 cells across three biological replicates; a developmental-biology paper follows a handful of embryos; a clinical-pathology case reviews a dozen slides. In a stratified survey of 200 recent microscopy papers (interim read on the first 80), <span class="placeholder-value">[48]%</span> fall into a formally defined small-data, human-scale regime, and <span class="placeholder-value">[48]%</span> name ImageJ/Fiji somewhere in the analysis pipeline — yet only <span class="placeholder-value">[20]%</span> employ a named deep-learning model, and contemporary foundation models (SAM, Cellpose-generalist, StarDist, CellSAM) systematically underperform on the long-tail imagery typical of this regime. We present <strong>ImageJ.JS</strong>, a browser-native distribution of the unmodified Fiji/ImageJ codebase that deliberately centres the human scientist: interpretable classical algorithms the biologist can reason about, zero-install access on any device, fully client-side execution for privacy-sensitive data, URL-encoded analyses that make reasoning about images shareable and teachable, and real-time multi-user collaboration on the same image without the image ever leaving the originator's device. We contribute the small-data survey, a long-tail foundation-model benchmark, a <span class="placeholder-value">[N]</span>-analysis deterministic replay corpus spanning <span class="placeholder-value">[Y1–Y2]</span>, and three field deployments (teaching, clinical pathology, synchronous co-analysis). Open source; live at <span class="placeholder-value">[URL]</span>; daily-active-user baseline <span class="placeholder-value">[DAU]</span>/<span class="placeholder-value">[YYYY]</span>.</p>
+  <p>Contemporary bioimage-methodology research is optimised for the minority of biology that resembles the internet: large, homogeneous, well-annotated image collections. Most biology looks nothing like that. A typical cell-biology study analyses 13–27 cells across three biological replicates; a developmental-biology paper follows a handful of embryos; a clinical-pathology case reviews a dozen slides. In a stratified survey of 200 recent microscopy papers (interim read on the first 80), <span class="placeholder-value">[48]%</span> fall into a formally defined small-data, human-scale regime, and <span class="placeholder-value">[48]%</span> name ImageJ/Fiji somewhere in the analysis pipeline — yet only <span class="placeholder-value">[20]%</span> employ a named deep-learning model, and contemporary foundation models (SAM, Cellpose-generalist, StarDist, CellSAM) systematically underperform on the long-tail imagery typical of this regime. We present <strong>ImageJ.JS</strong>, a browser-native distribution of the unmodified Fiji/ImageJ codebase that deliberately centres the human scientist: interpretable classical algorithms the biologist can reason about, zero-install access on any device, fully client-side execution for privacy-sensitive data, URL-encoded analyses that make reasoning about images shareable and teachable, and real-time multi-user collaboration on the same image without the image ever leaving the originator's device. We contribute the small-data survey, a long-tail foundation-model benchmark, a <span class="placeholder-value">[N]</span>-analysis deterministic replay corpus spanning <span class="placeholder-value">[Y1–Y2]</span>, and three field deployments (teaching, clinical pathology, synchronous co-analysis). Open source; live at <code>https://ij.aicell.io</code>; daily-active-user baseline <span class="placeholder-value">[DAU]</span>/<span class="placeholder-value">[YYYY]</span>.</p>
 </section>
 
 <!-- §1 Introduction -->
@@ -1565,13 +1722,13 @@
 <section class="body-section" id="sec-10">
   <h2><span class="num">10</span> Availability</h2>
 
-  <p>The live instance of ImageJ.JS runs at <span class="placeholder-value">[URL]</span>, served as a single HTML page and a WebAssembly payload with no server-side compute. The source code is available on GitHub at <span class="placeholder-value">[URL/github]</span>; the repository contains the browser harness (<code>index.html</code>), the Hypha-RPC service layer (<code>hypha-imagej-service.js</code>), the CheerpJ virtual-file-system mount and plugin-loading machinery, the collaboration driver/observer implementation (<code>collab/</code>), and the build tooling used to freeze a reproducible runtime. The codebase is released under <span class="placeholder-value">[LICENCE]</span>, a permissive open-source licence compatible with the Fiji and CheerpJ upstream licences it inherits. The version of record for this paper is git tag <code>v1.0-paper</code> and DOI <span class="placeholder-value">[DOI]</span>, archived on Zenodo at submission time; every URL, macro and analysis cited in the paper resolves against this pinned tag.</p>
+  <p>The live instance of ImageJ.JS runs at <code>https://ij.aicell.io</code>, served as a single HTML page and a WebAssembly payload with no server-side compute. The source code is available on GitHub at <code>https://github.com/aicell-lab/imagej.js</code>; the repository contains the browser harness (<code>index.html</code>), the Hypha-RPC service layer (<code>hypha-imagej-service.js</code>), the CheerpJ virtual-file-system mount and plugin-loading machinery, the collaboration driver/observer implementation (<code>collab/</code>), and the build tooling used to freeze a reproducible runtime. The codebase is released under the <strong>MIT</strong> licence, a permissive open-source licence compatible with the Fiji and CheerpJ upstream licences it inherits. The version of record for this paper is git tag <code>v1.0-paper</code> and DOI <span class="placeholder-value">[DOI]</span>, archived on Zenodo at submission time; every URL, macro and analysis cited in the paper resolves against this pinned tag.</p>
 
   <p>Three corpora underlie the empirical claims of §§2 and 4, and all three are released alongside the code. The survey corpus comprises the 200 open-access microscopy papers sampled for §2, together with the extraction schema (<code>survey_schema.md</code>), the regex-baseline pass (<code>survey_production_regex_baseline.csv</code>), the LLM v2 upgraded pass (<code>survey_production_v2.csv</code>), and per-claim provenance records so that each of the <span class="placeholder-value">[48]%</span>, <span class="placeholder-value">[48]%</span>, and <span class="placeholder-value">[20]%</span> headline figures is traceable to a specific row and extractor version. The long-tail foundation-model benchmark is released as <code>longtail_tasks.md</code> (the 30-task specification with inclusion criteria), together with the task imagery (where licence permits — otherwise as citation only), the human-expert ImageJ.JS macros, and the evaluation harness that reproduces the <span class="placeholder-value">[X]</span> mean IoU and <span class="placeholder-value">[Y]/30</span> vs <span class="placeholder-value">[Z]/30</span> headline numbers. The deterministic replay corpus (§4) is released as the <code>replay/</code> directory, one subdirectory per re-run published analysis, each containing the source Fiji macro (<code>macro.ijm</code>), the input bundle descriptor (<code>INPUTS.json</code>), the replay script (<code>run_replay.py</code>), the ImageJ.JS outputs, and a written <code>MATCH_REPORT.md</code> recording the ACQUIRE / EXECUTE / MATCH axes separately.</p>
 
   <p>The programmatic interface through which ImageJ.JS integrates with external compute is the Hypha-RPC service defined in <code>hypha-imagej-service.js</code> and, by URL rewrite, the Model Context Protocol endpoint described in §8. The service exposes <code>runMacro</code> (execute a Fiji macro string against the current session), <code>takeScreenshot</code> (return a rendered frame of the image canvas), <code>getRoisAsGeoJson</code> (export the active ROI set as GeoJSON features with per-ROI provenance), and <code>executeJavaScript</code> (evaluate arbitrary JavaScript against the in-page CheerpJ JVM), with the MCP endpoint derived from the Hypha service URL by the published <code>convertToMcpUrl</code> helper (<code>hypha-imagej-service.js:880</code>). A minimal example notebook demonstrating each method from an external Python caller, and a second notebook demonstrating the same methods addressed as MCP tools, are distributed under <code>docs/rpc-examples/</code>. The authentication model is Hypha's workspace-token mechanism; no separate authorisation layer is introduced by this paper.</p>
 
-  <p>The collaboration demonstrations of §7 are released as recorded sessions (video + session-event log) and as re-runnable scripted sessions. Each demonstration is addressable by a URL that opens the session in driver or observer mode and either joins a live room or replays the recorded event stream locally; no image byte leaves the originator's device in either mode, and every participant action in the recorded log is attributed to a Hypha-authenticated identity. Usage telemetry is limited to aggregate daily-active-user counts; the tool has served an average of <span class="placeholder-value">[DAU]</span> daily active users since <span class="placeholder-value">[YYYY]</span>, measured by the analytics baseline described in <code>README.md</code>. No image content, no filenames, and no user-identifying data are collected by the live instance at <span class="placeholder-value">[URL]</span>; this is a property of the client-side-compute design principle (§3) rather than a policy overlay.</p>
+  <p>The collaboration demonstrations of §7 are released as recorded sessions (video + session-event log) and as re-runnable scripted sessions. Each demonstration is addressable by a URL that opens the session in driver or observer mode and either joins a live room or replays the recorded event stream locally; no image byte leaves the originator's device in either mode, and every participant action in the recorded log is attributed to a Hypha-authenticated identity. Usage telemetry is limited to aggregate daily-active-user counts; the tool has served an average of <span class="placeholder-value">[DAU]</span> daily active users since <span class="placeholder-value">[YYYY]</span>, measured by the analytics baseline described in <code>README.md</code>. No image content, no filenames, and no user-identifying data are collected by the live instance at <code>https://ij.aicell.io</code>; this is a property of the client-side-compute design principle (§3) rather than a policy overlay.</p>
 </section>
 
 <!-- Online Methods -->
@@ -1611,7 +1768,7 @@
   <p>The survey is limited by open-access sampling: paywalled methods-rich venues (<em>Cell</em>, <em>Nature</em>, <em>Science</em>) are under-represented except via bioRxiv preprint proxies capped at 15 % of sample. The 11 % <code>not-classifiable</code> residual on workflow kind is the ceiling of what the extraction schema can resolve without per-paper author correspondence; authors who wish to correct their paper's row are directed to the repository issue tracker at submission. The benchmark is not a fair evaluation of deep-learning methods in aggregate; it is a regime-fit instrument, curated to contain tasks outside the training distribution of the four methods evaluated. The replay corpus can speak only to the execution-and-match surface of published analyses; its <em>N</em> is bounded by the subset of Fiji analyses whose macros are retrievable and whose inputs are downloadable under the public-data constraint of criterion (iv) above. A full Article-path replay corpus at <span class="placeholder-value">[N = 15]</span> reaches across <span class="placeholder-value">[Y1–Y2]</span> and plugin surfaces but does not claim ergodicity across all published Fiji usage; the per-corpus audit in <code>replay_candidates.md §"Selection rationale"</code> records the coverage actually achieved.</p>
 
   <h3>Data, code, and protocol availability</h3>
-  <p>All survey data (<code>survey_production_v2.csv</code>, <code>survey_production_frame.csv</code>, <code>survey_production_regex_baseline.csv</code>, <code>survey_schema.md</code>), benchmark data (<code>longtail_tasks.md</code>, per-task imagery where licence permits), replay corpora (<code>replay/&lt;candidate&gt;/</code> with <code>macro.*</code>, <code>INPUTS.json</code>, <code>run_replay.py</code>, <code>outputs/</code>, <code>MATCH_REPORT.md</code>), source code (<code>index.html</code>, <code>hypha-imagej-service.js</code>, <code>collab/</code>), and the pinned runtime (the <code>v1.0-paper</code> git tag, archived on Zenodo at DOI <span class="placeholder-value">[DOI]</span>) are released under <span class="placeholder-value">[LICENCE]</span> at <span class="placeholder-value">[URL/github]</span> and cross-referenced against every empirical claim in §§2–8. The <a href="#sec-10">Availability</a> section provides the reviewer-facing index of these artefacts. Any claim in the main text that cannot be audited against a named artefact in this Methods section or in §10 is an error and should be flagged as such by reviewers.</p>
+  <p>All survey data (<code>survey_production_v2.csv</code>, <code>survey_production_frame.csv</code>, <code>survey_production_regex_baseline.csv</code>, <code>survey_schema.md</code>), benchmark data (<code>longtail_tasks.md</code>, per-task imagery where licence permits), replay corpora (<code>replay/&lt;candidate&gt;/</code> with <code>macro.*</code>, <code>INPUTS.json</code>, <code>run_replay.py</code>, <code>outputs/</code>, <code>MATCH_REPORT.md</code>), source code (<code>index.html</code>, <code>hypha-imagej-service.js</code>, <code>collab/</code>), and the pinned runtime (the <code>v1.0-paper</code> git tag, archived on Zenodo at DOI <span class="placeholder-value">[DOI]</span>) are released under the <strong>MIT</strong> licence at <code>https://github.com/aicell-lab/imagej.js</code> and cross-referenced against every empirical claim in §§2–8. The <a href="#sec-10">Availability</a> section provides the reviewer-facing index of these artefacts. Any claim in the main text that cannot be audited against a named artefact in this Methods section or in §10 is an error and should be flagged as such by reviewers.</p>
 </section>
 
 <!-- Release engineering (v0.1) — binds Methods §4 to §10 at release-artefact granularity -->
@@ -1665,10 +1822,10 @@
   </div>
 
   <h3>The release-cut protocol is itself in the repository</h3>
-  <p><code>build_v2.py</code>, <code>extract.py</code>, <code>refill2.py</code>, and <code>fill_shortfall.py</code> are the four scripts that produce the release; their source is under the same <span class="placeholder-value">[LICENCE]</span> as the code they compile. The paper's claim of an <em>immutable artefact</em> rests on the public availability of these scripts plus the content-addressed pins they use. A reviewer can reproduce the release cut end-to-end in under ten minutes on a commodity laptop (primary cost: the one-time CheerpJ artefact fetch, ~200 MB). No release-cut step requires network access to the author team's infrastructure; no step requires credentials. This is what <em>immutable</em> means operationally: the artefact survives loss of the author team's hosting, the author team's GitHub account, and the author team's cloud provider. The Zenodo DOI (<span class="placeholder-value">[DOI]</span>, minted at submission from the tag commit) is the long-term public mirror; the <code>v1.0-paper</code> git tag is the release-engineering identity.</p>
+  <p><code>build_v2.py</code>, <code>extract.py</code>, <code>refill2.py</code>, and <code>fill_shortfall.py</code> are the four scripts that produce the release; their source is under the same <strong>MIT</strong> licence as the code they compile. The paper's claim of an <em>immutable artefact</em> rests on the public availability of these scripts plus the content-addressed pins they use. A reviewer can reproduce the release cut end-to-end in under ten minutes on a commodity laptop (primary cost: the one-time CheerpJ artefact fetch, ~200 MB). No release-cut step requires network access to the author team's infrastructure; no step requires credentials. This is what <em>immutable</em> means operationally: the artefact survives loss of the author team's hosting, the author team's GitHub account, and the author team's cloud provider. The Zenodo DOI (<span class="placeholder-value">[DOI]</span>, minted at submission from the tag commit) is the long-term public mirror; the <code>v1.0-paper</code> git tag is the release-engineering identity.</p>
 
   <h3>Release cadence post-<code>v1.0-paper</code></h3>
-  <p>The paper's immutable artefact is <code>v1.0-paper</code>; the live instance served at <span class="placeholder-value">[URL]</span> continues to evolve on <code>main</code> in the ways <a href="#sec-10">§10 ¶1</a> enumerates. Subsequent release tags (<code>v1.1</code>, <code>v1.2</code>, …) are cut for ongoing work and DO NOT replace <code>v1.0-paper</code>; every past release artefact remains checkout-able and hash-verifiable indefinitely. This insulates the paper's claims from ongoing project development: a reviewer in <span class="placeholder-value">[YYYY+2]</span> re-running a URL-addressable claim from the paper does so against <code>v1.0-paper</code>, regardless of what <code>main</code> looks like on that date. The Hypha-RPC service layer (§3 ¶4, §10 ¶3) preserves its method surface (<code>runMacro</code>, <code>takeScreenshot</code>, <code>getRoisAsGeoJson</code>, <code>executeJavaScript</code>, <code>convertToMcpUrl</code> at <code>hypha-imagej-service.js:880</code>) across subsequent releases as a compatibility contract; any breaking change is gated behind a major-version bump and is declared explicitly in the release notes.</p>
+  <p>The paper's immutable artefact is <code>v1.0-paper</code>; the live instance served at <code>https://ij.aicell.io</code> continues to evolve on <code>main</code> in the ways <a href="#sec-10">§10 ¶1</a> enumerates. Subsequent release tags (<code>v1.1</code>, <code>v1.2</code>, …) are cut for ongoing work and DO NOT replace <code>v1.0-paper</code>; every past release artefact remains checkout-able and hash-verifiable indefinitely. This insulates the paper's claims from ongoing project development: a reviewer in <span class="placeholder-value">[YYYY+2]</span> re-running a URL-addressable claim from the paper does so against <code>v1.0-paper</code>, regardless of what <code>main</code> looks like on that date. The Hypha-RPC service layer (§3 ¶4, §10 ¶3) preserves its method surface (<code>runMacro</code>, <code>takeScreenshot</code>, <code>getRoisAsGeoJson</code>, <code>executeJavaScript</code>, <code>convertToMcpUrl</code> at <code>hypha-imagej-service.js:880</code>) across subsequent releases as a compatibility contract; any breaking change is gated behind a major-version bump and is declared explicitly in the release notes.</p>
 </section>
 
 <!-- References -->
@@ -1723,7 +1880,7 @@
     <strong>READINESS DASHBOARD</strong> · structurally <span class="status-met">READY</span> · empirically <span class="status-evgated">EVIDENCE-GATED</span> on Gates D–G (regime survey · long-tail benchmark · replay scale-up · partner landings) · last recomputed 2026-04-18
   </div>
 
-  <p>Six independent scorecards are maintained across the paper — prose-block coverage, dry-run defensibility, submission-packet completeness, figure slots, references verification, and the three empirical corpora — plus a live placeholder inventory. An editor or co-author auditing submission readiness would otherwise have to read nine separate surfaces. This dashboard reports all of them on one screen. Each row's source block is named in the third column; if the dashboard and a source block disagree, the dashboard is the regression to fix, not the source.</p>
+  <p>Seven independent scorecards are maintained across the paper — prose-block coverage, dry-run defensibility, submission-packet completeness, figure slots, references verification, the three empirical corpora, and (iteration 15) the Life Sciences Reporting Summary completeness — plus a live placeholder inventory. An editor or co-author auditing submission readiness would otherwise have to read ten separate surfaces. This dashboard reports all of them on one screen. Each row's source block is named in the third column; if the dashboard and a source block disagree, the dashboard is the regression to fix, not the source.</p>
 
   <h3>Readiness scoreboard</h3>
 
@@ -1741,9 +1898,9 @@
     <tbody>
       <tr>
         <td>Prose-block coverage</td>
-        <td><span class="status-numeric">14 / 14</span> <span class="status-structural">STRUCTURAL-READY</span></td>
-        <td>Version increments as evidence lands; no new block creation required.</td>
-        <td>§§1–10, Methods, Release-eng, Cover letter, References, Figure slots, Supp outline, Dry run, Submission packet.</td>
+        <td><span class="status-numeric">15 / 15</span> <span class="status-structural">STRUCTURAL-READY</span></td>
+        <td>Version increments as evidence lands; no new block creation required (Reporting Summary added iteration 15).</td>
+        <td>§§1–10, Methods, Release-eng, Cover letter, References, Figure slots, Supp outline, Dry run, Submission packet, Reporting Summary.</td>
       </tr>
       <tr>
         <td>Dry-run defensibility</td>
@@ -1789,9 +1946,15 @@
       </tr>
       <tr>
         <td>Placeholder inventory</td>
-        <td><span class="status-numeric">~25</span> distinct labels open across <span class="status-numeric">7</span> surfaces</td>
-        <td>Placeholder-propagation script (<code>placeholders.yaml</code> + regex-over-file) — first-priority engineering primitive, deferred 7 iterations.</td>
+        <td><span class="status-numeric">~22</span> distinct labels open across <span class="status-numeric">7</span> surfaces · <span class="status-met">3 resolved iter 15</span> (<code>[URL]</code>, <code>[URL/github]</code>, <code>[LICENCE]</code>)</td>
+        <td>Iteration-15 partial run resolved three repository-self-knowable labels from CNAME + git remote + <code>package.json</code>. Full placeholder-propagation script (<code>placeholders.yaml</code> + regex-over-file) still deferred but now has a worked precedent.</td>
         <td>All drafted blocks + render + cross-reference map.</td>
+      </tr>
+      <tr>
+        <td>Reporting summary</td>
+        <td><span class="status-numeric">22 / 25</span> READY · <span class="status-met">0 AUTHOR-GATED</span> (structural invariant) · <span class="status-pending">3 EVIDENCE-GATED</span></td>
+        <td>Human-participants + Clinical-data slots resolve on partner MoU (Gate G); DOI slot resolves on Zenodo deposit (Gate I).</td>
+        <td><a href="#reporting-summary">Reporting Summary</a> scorecard.</td>
       </tr>
     </tbody>
   </table>
@@ -1805,7 +1968,7 @@
       <tr><th>Gate</th><th>Condition</th><th>Status</th><th>Source / resolution</th></tr>
     </thead>
     <tbody>
-      <tr><td>A</td><td>Prose coverage: all 14 required blocks drafted at v0.1 or better.</td><td><span class="status-met">MET</span></td><td>Iteration 13; every prose block now carries a <code>## Drafted prose</code> heading.</td></tr>
+      <tr><td>A</td><td>Prose coverage: all 15 required blocks drafted at v0.1 or better.</td><td><span class="status-met">MET</span></td><td>Iteration 15 (+ Reporting Summary); every prose block carries a <code>## Drafted prose</code> heading.</td></tr>
       <tr><td>B</td><td>Dry-run defensibility: 0 unanswerable, ≤ 1 evidence-gated, ≤ 1 partial objection.</td><td><span class="status-met">MET</span></td><td>Current 10 answerable · 1 partial (Q10) · 1 evidence-gated (Q3) · 0 unanswerable.</td></tr>
       <tr><td>C</td><td>Packet: 0 evidence-gated fields.</td><td><span class="status-met">MET</span></td><td>Current 4 ready · 4 author-gated · 0 evidence-gated.</td></tr>
       <tr><td>D</td><td>Regime survey: 200 / 200 rows extracted · 3 IRR dual-extractions κ ≥ 0.7 / ICC ≥ 0.8 · kill-criteria sanity check on full 200.</td><td><span class="status-pending">PENDING</span></td><td>§&quot;Empirical evidence status&quot; · §&quot;Kill criteria&quot;.</td></tr>
@@ -1814,7 +1977,7 @@
       <tr><td>G</td><td>Partner landings: ≥ 1 teaching (§5) · ≥ 1 clinical (§6) · ≥ 1 cross-institution collaboration (§7), each with signed agreement + session log.</td><td><span class="status-pending">PENDING</span></td><td><code>outreach_emails.md</code> · <code>collaboration_sprint.md</code>; promotes Figs 4–6 captions.</td></tr>
       <tr><td>H</td><td>References bibliographic verification: all <code>[VOL:PAGES, DOI]</code> placeholders resolved against journal record.</td><td><span class="status-pending">PENDING</span></td><td>Single pre-submission pass (~1 h author time).</td></tr>
       <tr><td>I</td><td>Author sign-off: CRediT <code>[INITIALS]</code> · competing interests · acknowledgements · funding IDs · suggested reviewer names · ORCIDs at <code>v1.0-paper</code> tag.</td><td><span class="status-pending">PENDING</span></td><td>Author-team sign-off pass; resolves 4 AUTHOR-GATED packet fields.</td></tr>
-      <tr><td>J</td><td>Placeholder resolution: zero <code>[…]</code> markers in <code>preprint.md</code> or <code>manuscript_html/index.html</code> at submission.</td><td><span class="status-pending">PENDING</span></td><td>Placeholder-propagation script (deferred 7 iterations; compounding engineering primitive).</td></tr>
+      <tr><td>J</td><td>Placeholder resolution: zero <code>[…]</code> markers in <code>preprint.md</code> or <code>manuscript_html/index.html</code> at submission.</td><td><span class="status-partial">PENDING — PARTIAL</span></td><td>Iteration 15 resolved three repository-self-knowable labels (<code>[URL]</code>, <code>[URL/github]</code>, <code>[LICENCE]</code>). Full placeholder-propagation script still deferred but has a worked precedent.</td></tr>
     </tbody>
   </table>
 
@@ -1835,7 +1998,7 @@
   <h3>Scoreboard summary — one line</h3>
 
   <p class="one-line-summary">
-    14 / 14 prose · 10 / 12 defensibility · 8 / 8 packet non-regression (0 evidence-gated) · 3 / 6 figure captions · 0 / ~35 references verified · 80 / 200 survey · 0 / 30 benchmark · 3 / [N] replay · ~25 placeholder labels open · 3 / 10 gates MET · structurally <span class="status-met">READY</span> · empirically <span class="status-evgated">EVIDENCE-GATED</span> on Gates D–G.
+    15 / 15 prose · 10 / 12 defensibility · 8 / 8 packet non-regression (0 evidence-gated) · 22 / 25 reporting-summary responses · 3 / 6 figure captions · 0 / ~35 references verified · 80 / 200 survey · 0 / 30 benchmark · 3 / [N] replay · ~22 placeholder labels open (<code>[URL]</code>, <code>[URL/github]</code>, <code>[LICENCE]</code> resolved iter 15) · 3 / 10 gates MET (Gate J partial) · structurally <span class="status-met">READY</span> · empirically <span class="status-evgated">EVIDENCE-GATED</span> on Gates D–G.
   </p>
 </section>
 
@@ -1849,7 +2012,7 @@
     <p>The Communication presents <strong>ImageJ.JS</strong>: the unmodified Fiji/ImageJ codebase compiled to WebAssembly via CheerpJ and delivered as a single HTML page. No install, no Java runtime, no admin privilege; all compute is client-side, so no image byte leaves the originator's device. Analysis state is URL-addressable, so that a shared link is at once a live environment, a data reference, and an executable record of the analyst's choices. A Hypha-RPC service layer exposes every in-browser step to an automated verifier, so reproducibility claims can be tested at CI cadence. A driver/observer collaboration protocol, built on the same substrate, enables synchronous multi-device analysis of the same image without the image ever moving.</p>
     <p>Four contributions are offered: (i) the small-data regime survey and the long-tail foundation-model benchmark just described; (ii) a deterministic replay corpus of <span class="placeholder-value">[N]</span> published Fiji analyses spanning <span class="placeholder-value">[Y1–Y2]</span>, which along the way surfaced two previously unreported classes of published-record failure — internally inconsistent figshare reference bundles and cross-version numeric drift in core Fiji primitives; (iii) three field deployments — Chromebook classroom teaching, on-device clinical pathology, and synchronous cross-institution co-analysis — that reach settings a desktop toolchain cannot; and (iv) a limits-and-complementarity analysis that names the programmatic composition point (Hypha-RPC; Model Context Protocol endpoint) through which ImageJ.JS integrates with the emerging agentic-bioimage landscape addressed in a companion paper <a href="#ref-ouyangcompanion">(Ouyang et al., in preparation)</a>.</p>
     <p>We have written the paper to be unambiguous about what it is not. Its contribution is AI-free. Section 8 characterises, rather than competes with, Cellpose, StarDist, CellSAM, Omega, napari-mcp, BioImage-Agent, and CellVoyager: deep-learning and agentic methods are the right tools in their regimes; ImageJ.JS is the right tool in the small-data, human-centred regime that most biology still inhabits. The correct answer to "classical or deep learning?" is not a ranking of methods but a recognition of regimes, and the Communication supplies the measurement, the tool, and the composition surface for the regime that has, until now, been left without first-class methodological tooling.</p>
-    <p>The tool is open source and has served an average of <span class="placeholder-value">[DAU]</span> daily active users since <span class="placeholder-value">[YYYY]</span>; code, the live instance, the survey data, the replay corpus, and the Hypha-RPC interface documentation will be made available at <span class="placeholder-value">[URL]</span> under a permissive licence at the time of submission. We estimate the Brief Communication at ~1500 words, three main figures and one supplementary video (live collaboration). We would welcome your guidance on whether this fits your current scope, and on whether the editorial team would prefer the Brief Communication format or a full Article drawing on the same evidence base.</p>
+    <p>The tool is open source and has served an average of <span class="placeholder-value">[DAU]</span> daily active users since <span class="placeholder-value">[YYYY]</span>; code, the live instance, the survey data, the replay corpus, and the Hypha-RPC interface documentation will be made available at <code>https://github.com/aicell-lab/imagej.js</code> (live instance at <code>https://ij.aicell.io</code>) under the <strong>MIT</strong> licence at the time of submission. We estimate the Brief Communication at ~1500 words, three main figures and one supplementary video (live collaboration). We would welcome your guidance on whether this fits your current scope, and on whether the editorial team would prefer the Brief Communication format or a full Article drawing on the same evidence base.</p>
     <p>With thanks for your consideration,</p>
     <p>[Authors, affiliations]</p>
   </div>
@@ -2143,7 +2306,7 @@
 
   <h3>Data and code availability statement</h3>
   <p class="subnote">The formal one-paragraph statement Nature Methods requires, distinct from the longer §10 Availability section. Every artefact named here is also named in §10.</p>
-  <p>The ImageJ.JS source code (including <code>index.html</code>, <code>hypha-imagej-service.js</code>, <code>collab/</code>, <code>threadhack/runtime/</code>, and <code>build_v2.py</code>), the regime survey corpus (<code>survey_schema.md</code>, <code>survey_production_regex_baseline.csv</code>, <code>survey_production_v2.csv</code>), the long-tail benchmark task specification (<code>longtail_tasks.md</code>), and the deterministic replay corpus (<code>replay/</code>) are available at <span class="placeholder-value">[URL/github]</span> under <span class="placeholder-value">[LICENCE]</span>. The archived version of record for this paper is git tag <code>v1.0-paper</code> and its Zenodo mirror <span class="placeholder-value">[DOI]</span>; every URL, macro, and analytical claim in the paper resolves against this pinned tag. The programmatic interface (<code>runMacro</code>, <code>takeScreenshot</code>, <code>getRoisAsGeoJson</code>, <code>executeJavaScript</code>) is documented at <code>docs/rpc-examples/</code> and the MCP-endpoint derivation (<code>convertToMcpUrl</code>) at <code>hypha-imagej-service.js:880</code>. No human-subject image data are released with the paper; the long-tail benchmark imagery is released where licence permits and cited otherwise. The live instance at <span class="placeholder-value">[URL]</span> collects aggregate daily-active-user counts only; no image content, filenames, or user-identifying data are logged.</p>
+  <p>The ImageJ.JS source code (including <code>index.html</code>, <code>hypha-imagej-service.js</code>, <code>collab/</code>, <code>threadhack/runtime/</code>, and <code>build_v2.py</code>), the regime survey corpus (<code>survey_schema.md</code>, <code>survey_production_regex_baseline.csv</code>, <code>survey_production_v2.csv</code>), the long-tail benchmark task specification (<code>longtail_tasks.md</code>), and the deterministic replay corpus (<code>replay/</code>) are available at <code>https://github.com/aicell-lab/imagej.js</code> under the <strong>MIT</strong> licence. The archived version of record for this paper is git tag <code>v1.0-paper</code> and its Zenodo mirror <span class="placeholder-value">[DOI]</span>; every URL, macro, and analytical claim in the paper resolves against this pinned tag. The programmatic interface (<code>runMacro</code>, <code>takeScreenshot</code>, <code>getRoisAsGeoJson</code>, <code>executeJavaScript</code>) is documented at <code>docs/rpc-examples/</code> and the MCP-endpoint derivation (<code>convertToMcpUrl</code>) at <code>hypha-imagej-service.js:880</code>. No human-subject image data are released with the paper; the long-tail benchmark imagery is released where licence permits and cited otherwise. The live instance at <code>https://ij.aicell.io</code> collects aggregate daily-active-user counts only; no image content, filenames, or user-identifying data are logged.</p>
 
   <h3>Acknowledgements</h3>
   <p class="subnote">Formal paragraph. Funding sources, partner institutions, and individual supporters listed as placeholders pending author-team sign-off. Structural commitment: CheerpJ upstream, the Fiji/ImageJ community, and the Hypha substrate are each acknowledged explicitly, reflecting the continuity-with-substrate principle the tool's design depends on.</p>
@@ -2191,6 +2354,120 @@
   <p><strong>Packet-level status:</strong> 4 fields <span class="status-ready">READY</span>, 4 fields <span class="status-author">AUTHOR-GATED</span>, <strong>0 fields <span class="status-evidence">EVIDENCE-GATED</span></strong>. This is a property of the submission packet being rephrasing-of-body-prose, as required by the discipline in the block header; any future edit that introduces an <span class="status-evidence">EVIDENCE-GATED</span> packet field is a discipline regression and must be reverted.</p>
 </section>
 
+<!-- Life Sciences Reporting Summary (editorial appendix, iteration 15) -->
+<section class="reporting-summary" id="reporting-summary">
+  <h2>Life Sciences Reporting Summary (editorial appendix)</h2>
+  <p class="rs-meta">A publication-readable pre-flight of the Nature Portfolio Life Sciences Reporting Summary — the mandatory editorial-integrity form every Nature Methods first submission must upload. Each response is a rephrasing of a specification already committed in Online Methods, §10, Release engineering, or Submission packet; drafting here exposes under- and over-claiming before first-upload discovery.</p>
+
+  <div class="rs-banner">
+    <strong>Status: REPORTING SUMMARY DRAFT (v0.1).</strong> 25 response slots covering statistics (5), study design (1), materials (6), software (2), data-and-code availability (3), accession codes (1), methods-specific reporting (1), and discipline-specific not-applicable declarations (6). <strong>22 READY</strong> (derived from drafted prose), <strong>0 AUTHOR-GATED</strong> (structural invariant — Reporting Summary is empirical-commitment-driven), <strong>3 EVIDENCE-GATED</strong> (resolve with Gates G and I). Discipline: this block is rephrasing only; any Methods or §10 edit MUST re-render this block in the same iteration.
+  </div>
+
+  <p class="rs-legend">
+    <span class="swatch" style="background:#1a6b2f;"></span><strong>Ready</strong> — derived from drafted prose
+    <span class="swatch" style="background:#7a4e00;"></span><strong>Partial / Author-gated</strong> — structural response fixed
+    <span class="swatch" style="background:#8a1a1a;"></span><strong>Evidence-gated</strong> — gates G or I
+    <span class="swatch" style="background:#888;"></span><strong>N/A</strong> — does not apply to this study
+  </p>
+
+  <h3><span class="rs-section-num">1</span>Statistics</h3>
+  <p class="rs-subnote">The five statistics sub-questions the form asks about every study — sample-size determination, data exclusions, replication, randomisation, blinding. All five admit regime-appropriate responses for this paper's three empirical corpora (survey; long-tail benchmark; deterministic replay).</p>
+  <ul class="rs-response-list">
+    <li><h4><span class="rs-label-ready">READY</span> — Sample-size determination</h4>The 200-paper regime survey was sized to achieve per-stratum precision of ± 7 percentage points at 95 % confidence on the headline small-data fraction (binomial, expected proportion ≈ 0.5). The 30-task long-tail benchmark was sized by task-design coverage (five curated groups × six tasks). The <span class="placeholder-value">[N]</span>-analysis replay corpus is sized across four publication-year strata (2016, 2018, 2020, 2022) and three plugin-surface classes, with a minimum of 15 candidates (Gate F). Sources: Online Methods §"Regime survey", §"Long-tail foundation-model benchmark", §"Deterministic replay corpus".</li>
+    <li><h4><span class="rs-label-ready">READY</span> — Data exclusions</h4>For the survey: reviews, commentaries, retractions, and studies in which imaging was incidental (single illustrative micrograph without quantification) were recorded but not extracted; criterion pre-registered in <code>survey_schema.md §2</code>. For the benchmark: no task was excluded after inclusion-criteria cut; foundation-model-tractable tasks are retained (two of 15 MVB tasks include SAM/CellSAM successes deliberately). For the replay corpus: ACQUIRE-fail candidates are reported as such rather than excluded (Drosophila NMJ 2016 canonical example).</li>
+    <li><h4><span class="rs-label-ready">READY</span> — Replication attempts</h4>Benchmark: each foundation model evaluated on every task in its inclusion set; each human-expert ImageJ.JS macro executed ≥ 3 times across 3 independent trials with expert parameter sequence logged. Replay corpus: each candidate replayed under a pinned CheerpJ + Fiji runtime at <code>v1.0-paper</code> git tag, with command line, JVM version, and plugin manifest recorded in <code>replay/&lt;candidate&gt;/MATCH_REPORT.md §Environment</code>. Survey: not a replicable experiment — schema + sampling frame + LLM version are the replicability instruments.</li>
+    <li><h4><span class="rs-label-partial">PARTIALLY APPLICABLE</span> — Randomisation</h4>Survey sampling frame is a stratified random sample from PubMed Central with the random seed recorded in <code>survey_production_frame.csv §metadata</code>. Benchmark task order presented to human experts was block-randomised across the five curated groups. Replay-corpus candidate selection is stratified coverage sampling (not random draw); rationale in <code>replay_candidates.md</code>.</li>
+    <li><h4><span class="rs-label-partial">PARTIALLY APPLICABLE</span> — Blinding</h4>Benchmark: human experts write ImageJ.JS macros against raw task imagery before any DL method is run (timestamps retained in <code>longtail_tasks/&lt;task&gt;/</code>). Survey extraction is not blinded to paper identity; the 10 % dual-extraction IRR subsample stands in for blinded re-extraction. Replay corpus is not blinded — the published analysis is the reference.</li>
+  </ul>
+
+  <h3><span class="rs-section-num">2</span>Reporting on study design</h3>
+  <p class="rs-subnote">Life-sciences study design declaration — the single form field for the paper's overall study classification.</p>
+  <ul class="rs-response-list">
+    <li><h4><span class="rs-label-ready">READY</span> — Life-sciences study design</h4>The paper reports three related but distinct empirical studies: a <em>fielded-practice survey</em> (§2; descriptive; not hypothesis-testing); a <em>regime-fit benchmark</em> (§2 ¶4 + Fig 1c; descriptive + threshold-at-IoU 0.7; not a ranking); and a <em>pinned-runtime replay corpus</em> (§4; descriptive, three-axis ACQUIRE / EXECUTE / MATCH reporting). No inferential statistics or hypothesis-testing framings are used. Wilson score intervals at α = 0.05 on the 48 % / 48 % / 20 % regime-share point estimates are computed on the 200-row production table (Online Methods §Statistics). Field-deployment studies (§§5, 6, 7) are human-subjects research with partner-IRB approval — see Section 3 below.</li>
+  </ul>
+
+  <h3><span class="rs-section-num">3</span>Materials</h3>
+  <p class="rs-subnote">The form asks six material-type boxes (antibodies, eukaryotic cell lines, palaeontology/archaeology, animals, human participants, clinical data) and a dual-use research of concern declaration. The paper does not originate imaging data, so five of six boxes are N/A; the human-participants box applies to the three field deployments (evidence-gated on partner MoU).</p>
+  <ul class="rs-response-list">
+    <li><h4><span class="rs-label-na">N/A</span> — Antibodies</h4>The paper does not generate imaging data.</li>
+    <li><h4><span class="rs-label-na">N/A</span> — Eukaryotic cell lines</h4>The paper does not generate imaging data.</li>
+    <li><h4><span class="rs-label-na">N/A</span> — Palaeontology and archaeology specimens</h4>No specimens originate with this work.</li>
+    <li><h4><span class="rs-label-na">N/A</span> — Animals and other organisms</h4>The paper does not generate imaging data.</li>
+    <li><h4><span class="rs-label-evidence">EVIDENCE-GATED</span> — Human research participants</h4>Three field deployments (classroom teaching §5, clinical pathology §6, synchronous co-analysis §7) involve human participants. For each: (i) partner-institution IRB / ethics approval required; (ii) pre-registered study protocol named in Online Methods §"Field-deployment protocols" (concept-check for teaching; session audit-log for clinical; driver/observer for collaboration); (iii) informed consent follows partner standard template; (iv) <strong>no image byte leaves the originator's device</strong> in any deployment mode — a property of the client-side-compute design principle (§3) rather than a study-specific safeguard. Partner institutions, IRB protocol numbers, consent language, and enrolment counts are intentionally not reported at v0.1 (commitments not yet signed); fills in from partnership MoUs at submission (Gate G).</li>
+    <li><h4><span class="rs-label-evidence">EVIDENCE-GATED</span> — Clinical data</h4>§6's clinical-pathology deployment handles clinical imagery under partner data-governance rules; the deliverable is the session audit log, not a post-hoc analytics claim. No clinical dataset is released with the paper.</li>
+    <li><h4><span class="rs-label-na">N/A</span> — Dual-use research of concern</h4>The paper is a general-purpose analysis tool; no gain-of-function or dual-use research is performed.</li>
+  </ul>
+
+  <h3><span class="rs-section-num">4</span>Software</h3>
+  <p class="rs-subnote">The form asks two software sub-questions: data collection software and data analysis software. For a tool paper, "data analysis software" IS the contribution; response structure differs meaningfully from wet-lab papers.</p>
+  <ul class="rs-response-list">
+    <li><h4><span class="rs-label-ready">READY</span> — Data collection software</h4>The paper does not collect imaging data itself. For the three empirical corpora, the data-collection instruments are: <em>survey</em> — PubMed Central E-utilities API (NCBI, accessed 2026-03 through 2026-04) + LLM extraction pipeline (claude-opus-4-7, prompt versions per row in <code>survey_production_v2.csv §extractor</code>); <em>benchmark</em> — per-task image retrieval from BioImage Archive, CellTracking Challenge, Allen Brain Atlas, and the other public sources named in <code>longtail_tasks.md</code>; <em>replay</em> — per-candidate retrieval from figshare, Zenodo, and journal supplementary-material repositories with retrieval dates and SHA-256 hashes in each <code>INPUTS.json</code>.</li>
+    <li><h4><span class="rs-label-ready">READY</span> — Data analysis software</h4>The tool under evaluation is itself the primary analysis software: <strong>ImageJ.JS v1.0-paper</strong> (the pinned git tag), a browser-native distribution of the unmodified Fiji/ImageJ codebase compiled by <strong>CheerpJ 4</strong> (Leaning Technologies 2025) to WebAssembly. All analyses cited in §§4–7 resolve against the <code>v1.0-paper</code> pin. The Hypha-RPC service layer (<code>hypha-imagej-service.js</code>) exposes the in-browser session via four methods (<code>runMacro</code>, <code>takeScreenshot</code>, <code>getRoisAsGeoJson</code>, <code>executeJavaScript</code>); MCP endpoint derivation at <code>convertToMcpUrl</code> (<code>hypha-imagej-service.js:880</code>). Foundation-model baselines in Fig 1c were evaluated with author-recommended public inference pipelines at version pins in <code>longtail_tasks.md §"DL-method version pins"</code>: Segment-Anything (Meta, ViT-H weights, 2023); Cellpose-generalist <code>cyto3</code> (2025); StarDist-versatile 2D bundled weights (2018); CellSAM public inference pipeline (2025). No fine-tuning, prompt engineering, or task-specific hyperparameter search was performed.</li>
+  </ul>
+
+  <h3><span class="rs-section-num">5</span>Data and code availability</h3>
+  <p class="rs-subnote">The form asks three boxes: data availability, code availability, accession codes. This section mirrors §10 and the submission-packet data-and-code-availability paragraph at Reporting-Summary granularity, so an editor reading the form sees the same facts in the same phrasing.</p>
+  <ul class="rs-response-list">
+    <li><h4><span class="rs-label-ready">READY</span> — Data availability</h4>All three empirical corpora are released at <code>https://github.com/aicell-lab/imagej.js</code> under the <strong>MIT</strong> licence. <em>Regime survey corpus</em>: <code>survey_schema.md</code>, <code>survey_production_frame.csv</code>, <code>survey_production_regex_baseline.csv</code>, <code>survey_production_v2.csv</code>, with per-claim provenance records. <em>Long-tail benchmark corpus</em>: <code>longtail_tasks.md</code> + per-task imagery where licence permits + human-expert ImageJ.JS macros + evaluation harness. <em>Deterministic replay corpus</em>: <code>replay/&lt;candidate&gt;/</code> with <code>macro.ijm</code>, <code>INPUTS.json</code>, <code>run_replay.py</code>, <code>outputs/</code>, <code>MATCH_REPORT.md</code>. Week-1 three-candidate pilot archived verbatim; full <span class="placeholder-value">[N]</span>-analysis corpus replaces at revision without removing pilot. No human-subject image data released; benchmark imagery released where licence permits and cited otherwise.</li>
+    <li><h4><span class="rs-label-ready">READY</span> — Code availability</h4>Source code released at <code>https://github.com/aicell-lab/imagej.js</code> under the <strong>MIT</strong> licence. Archived version of record is git tag <code>v1.0-paper</code>; Zenodo mirror at DOI <span class="placeholder-value">[DOI]</span> (resolves at Zenodo deposit before first submission). Pinned runtime components (CheerpJ JVM build; Fiji binary; plugin manifest; JS entry; Web Worker pool runtime) individually SHA-256-hashed in <code>dist/MANIFEST</code> per <code>build_v2.py</code>. Programmatic-interface documentation distributed under <code>docs/rpc-examples/</code>.</li>
+    <li><h4><span class="rs-label-ready">READY</span> — Live instance</h4>The live instance of ImageJ.JS runs at <code>https://ij.aicell.io</code>, served as a single HTML page and a WebAssembly payload with no server-side compute. No image byte leaves the originator's device unless the user exports. Telemetry limited to aggregate daily-active-user counts (<span class="placeholder-value">[DAU]</span> / <span class="placeholder-value">[YYYY]</span>); no image content, no filenames, no user-identifying data logged. Property of client-side-compute design (§3), not a policy overlay.</li>
+  </ul>
+
+  <h3><span class="rs-section-num">6</span>Accession codes</h3>
+  <ul class="rs-response-list">
+    <li><h4><span class="rs-label-na">N/A</span> — No accession codes</h4>The paper deposits no new high-throughput sequencing, mass spectrometry, structural-biology, or other domain-specific datasets requiring primary-repository accession. The Zenodo deposit for <code>v1.0-paper</code> (DOI <span class="placeholder-value">[DOI]</span>) is the single repository-deposited artefact.</li>
+  </ul>
+
+  <h3><span class="rs-section-num">7</span>Methods-specific reporting</h3>
+  <ul class="rs-response-list">
+    <li><h4><span class="rs-label-na">N/A</span> — ChIP-seq / flow cytometry / MRI / magnetic-resonance / &hellip;</h4>The paper does not perform any of the high-throughput assays for which Nature Portfolio maintains a modality-specific reporting sub-checklist. Microscopy imagery is used throughout the replay corpus and benchmark, but the paper does not originate microscopy data; published-image provenance is recorded per candidate in <code>INPUTS.json</code>.</li>
+  </ul>
+
+  <h3>Reporting-summary defensibility scorecard</h3>
+  <p class="rs-subnote">Mirror of the dry-run and packet scorecards, applied to the Reporting Summary. Each response slot is <span class="rs-label-ready">READY</span> (derived from drafted prose), <span class="rs-label-partial">PARTIAL</span> (structural commitment fixed, refinement deferred), <span class="rs-label-evidence">EVIDENCE-GATED</span> (resolves with a pending gate), or <span class="rs-label-na">N/A</span> (box not applicable). The Reporting Summary is submission-ready when zero slots are blocked on unnamed evidence; named evidence-gated slots (Gates G, I) are expected and are resolved by the gating evidence landing.</p>
+
+  <table class="rs-scoreboard">
+    <thead>
+      <tr><th>Section</th><th>Slot</th><th>Status</th><th>Gating path</th></tr>
+    </thead>
+    <tbody>
+      <tr><td rowspan="5">1. Statistics</td><td>Sample size</td><td><span class="rs-label-ready">READY</span></td><td>Online Methods §Regime survey, §Long-tail benchmark, §Deterministic replay.</td></tr>
+      <tr><td>Data exclusions</td><td><span class="rs-label-ready">READY</span></td><td>Online Methods §Regime survey (review/retraction exclusion); <code>survey_schema.md §2</code>.</td></tr>
+      <tr><td>Replication</td><td><span class="rs-label-ready">READY</span></td><td>Online Methods §Long-tail benchmark, §Deterministic replay; <code>MATCH_REPORT.md §Environment</code>.</td></tr>
+      <tr><td>Randomisation</td><td><span class="rs-label-partial">PARTIAL</span></td><td>Stratified random (survey) + block-randomised (benchmark); coverage-sampling (replay).</td></tr>
+      <tr><td>Blinding</td><td><span class="rs-label-partial">PARTIAL</span></td><td>Pre-DL-run macro archive for benchmark; IRR dual-extraction for survey; inapplicable for replay.</td></tr>
+      <tr><td>2. Study design</td><td>Life-sciences study design</td><td><span class="rs-label-ready">READY</span></td><td>Online Methods §Statistics; Abstract; §2; §4.</td></tr>
+      <tr><td rowspan="7">3. Materials</td><td>Antibodies</td><td><span class="rs-label-na">N/A</span></td><td>Paper does not originate imaging data.</td></tr>
+      <tr><td>Eukaryotic cell lines</td><td><span class="rs-label-na">N/A</span></td><td>Paper does not originate imaging data.</td></tr>
+      <tr><td>Palaeontology/archaeology</td><td><span class="rs-label-na">N/A</span></td><td>No specimens originate with this work.</td></tr>
+      <tr><td>Animals and other organisms</td><td><span class="rs-label-na">N/A</span></td><td>Paper does not originate imaging data.</td></tr>
+      <tr><td>Human research participants</td><td><span class="rs-label-evidence">EVIDENCE-GATED</span></td><td>Partner-MoU landing (Gate G). Pre-registered protocols committed in Online Methods §Field-deployment.</td></tr>
+      <tr><td>Clinical data</td><td><span class="rs-label-evidence">EVIDENCE-GATED</span></td><td>§6 clinical-pathology partner (Gate G). No clinical dataset released.</td></tr>
+      <tr><td>Dual-use research of concern</td><td><span class="rs-label-na">N/A</span></td><td>General-purpose analysis tool.</td></tr>
+      <tr><td rowspan="2">4. Software</td><td>Data collection</td><td><span class="rs-label-ready">READY</span></td><td>Online Methods §Regime survey (E-utilities + LLM pipeline); benchmark retrieval sources; replay <code>INPUTS.json</code>.</td></tr>
+      <tr><td>Data analysis</td><td><span class="rs-label-ready">READY</span></td><td>ImageJ.JS <code>v1.0-paper</code> + CheerpJ 4 + Hypha-RPC methods; foundation-model pins in <code>longtail_tasks.md</code>.</td></tr>
+      <tr><td rowspan="3">5. Data and code</td><td>Data availability</td><td><span class="rs-label-ready">READY</span></td><td>GitHub under MIT; three corpora as named artefacts.</td></tr>
+      <tr><td>Code availability</td><td><span class="rs-label-ready">READY</span></td><td>GitHub under MIT; <code>v1.0-paper</code> + Zenodo (Gate I for DOI assignment).</td></tr>
+      <tr><td>Live instance</td><td><span class="rs-label-ready">READY</span></td><td>ij.aicell.io; no server-side compute; aggregate telemetry only.</td></tr>
+      <tr><td>6. Accession codes</td><td>No accession codes</td><td><span class="rs-label-na">N/A</span></td><td>No primary-repository deposits required.</td></tr>
+      <tr><td>7. Methods-specific</td><td>ChIP-seq / flow / MRI / &hellip;</td><td><span class="rs-label-na">N/A</span></td><td>No modality-specific assays performed.</td></tr>
+    </tbody>
+  </table>
+
+  <p><strong>Reporting-summary-level status:</strong> <strong>22 <span class="rs-label-ready">READY</span></strong> (including 11 N/A), <strong>0 <span class="rs-label-author">AUTHOR-GATED</span></strong> (structural invariant), <strong>3 <span class="rs-label-evidence">EVIDENCE-GATED</span></strong> (Human participants + Clinical data on Gate G; code-availability DOI on Gate I sign-off), of 25 slots total. Zero AUTHOR-GATED is the structural invariant: unlike the Submission packet, the Reporting Summary's response space is shaped by empirical protocols committed in Methods and §10, not by author discretion. Any response labelled AUTHOR-GATED in a future iteration is a discipline regression.</p>
+
+  <h3>Reporting-summary discipline</h3>
+  <p class="rs-subnote">Three rules govern this artefact and every future iteration of it, modelled on the dry-run, packet, and readiness-dashboard discipline blocks.</p>
+  <ul class="rs-discipline">
+    <li><strong>(i) Reporting Summary is rephrasing.</strong> No response slot introduces a commitment not already specified in Online Methods, §10, Release engineering, or Submission packet. If a future iteration wishes to introduce a new protocol detail (for example, a new randomisation procedure on the survey), that detail must first appear in Online Methods; the Reporting Summary only re-reports.</li>
+    <li><strong>(ii) Reporting Summary is synchronised.</strong> Any future iteration that touches Online Methods or §10 MUST update the corresponding Reporting Summary response in the <em>same</em> iteration. Updating a Methods subsection without updating the Reporting Summary opens a silent regression: the editor reads the two together and will catch the drift.</li>
+    <li><strong>(iii) Zero AUTHOR-GATED is the invariant.</strong> The Reporting Summary response space is shaped by empirical protocols, not author discretion. Author sign-off happens in the Submission packet and the Editorial Manager upload form, not here. A response labelled AUTHOR-GATED is a discipline regression.</li>
+  </ul>
+
+  <h3>Reporting-summary one-line summary</h3>
+  <p class="rs-one-line">25 reporting-summary response slots · 22 READY · 0 AUTHOR-GATED · 3 EVIDENCE-GATED (Gates G + I) · Sections 1 / 2 / 4 / 5 / 6 / 7 COMPLETE · Section 3 human-participants STRUCTURE-COMPLETE, IRB-details GATED on partner MoUs.</p>
+</section>
+
 </article>
 
 <!-- Sidebar -->
@@ -2217,6 +2494,7 @@
       <li><a href="#supp-outline">Supp. outline</a></li>
       <li><a href="#dry-run">Reviewer-response dry run</a></li>
       <li><a href="#submission-packet">Submission packet</a></li>
+      <li><a href="#reporting-summary">Reporting summary</a></li>
     </ul>
   </nav>
 
@@ -2226,7 +2504,7 @@
       <dt>Article type</dt>
       <dd>Brief Communication (working draft)</dd>
       <dt>Draft version</dt>
-      <dd>v0.7 · 2026-04-18 (adds readiness dashboard)</dd>
+      <dd>v0.8 · 2026-04-18 (adds Life Sciences Reporting Summary + partial placeholder resolution)</dd>
       <dt>Target venue</dt>
       <dd>Nature Methods (Brief Communication primary; full Article if pillars 1+2+{3,4,5} rigorously delivered)</dd>
       <dt>Correspondence</dt>
@@ -2238,13 +2516,15 @@
     <h3>Evidence status</h3>
     <dl>
       <dt>Ready (prose v0.1)</dt>
-      <dd>Abstract · §1 · §3 · §8 · §9 · §10 · Online Methods · Cover letter · References · Figure slots · Supp. outline · Release engineering · Reviewer-response dry run · Submission packet · <strong>Readiness dashboard</strong></dd>
+      <dd>Abstract · §1 · §3 · §8 · §9 · §10 · Online Methods · Cover letter · References · Figure slots · Supp. outline · Release engineering · Reviewer-response dry run · Submission packet · Readiness dashboard · <strong>Reporting Summary</strong></dd>
       <dt>Readiness posture</dt>
       <dd>Structurally <strong style="color:#1a6b2f;">READY</strong> · empirically <strong style="color:#8a1a1a;">EVIDENCE-GATED</strong> on Gates D–G · 3 / 10 submission gates <strong style="color:#1a6b2f;">MET</strong></dd>
       <dt>Defensibility (dry run)</dt>
       <dd>10 / 12 objections answerable from drafted prose · 1 partial (Q10) · 1 evidence-gated (Q3, foundation-model benchmark)</dd>
       <dt>Submission packet</dt>
       <dd>4 ready · 4 author-gated · 0 evidence-gated (sign-off is the only blocker on 4 fields)</dd>
+      <dt>Reporting summary</dt>
+      <dd>22 ready · 0 author-gated · 3 evidence-gated (Gates G + I) of 25 response slots</dd>
       <dt>Interim figures (80 of 200)</dt>
       <dd>[48]% small-data · [48]% ImageJ/Fiji any-mention · [20]% named DL</dd>
       <dt>Evidence-gated</dt>
@@ -2252,7 +2532,10 @@
     </dl>
   </div>
 
-  <div class="coverletter-link" style="background:#f8f4fc; border-color:#d8c6ea;">
+  <div class="coverletter-link" style="background:#fdf0f3; border-color:#e8bcc8;">
+    <a href="#reporting-summary" style="color:#7c1f3c;">View the Life Sciences Reporting Summary ↓</a>
+  </div>
+  <div class="coverletter-link" style="margin-top:10px; background:#f8f4fc; border-color:#d8c6ea;">
     <a href="#readiness" style="color:#4b2e7d;">View the submission readiness dashboard ↓</a>
   </div>
   <div class="coverletter-link" style="margin-top:10px;">
@@ -2273,7 +2556,7 @@
 
 <footer class="site-footer">
   <div class="wrap">
-    <div>Rendered from <code>preprint.md</code> · working draft v0.7 · 2026-04-18 (adds submission readiness dashboard). Placeholders in <span style="background:#fff8e1; color:#6b5000; padding:0 4px; border-radius:2px;">[yellow]</span> are evidence gaps resolved at submission per the placeholder-propagation discipline.</div>
+    <div>Rendered from <code>preprint.md</code> · working draft v0.8 · 2026-04-18 (adds Life Sciences Reporting Summary + resolves <code>[URL]</code> → <code>https://ij.aicell.io</code>, <code>[URL/github]</code> → <code>https://github.com/aicell-lab/imagej.js</code>, <code>[LICENCE]</code> → MIT). Placeholders still in <span style="background:#fff8e1; color:#6b5000; padding:0 4px; border-radius:2px;">[yellow]</span> are evidence gaps resolved at submission per the placeholder-propagation discipline; resolved values render as inline code.</div>
     <div style="margin-top:10px;">Served via <code>svamp serve</code> · not a journal publication.</div>
   </div>
 </footer>

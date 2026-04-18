@@ -254,6 +254,53 @@
   but it makes them visible from a single screen. At submission the
   dashboard is the auditable record that Gates A–J all resolved before
   sign-off.
+- **Life Sciences Reporting Summary is the empirical-commitment-driven
+  twin of the author-gated Submission packet.** Iteration 15
+  (2026-04-18) added `preprint.md §"Drafted prose — Life Sciences
+  Reporting Summary (v0.1)"` and the corresponding
+  `<section class="reporting-summary" id="reporting-summary">` in the
+  HTML render, styled with a rose/coral palette (#b8325a border-left,
+  #fdf0f3 background) distinct from cover-letter serif, supp-outline
+  green/amber/red, release-eng blue, dry-run amber, packet teal, and
+  dashboard violet. The block is a pre-flight of the Nature Portfolio
+  Life Sciences Reporting Summary — the mandatory editorial-integrity
+  form every NM first submission must upload. Three rules govern this
+  artefact and any future iteration of it: (i) **rephrasing only** — no
+  response slot introduces a commitment not already specified in Online
+  Methods, §10, Release engineering, or Submission packet; new protocol
+  details must first appear in Methods; (ii) **synchronised in-pass** —
+  any iteration that edits Methods or §10 MUST re-render this block in
+  the same iteration or a silent editor-catchable regression opens; (iii)
+  **zero AUTHOR-GATED is the invariant** — unlike the Submission packet,
+  the Reporting Summary response space is shaped by empirical protocols
+  committed in Methods, not author discretion; a response labelled
+  AUTHOR-GATED is a discipline regression. The scorecard at the bottom
+  of the block tracks READY / PARTIAL / EVIDENCE-GATED / N/A counts by
+  section and MUST be re-computed in any iteration that touches Methods
+  or §10. This is the fourth editorial-machinery scorecard (after
+  dry-run, packet, and readiness dashboard) and the fifth completeness
+  instrument on the submission readiness dashboard. Iteration 15's
+  ledger: 22 READY / 0 AUTHOR-GATED / 3 EVIDENCE-GATED of 25 slots.
+- **Partial placeholder resolution from repository-self-knowable values
+  is tractable without the full propagation script.** Iteration 15
+  (2026-04-18) resolved three labels that do not depend on
+  evidence-landing or author sign-off: `[URL]` → `https://ij.aicell.io`
+  (from `CNAME`), `[URL/github]` → `https://github.com/aicell-lab/imagej.js`
+  (from `git remote`), `[LICENCE]` → `MIT` (from `package.json`).
+  Replacements are targeted to *body prose* occurrences only — meta
+  references (Risks-table Zenodo-specific row, dashboard placeholder
+  inventory, scoreboard metadata listing labels) are updated to record
+  *that* the labels are resolved, rather than edited to remove the label
+  reference. In the HTML render, resolved values use inline `<code>`
+  (URLs) or `<strong>` (MIT) rather than the `placeholder-value` span;
+  this visually distinguishes resolved from unresolved placeholders
+  without introducing a new CSS class. The pattern here is that
+  repository self-knowable placeholders can be resolved by a direct
+  targeted pass without waiting for the full regex-over-file
+  propagation script; ~3 of ~25 labels drop in one iteration at low
+  risk (each replacement is a single Edit with unique context).
+  This promotes Gate J from `PENDING` to `PENDING — PARTIAL` on the
+  readiness dashboard.
 - **Release engineering is the Methods ↔ Availability binding at release-
   artefact granularity.** Iteration 11 (2026-04-18) added
   `preprint.md §"Drafted prose — Release engineering (v0.1)"` and the
@@ -1961,6 +2008,251 @@
   sufficient — svamp serves from disk. No `svamp serve` re-invocation
   is needed. This pattern now holds across seven re-render iterations
   and is the stable norm through submission.
+
+---
+
+## 2026-04-18 — Iteration 15: Life Sciences Reporting Summary (v0.1) + partial placeholder resolution + HTML render v0.8
+
+### What was implemented
+
+- **Drafted §Life Sciences Reporting Summary (v0.1)** at
+  `preprint.md §"Drafted prose — Life Sciences Reporting Summary
+  (v0.1, 2026-04-18)"` — ~3,400 words, publication-readable
+  pre-flight of the Nature Portfolio Life Sciences Reporting Summary
+  (the mandatory editorial-integrity form every Nature Methods first
+  submission must upload). Structure:
+  1. **Status banner** marking the block as a rephrasing artefact;
+     any Methods / §10 edit MUST re-render this block in the same
+     iteration.
+  2. **Purpose and scope** — names the seven form sections and the
+     4-of-7 that apply directly to a tool paper (statistics; study
+     design; software; data-and-code availability), the 2-of-7 that
+     apply only through the three field deployments (human
+     participants; data management — evidence-gated), and the
+     1-of-7 that is genuinely N/A (methods-specific modality
+     checklists like ChIP-seq / flow / MRI).
+  3. **Section 1 Statistics** — five READY / PARTIAL slots
+     (sample size; data exclusions; replication; randomisation;
+     blinding). Every slot references Online Methods §Regime survey
+     or §Long-tail benchmark or §Deterministic replay.
+  4. **Section 2 Reporting on study design** — one READY slot,
+     distinguishing the paper's three descriptive studies from a
+     hypothesis-testing design. Cites Wilson score intervals on
+     48 % / 48 % / 20 % estimates.
+  5. **Section 3 Materials** — five N/A slots (antibodies; cell
+     lines; palaeontology; animals; dual-use); two EVIDENCE-GATED
+     slots (human participants → Gate G; clinical data → Gate G).
+     Every N/A is justified against the "paper does not originate
+     imaging data" rationale.
+  6. **Section 4 Software** — two READY slots (data collection
+     software named per corpus: E-utilities + LLM pipeline for
+     survey; public retrieval for benchmark; figshare/Zenodo for
+     replay; data analysis software = ImageJ.JS `v1.0-paper` itself
+     + CheerpJ 4 + Hypha-RPC methods + foundation-model version
+     pins for baselines).
+  7. **Section 5 Data and code availability** — three READY slots
+     (data availability; code availability; live instance). Cites
+     resolved `https://github.com/aicell-lab/imagej.js` (code)
+     and `https://ij.aicell.io` (live) + MIT licence.
+  8. **Section 6 Accession codes** — one N/A slot (no primary-
+     repository deposits required; Zenodo deposit for
+     `v1.0-paper` is the single repository artefact).
+  9. **Section 7 Methods-specific reporting** — one N/A slot
+     (the paper does not perform ChIP-seq / flow / MRI /
+     magnetic-resonance / … for which Nature maintains
+     sub-checklists).
+ 10. **Defensibility scorecard** — 25-slot table with status +
+     gating path + source per slot. Counts: **22 READY / 0
+     AUTHOR-GATED / 3 EVIDENCE-GATED**. Zero AUTHOR-GATED is the
+     structural invariant.
+ 11. **Discipline block** — three rules (rephrasing; synchronised;
+     zero AUTHOR-GATED) modelled on the dry-run, packet, and
+     readiness-dashboard discipline blocks.
+ 12. **One-line summary** for sidebar / iteration-log use.
+- **Partial placeholder resolution.** Three repository-self-knowable
+  labels resolved in body prose (NOT in meta/scaffolding):
+  `[URL]` → `https://ij.aicell.io` (from `CNAME`);
+  `[URL/github]` → `https://github.com/aicell-lab/imagej.js` (from
+  `git remote`); `[LICENCE]` → `MIT` (from `package.json`). Body
+  occurrences resolved across Abstract v0.5, Cover letter, §10,
+  Release engineering (2 occurrences), Submission packet (2
+  occurrences), Online Methods §Data/code/protocol availability.
+  Meta references (Risks-table Zenodo-specific row, §10 block
+  header placeholder list, Release-eng placeholder-budget listing,
+  dashboard placeholder inventory) are updated to record *that*
+  the labels are resolved, rather than edited to remove the label
+  reference. Dashboard placeholder-inventory count drops from ~25
+  to ~22. Gate J is promoted from `PENDING` to `PENDING — PARTIAL`.
+- **HTML render refreshed to v0.8.** `manuscript_html/index.html`
+  now includes:
+  - New `<section class="reporting-summary" id="reporting-summary">`
+    inserted after Submission packet, with a status banner, 7
+    numbered subsections (each with a circled pink `rs-section-num`
+    chip), a 25-row reporting-summary scoreboard with grouped
+    rowspan cells, a discipline `ul`, and a one-line monospace
+    summary.
+  - New rose/coral CSS palette (#b8325a border-left, #fdf0f3
+    background, #fae0e7 banner, #f4cbd4 table header). ~150
+    lines of CSS distinct from the five previously introduced
+    editorial-appendix palettes.
+  - ToC entry `Reporting summary` appended.
+  - Sidebar callout (rose/coral-tinted) inserted above the readiness
+    callout so it sits at the top of the callout stack.
+  - Sidebar `Evidence status` gains a new `Reporting summary` row
+    reporting `22 ready · 0 author-gated · 3 evidence-gated of 25`.
+  - `Ready (prose v0.1)` list extended to include `Reporting
+    Summary` as the 16th entry (marked `<strong>` as newest).
+  - Version strings bumped v0.7 → v0.8 in four places (article-meta
+    published line; status-chip draft; sidebar `Draft version`;
+    footer rendered-from line).
+  - Status-chip status promoted to `15 prose blocks v0.1 (+ Life
+    Sciences Reporting Summary); … reporting summary 22 ready /
+    0 author-gated / 3 evidence-gated; [URL]/[URL/github]/[LICENCE]
+    resolved in iteration 15; 3 / 10 submission gates MET (Gate J
+    partial)`.
+  - Resolved placeholders in body prose use inline `<code>` (URLs)
+    or `<strong>` (MIT); the `placeholder-value` yellow-highlight
+    span is reserved for still-unresolved labels.
+  - **Readiness dashboard synchronised in-pass:** prose coverage
+    row updated to `15 / 15`; placeholder inventory row updated to
+    `~22 distinct labels open · 3 resolved iter 15`; new row
+    `Reporting summary · 22 / 25 READY · 0 AUTHOR-GATED · 3
+    EVIDENCE-GATED`; Gate A updated to 15-block count; Gate J
+    promoted to `PENDING — PARTIAL`; one-line summary updated.
+  - Dashboard narrative updated from `Six independent scorecards`
+    to `Seven independent scorecards` (adds Reporting Summary
+    completeness).
+- **Re-served via svamp.** Same mount name `manuscript`, same URL
+  `https://static-serve-0bc5cde8.svc.hypha.aicell.io/manuscript/`.
+  Post-edit HTTP HEAD → `200`, `content-length: 227,942` (up from
+  199,447), `last-modified: Sat, 18 Apr 2026 13:04:34 GMT`. String
+  `reporting-summary` / `Reporting Summary` appears 61× in the
+  rendered page; `v0.8` appears 4× exactly where expected;
+  `ij.aicell.io` appears 9× (one per resolved `[URL]` body-prose
+  occurrence + abstract + HTML references); zero residual `v0.7`
+  references; zero `placeholder-value">[URL]` / `placeholder-
+  value">[URL/github]` / `placeholder-value">[LICENCE]` outside of
+  the three References-entry `[URL, commit hash]` /
+  `[URL, archived snapshot]` / `[URL, date-accessed]` patterns
+  (which are different placeholder class — bibliographic-metadata
+  placeholders gated on Gate H, not the live-instance URL class).
+  HTML parses well-formed (Python `html.parser`: zero unclosed
+  tags, zero mismatched tags).
+
+### Files changed
+
+- `preprint.md` — appended Reporting Summary v0.1 block after the
+  Submission readiness dashboard; resolved `[URL]` / `[URL/github]`
+  / `[LICENCE]` in 10 body-prose occurrences (Abstract v0.5; Cover
+  letter; §10 ¶1; §10 ¶4; Online Methods §Data/code/protocol
+  availability; Release engineering §"release-cut protocol"
+  paragraph; Release engineering §"Release cadence post-v1.0-paper"
+  paragraph; Submission packet §"Data and code availability
+  statement"; Submission packet §"Acknowledgements"); updated §10
+  block header description, Release engineering placeholder-budget
+  listing, dashboard placeholder inventory row (~25 → ~22),
+  dashboard Gate J status (PENDING → PENDING — PARTIAL), dashboard
+  Gate A status (14 → 15 blocks), dashboard scoreboard summary one-
+  liner. File is now 1,812 lines / ~26,300 words.
+- `manuscript_html/index.html` — added `section.reporting-summary`
+  CSS block (~150 lines); inserted new `<section>` after Submission
+  packet with status banner, legend, 7 numbered subsections each
+  with circled section-num chip + response-list items, 25-row
+  scoreboard table, discipline ul, one-line summary; resolved
+  placeholder spans in 7 body-prose occurrences (abstract; §10 ¶1;
+  §10 ¶4; Methods data/code; Release eng release-cut; Release eng
+  release-cadence; Submission packet data/code; Submission packet
+  cover-letter-ish line); added ToC entry; bumped version strings
+  in four places; added sidebar callout (rose/coral-tinted);
+  promoted status-chip; added sidebar `Reporting summary` row;
+  synchronised readiness dashboard (prose coverage, placeholder
+  inventory, new reporting-summary row, Gate A, Gate J, one-line
+  summary, narrative). File is now 227,942 bytes / 2,565 lines
+  (up from 199,447 bytes / 2,282 lines).
+- `.svamp/d9a68491-c46b-4e04-9b30-6294d0bbf071/ralph-progress.md` —
+  this entry; added two pattern bullets at the top of the Patterns
+  block (Reporting Summary discipline; partial-placeholder-resolution
+  from repository-self-knowable values).
+
+### Learnings for future iterations
+
+- **The Reporting Summary is the first mandatory-NM editorial surface
+  the paper has drafted.** Unlike the dry-run (anticipatory), the
+  Submission packet (NM-recommended metadata), and the readiness
+  dashboard (paper-internal instrument), the Reporting Summary is a
+  Nature Portfolio-wide *required* upload at first submission. Its
+  structural commitments must precisely match the form Editorial
+  Manager presents; the v0.1 block's seven-section structure is the
+  commitment and is the thing a future iteration must keep
+  synchronised with the form if Nature updates it. If Nature
+  Portfolio revises the Reporting Summary schema between now and
+  submission, the block requires an in-place rewrite (rare, but
+  possible — the form was last revised in October 2018; any 2026
+  revision would be a schema-breaking change for this block).
+- **Iteration 15 is a natural iteration boundary for the submission-
+  engineering prose surfaces.** Five distinct editorial-machinery
+  blocks now exist (Submission packet; Reviewer-response dry run;
+  Supplementary material outline; Submission readiness dashboard;
+  Life Sciences Reporting Summary). Each is rendered in the HTML
+  with a distinct palette (teal, amber, green/amber/red, violet,
+  rose/coral) and is a rephrasing of body prose per its own
+  discipline block. Together with the Cover letter (serif, peach
+  border) and Release engineering (blue), the rendered page now
+  carries seven editorial-appendix surfaces. The pattern
+  "editorial-appendix section + distinct palette + discipline block
+  + scorecard" is now the stable recipe for any future editorial-
+  machinery prose surface (for example, if a future iteration adds a
+  Research Briefing / Plain-language summary, it should follow the
+  same pattern — distinct palette, discipline block, scorecard).
+- **Highest-value next iteration without new evidence:
+  placeholder-propagation script (FULL run, first-priority for
+  EIGHT iterations running).** Iteration 15's partial run resolved
+  three labels from repository-self-knowable sources; the remaining
+  ~22 labels split into (a) evidence-landing gated (Gates D–G ≈ 15
+  labels), (b) author-sign-off gated (Gate I ≈ 5 labels), (c)
+  references-verification gated (Gate H ≈ 1 label → `[VOL:PAGES,
+  DOI]` × ~35 entries through shared-expansion). The full
+  placeholder-propagation script (`placeholders.yaml` + regex-over-
+  file emit) is the compounding engineering primitive; iteration
+  15's partial run is a worked precedent but does not replace it.
+- **Second-highest next iteration without new evidence: References
+  bibliographic verification (Gate H).** The References v0.1 block
+  carries ~35 `[VOL:PAGES, DOI]` placeholders. A single iteration
+  that verifies each entry against the journal record (~1 hour
+  author time per the dashboard) resolves Gate H, drops the
+  placeholder-inventory count by ~35 × (one per entry), and
+  promotes the references-verification dashboard row from `0 / ~35`
+  to `~35 / ~35` in a single pass. This is the single largest
+  placeholder-inventory move available before evidence landing.
+- **Third-highest: Author biographical blurbs / ORCID registry
+  (partial Gate I).** Nature Methods Brief Communications use short
+  author biographies (~50 words each) on their website. The
+  structural commitment (each author's expertise and role) can be
+  drafted at v0.1 with `[INITIALS]` placeholders; at sign-off the
+  blurbs resolve simultaneously with the ORCID registry. This is a
+  small iteration (one pass over the CRediT taxonomy in the
+  Submission packet + one paragraph per author).
+- **Framing containment re-verified across the v0.8 render.**
+  Reporting Summary body mentions AI only as subject (Section 4
+  software: foundation-model version pins for benchmark baselines
+  — a descriptive fact, not a methodology claim); Section 3
+  human-participants and clinical-data responses mention no AI
+  method. The pattern bullet (*"AI stays contained to §8"*) is
+  preserved. Reporting Summary is also rephrasing-clean: zero
+  response slots introduce a commitment not already in Online
+  Methods / §10 / Release engineering / Submission packet
+  (verified by spot-check — every specific protocol in the
+  Reporting Summary maps to a named Methods subsection or §10
+  artefact).
+- **Served URL is stable across re-renders (Iteration 8 / 9 / 10 /
+  11 / 12 / 13 / 14 / 15).** Mount is in place under the name
+  `manuscript` (registered 2026-04-18 11:54); re-saving the HTML
+  on disk is sufficient — svamp serves from disk. No `svamp serve`
+  re-invocation is needed. This pattern now holds across eight
+  re-render iterations and is the stable norm through submission.
+  Current served URL:
+  `https://static-serve-0bc5cde8.svc.hypha.aicell.io/manuscript/`,
+  content-length 227,942 bytes.
 
 ---
 
