@@ -37,6 +37,12 @@ jobs:
         cp utils.js dist/
         cp CNAME dist/
         cp -r lib dist/
+        # threadhack drop-in runtime — loader.js is referenced from index.html
+        mkdir -p dist/threadhack
+        cp -r threadhack/runtime dist/threadhack/
+        cp threadhack/parallel-tool.jar dist/threadhack/ 2>/dev/null || true
+        cp threadhack/s2-worker.js     dist/threadhack/ 2>/dev/null || true
+        cp threadhack/threadspawn-sample.jar dist/threadhack/ 2>/dev/null || true
 
     - name: Deploy to GitHub Pages
       if: github.ref == 'refs/heads/main'
