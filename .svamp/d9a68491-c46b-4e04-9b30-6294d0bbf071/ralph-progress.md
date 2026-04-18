@@ -2,6 +2,42 @@
 
 ## Patterns
 
+- **`tools/chain_of_voice_audit.py` is the sixth application of the
+  iter-28 engineering-infrastructure iteration kind and the first
+  *review-time* tool in the matched suite — introducing the review-time /
+  authoring-time distinction as a first-class property of the iteration
+  kind.** Iteration 42 (2026-04-18) landed a ~500-line stdlib-only Python
+  3 tool that parses the rendered HTML's six canonical chain-of-voice
+  claim sites (header chip `.chip.draft`; `.readiness-banner` div;
+  article-meta `<div class="meta"><dl>`; `<td>Biologist-voice per-§
+  checklist</td>` scoreboard row; `<p class="one-line-summary">`;
+  `<footer class="site-footer">`), extracts chain-of-voice claims
+  (iteration numbers; biologist-voiced §§ counts for §§1-8 body slice
+  and §§1-10 full slice; `placeholder-value` span counts; Nth-
+  application-of-engineering-infrastructure-iteration-kind ordinals),
+  and cross-checks each claim against an authoritative source: per-§
+  row chips (iter-34 origin), `validate_manuscript.py` output (iter-28
+  origin), `git log -n 40 --pretty=%s` latest-iter, and count of `.py`
+  files in `tools/`. First application at iter 42 surfaced six drifts
+  all closed in the same commit: (1) one-line parenthetical missing §10
+  (added after iter 40); (2) one-line placeholder count stale (185 →
+  186 since iter-40 drop-restoration); (3) readiness banner missing
+  iter-41 mention; (4) article-meta dd still leading with iter 39;
+  (5) footer still leading with iter 39; (6) "fourth application" claim
+  stale against 6 tool files. Tool PASSes at 0 drifts post-commit. The
+  three iter-28 rules hold verbatim across the sixth application: zero
+  prose edits · guards an empirically-observed regression class (the
+  iter-37 / iter-39 silent chain-of-voice drift class) · self-contained
+  stdlib-only. The matched-suite review-time / authoring-time distinction
+  is now first-class: authoring-time tools (iter 28 / 35 / 36 / 39 / 41)
+  check invariants on the *working-document* surfaces (`preprint.md`
+  blocks; HTML on disk before render); review-time tools (iter 42, the
+  first) check the *rendered* HTML as the thing a reader sees, including
+  self-descriptive meta surfaces. Future iterations that add a *seventh*
+  surface to the rendered HTML (e.g. a per-figure-evidence-source row)
+  must also extend the audit tool's extractor list in the same pass —
+  otherwise the new surface's claims go unaudited.
+
 - **`tools/check_render_fidelity.py` is the fifth application of the
   iter-28 engineering-infrastructure iteration kind and closes the iter-40
   render-fidelity regression class.** Iteration 41 (2026-04-18) landed a
@@ -5463,5 +5499,303 @@ Validator state after the iteration:
 - **The `_italic_` markdown rule must respect word boundaries.** The first version of the tool used a simple `_([^_\n]+)_` regex that greedily matched across intra-identifier underscores (eating `run_replay.py` → `runreplay.py`, `MATCH_REPORT.md` → `MATCHREPORT.md`). This destroyed the normalized sentence's identifier tokens and caused ~10 false-positive drops in §4 / §7 / §8. The fix is `(?<!\w)_([^_\n]+)_(?!\w)` — require the `_` not be adjacent to a word character — which correctly skips intra-identifier underscores. Markdown tool-chains typically apply the same boundary rule; a future iteration that parses preprint-like prose should adopt it from iter-41's rule-set rather than rediscover it.
 
 - **Publication readiness is now measurably end-to-end for the rendered manuscript.** With all five engineering-infrastructure tools passing, the v0.33 `manuscript_html/index.html` is provably: (i) well-formed HTML; (ii) anchor-complete; (iii) placeholder-scope-linted; (iv) sentence-level faithful to the `preprint.md` v-latest drafts; (v) discipline-audited for claim-preservation across Drafted-prose version-pairs. The remaining publication-readiness gates are all evidence- or author-landing: Gate D (survey rows 81–200 + IRR), Gate E (foundation-model benchmark runs), Gate F (≥ 15 replay candidates), Gate G (partner teaching / clinical / collaboration landings), Gate I (author-team CRediT + competing-interests + acknowledgements + funding-ID + suggested-reviewer sign-off). None of these blocks further biologist-voice or structural-prose work.
+
+---
+
+## [2026-04-18 iter 42] — `tools/chain_of_voice_audit.py` landed + 6 meta-surface chain-of-voice drifts closed in `manuscript_html/index.html` (HTML render v0.33 → v0.34)
+
+Sixth application of the iter-28 engineering-infrastructure iteration kind
+and the eleventh distinct iteration kind in the log. This is the first
+**review-time** tool in the matched suite — the prior five (iter-28
+`validate_manuscript.py`, iter-35 `propagate_placeholders.py`, iter-36
+`recheck_references.py`, iter-39 `check_discipline.py`, iter-41
+`check_render_fidelity.py`) are all authoring-time linters that run against
+`preprint.md` and / or the rendered HTML as *working-document* surfaces;
+the new ~500-line stdlib-only Python 3 tool runs against the rendered HTML
+as the *review-time* surface a reviewer reads, and audits the manuscript's
+self-descriptive chain-of-voice claims.
+
+The three iter-28 rules hold verbatim across this sixth application:
+(i) zero prose edits by the tool itself — all six HTML edits that close
+the first-application drifts are made by the iteration commit, not by the
+tool; (ii) guards an empirically-observed regression class — the
+iter-37 / iter-39 silent-drift class where "complete" claims in the
+rendered-HTML meta surfaces had silently inherited stale denominators or
+missing iteration mentions across iter-N commits that touched body-prose
+but not the self-descriptive surfaces; (iii) self-contained, stdlib-only
+(a single Python 3 file, no dependencies outside `re`, `json`, `argparse`,
+`subprocess`, `dataclasses`, `pathlib`).
+
+### What was implemented
+
+- New file `tools/chain_of_voice_audit.py` — ~500 lines, stdlib-only.
+  Parses the rendered HTML to extract six canonical chain-of-voice claim
+  sites (header chip `.chip.draft`; `.readiness-banner` div; article-meta
+  `<div class="meta"><dl>`; per-§ biologist-voice row — anchored by
+  `<td>Biologist-voice per-§ checklist</td>`; `<p class="one-line-summary">`
+  Readiness-scoreboard one-liner; `<footer class="site-footer">`
+  render-stamp). From each site it extracts iteration numbers (regex
+  `\biter(?:ation)?\s+(\d+)\b`) and, for the one-line and per-§ surfaces,
+  the claim-specific counts (`(\d+)\s*/\s*(\d+)\s+biologist-voiced\s+§§`;
+  `(\d+)\s+<code>placeholder-value</code>\s+spans?\s+open`;
+  §§1-8 body-slice chips — `<span class="status-met">§N v0.2 iter M</span>`;
+  trailing §9/§10 chips — `§N Discussion implications <span class="status-met">
+  v0.2 biologist-voice iter M</span>`; Gate-G-pending chips —
+  `<span class="status-pending">§N teaching|clinical|collaboration</span>`).
+  For each extracted claim the tool cross-checks against an authoritative
+  source: one-line `X / Y` vs per-§ row chip count (two slices accepted —
+  `X / 8` body slice and `X / 10` full slice); one-line placeholder count
+  vs `validate_manuscript.py` output (parsed via
+  `placeholder-value\s+spans?\s*=\s*(\d+)`); highest iteration in each
+  meta surface vs `git log -n 40 --pretty=%s` latest iter; highest
+  "Nth application of the engineering-infrastructure iteration kind"
+  ordinal vs count of `.py` files in `tools/`; one-line parenthetical
+  listing vs per-§ row trailing §9+ chips. Modes: default text report ·
+  `--self-test` (built-in smoke test with synthetic HTML fixture) ·
+  `--strict` (exit 1 on any drift) · `--json` (pipe-able JSON report).
+
+- **Six first-application drifts closed** in the same iter-42 commit:
+  (1) One-line parenthetical — `(+ Abstract / Cover letter / Research
+  Briefing / §9)` → `(+ Abstract / Cover letter / Research Briefing / §9
+  / §10)`; iter-40 had landed §10 biologist-voice but the one-line
+  parenthetical was never updated. (2) One-line placeholder count —
+  `185` → `186`; iter-40's drop-restoration (the v0.1 HTML silently
+  omitted a sentence that v0.1 `preprint.md` carried; iter-40 restored
+  it) had bumped the validator count to 186. (3) Readiness banner
+  chain-of-iteration list extended with two new clauses (iter-41
+  `check_render_fidelity.py` description; iter-42 `chain_of_voice_audit.py`
+  description with six-drift list). (4) Article-meta `Draft version` dd
+  lead rewritten to open with the iter-42 landing; iter-40 / iter-41 /
+  iter-39 descriptions folded into the history segment. (5) Footer
+  render-stamp `div` lead rewritten parallel to (4). (6) Regression-guard
+  dd dt extended from `Regression guard (iter 28) + mechanical rewriter
+  (iter 35) + bibliographic re-checker (iter 36) + discipline linter
+  (iter 39) + biologist-voice coverage (iter 40)` to `... + render-
+  fidelity checker (iter 41) + chain-of-voice audit (iter 42)`. Also
+  added three iter-landing chips to the Readiness-scoreboard one-liner
+  (iter 40 biologist-voice end-to-end · iter 41 render-fidelity checker
+  landed · iter 42 chain-of-voice audit landed).
+
+- **HTML render v0.33 → v0.34** — four canonical version strings bumped
+  (Open-Access published-line chip; status-chip Working-draft chip;
+  Article-info Draft-version dd lead; footer Rendered-from div lead).
+  Historical version stamps inside the meta-narrative (e.g. "All four
+  validator checks PASS at v0.33" within the iter-40 clause body) are
+  preserved as-is because they are point-in-time snapshots of earlier
+  iteration state.
+
+- **Preprint.md Drafted-prose block appended** — 43rd Drafted-prose block
+  "`tools/chain_of_voice_audit.py` review-time chain-of-voice audit
+  (v0.1, engineering-infrastructure iteration 2026-04-18, iter 42)".
+  Documents tool contract, modes, first-application results, claim-site /
+  authoritative-source mapping table, matched-suite evolution (five → six
+  tools), six-tool reproducible workflow cheatsheet, invariants preserved
+  at iter 42, and what the audit tool unlocks. Zero existing content
+  modified in `preprint.md`; file grew 2854 → 2972 lines (+118 lines).
+
+- **All six tools PASS** at v0.34:
+  - `validate_manuscript.py`: **PASS**. 0 HTML errors · 228 anchors /
+    50 unique / 90 ids / 0 broken · **186 `placeholder-value` spans**
+    (unchanged since iter 40) · 391 bracketed tokens · 0 scope
+    violations. 16th consecutive iteration running the validator.
+  - `check_discipline.py --self-test`: **PASS**.
+  - `propagate_placeholders.py --self-test`: **PASS**.
+  - `recheck_references.py --self-test`: **PASS**.
+  - `check_render_fidelity.py`: **PASS**. 16 verbatim surfaces
+    checked · 0 drops · 8 summary surfaces listed. 8 unmapped
+    informational surfaces (Drafted-prose blocks for the six tools
+    themselves, the per-gate landing timeline row, and the figure-slots
+    block) — these are the tool-documentation blocks that do not render
+    to a body `<section>` but are informational in `preprint.md`.
+  - `chain_of_voice_audit.py --self-test`: **PASS**. Built-in smoke test
+    against a synthetic HTML fixture asserts the tool extracts
+    §§1/2/3/4/8/9/10 voiced + §§5/6/7 pending, that the body-slice
+    drift check fires on a `3 / 8` claim (actual 5/8), that the
+    parenthetical drift fires when `§10` is omitted, and that the
+    parenthetical-drift detector correctly identifies the missing
+    surface.
+  - `chain_of_voice_audit.py --strict` against real HTML: **exit 0, 0
+    drifts**. Post-iter-42-commit, all six meta surfaces agree on the
+    latest-iteration mention (iter 42), the one-line counts match the
+    per-§ row + validator output, and the highest Nth-application
+    ordinal (*sixth*) matches the tool-file count (6).
+
+- **Disk size 573,808 → 585,068 bytes** (+11,260 bytes: ~8,500 bytes
+  for the Draft-version dd lead rewrite and the two new banner /
+  footer iter-41 / iter-42 clauses; ~1,800 bytes for the Regression-
+  guard dt compound extension + one-liner rephrasing; ~960 bytes for
+  chip / scoreboard updates).
+- **Served URL confirmed stable**. `curl -sI
+  https://static-serve-0bc5cde8.svc.hypha.aicell.io/manuscript/index.html`
+  returns `HTTP/2 200` with `content-length: 585068` (matches disk
+  `wc -c` exactly).
+- **Re-registered svamp session link with v0.34 label** via
+  `svamp session set-link` — label "Manuscript draft v0.34 (Nature
+  Methods) — chain_of_voice_audit.py (iter 42)".
+
+### Files changed
+
+- `tools/chain_of_voice_audit.py` — NEW; ~500 lines stdlib-only Python 3
+  implementing block parsing, claim-site extraction, authoritative-source
+  cross-checks, five drift-detection rules, and a built-in `--self-test`
+  mode with a synthetic HTML fixture that exercises the voiced §§,
+  pending §§, one-line body-slice drift, and parenthetical-drift paths.
+- `manuscript_html/index.html` — four version strings bumped v0.33 →
+  v0.34; readiness banner extended with iter-41 + iter-42 clauses;
+  article-meta Draft-version dd lead rewritten with iter-42-leading
+  description (iter-39 description folded into the history segment as an
+  `<em>Historical head</em>` marker); Regression-guard dt compound
+  extended with iter-41 + iter-42; footer Rendered-from div lead
+  rewritten parallel to the dd lead; one-line Readiness-scoreboard
+  summary parenthetical extended with `/ §10`, placeholder count
+  185 → 186, three new iter-landing chips (iter 40 / iter 41 / iter 42)
+  appended before the structurally-READY / empirically-EVIDENCE-GATED
+  chips. File grew 573,808 → 585,068 bytes (+11,260 bytes).
+- `preprint.md` — appended **43rd Drafted-prose block**
+  `` `tools/chain_of_voice_audit.py` review-time chain-of-voice audit
+  (v0.1, engineering-infrastructure iteration 2026-04-18, iter 42)``.
+  No existing content modified. File grew 2854 → 2972 lines
+  (+118 lines).
+- `.svamp/d9a68491-c46b-4e04-9b30-6294d0bbf071/config.json` —
+  `session_link` updated by `svamp session set-link` with v0.34 label.
+- `.svamp/d9a68491-c46b-4e04-9b30-6294d0bbf071/ralph-progress.md` —
+  this entry; one new Patterns bullet added at the top of the Patterns
+  block (`chain_of_voice_audit.py` is the sixth application of the
+  engineering-infrastructure iteration kind and the first review-time
+  tool in the matched suite).
+
+### Learnings for future iterations
+
+- **Sixth application of the iter-28 engineering-infrastructure
+  iteration kind confirms the three-rule pattern is empirically stable
+  across both authoring-time and review-time tools.** Six iterations
+  on (iters 28, 35, 36, 39, 41, 42), the three iter-28 rules hold
+  unchanged: zero prose edits · guards an empirically-observed
+  regression class · self-contained stdlib-only. Sixth application
+  without refinement is strong evidence the rule-set is robust; the
+  matched suite is now six tools, and a seventh tool would slot into
+  the same template (candidate: `tools/check_links.py` for href-target
+  liveness against authoritative URLs; `tools/verify_figure_evidence.py`
+  for Fig n → evidence-source integrity; or a per-figure-evidence-
+  source dashboard row iteration on the iter-34 scoreboard-row
+  template).
+
+- **Review-time vs authoring-time is a first-class distinction for the
+  iter-28 iteration kind.** Iter 42 introduces the distinction
+  explicitly: authoring-time tools (the prior five) check invariants on
+  the *working-document* surfaces — `preprint.md` Drafted-prose blocks,
+  the HTML as a file on disk before render. Review-time tools (iter 42
+  is the first) check the *rendered* surface as the thing a reader
+  sees, including self-descriptive meta surfaces (header chip,
+  readiness banner, article-meta dl, scoreboards, footer render-stamp).
+  The iter-37 / iter-39 silent-drift class was inherently a review-time
+  regression — the body prose was fine, but the meta surfaces had
+  stale self-claims that a reviewer would see at first pass. Future
+  iterations should classify each new tool as authoring-time or
+  review-time up-front; the two classes serve different readers (an
+  author-at-work vs a reviewer-at-submission) and the distinction
+  shapes which surfaces the tool parses.
+
+- **The `<p class="one-line-summary">` is the highest-value single
+  claim site in the rendered HTML.** Four of the six iter-42 drifts
+  were in the one-liner (parenthetical missing §10; placeholder count
+  stale; no iter-41 / iter-42 clauses; no Nth-application update). The
+  one-liner is the single surface that summarises the paper's state in
+  a paragraph; any silent regression there is a reviewer-facing gap.
+  Future iterations that touch body prose or editorial-machinery
+  scorecards should update the one-liner in the same pass; the
+  iter-42 audit tool catches missed updates at strict mode.
+
+- **The `git log` latest-iter cross-check is a reliable authoritative
+  source for the meta surfaces' latest-iteration mention.** The
+  iter-41 `check_render_fidelity.py` commit had bumped the tool count
+  and the `preprint.md` state but had not touched the rendered-HTML
+  meta surfaces; the iter-42 audit surfaced this as a drift by noting
+  that `git log` contains an iter-41 subject but none of the four meta
+  surfaces mention iter 41. Future iterations that land a tool / body
+  change without bumping the rendered-HTML meta surfaces will be
+  caught the same way; the audit tool is the author-time equivalent
+  of a review-time reader's "why doesn't this paper's self-description
+  match its commit log" observation.
+
+- **Two claim-slice conventions (body §§1-8 vs full §§1-10) are both
+  accepted by the audit tool; future iterations should pick one per
+  surface and hold it.** The rendered HTML currently writes the body
+  slice (`5 / 8`) in the one-line summary with a parenthetical
+  supplementary list (`+ Abstract / Cover letter / Research Briefing
+  / §9 / §10`). An alternative convention — write the full slice
+  (`7 / 10`) — would also be valid. The audit tool accepts either,
+  but drifts if the chosen slice's counts are internally inconsistent
+  (e.g. `6 / 8` would flag because only 5 of §§1-8 are biologist-
+  voiced; `8 / 10` would flag because only 7 of §§1-10 are biologist-
+  voiced). Future iterations should not mix conventions within a
+  surface.
+
+- **Highest-value next iteration: per-figure-evidence-source dashboard
+  row.** A fifth dashboard-expansion iteration (iter-34 origin) that
+  adds a row tracking per-figure evidence-source status — Fig 1
+  panels a/b → `survey_production_v2.csv` rows 1–80 + `survey_schema.md`;
+  Fig 1 panel c → `longtail_tasks.md` Gate E pending; Fig 3 →
+  `replay/<candidate>/MATCH_REPORT.md` Gate F pending; Fig 4/5/6 →
+  Gate G partner session data; Fig 7 → `hypha-imagej-service.js` git
+  tag `v1.0-paper`; Box 1 · Fig + Box 2 · Fig → inline SVG schematics
+  iter 33. Complementary to the iter-34 figure-coverage row and the
+  iter-38 per-gate landing timeline row. Would make figure-evidence
+  dependencies legible at a glance — a reviewer who challenges a
+  figure can jump to its evidence source. Rephrasing-only at the
+  rendered surface; follows the iter-34 three-rule dashboard-expansion
+  pattern verbatim. A sixth dashboard-expansion iteration would then
+  close the complete review-time coverage set; combined with the
+  iter-42 audit tool, a future "seventh-surface landing" iteration
+  would only need to extend `chain_of_voice_audit.py`'s extractor
+  list.
+
+- **Second-highest: `tools/check_links.py` href-target liveness
+  linter.** Seventh application of the iter-28 engineering-
+  infrastructure iteration kind. Would query every `http(s)://` URL
+  in the References section and `<a href>` body-prose links against
+  their authoritative source (Crossref, DOI resolver, W3C, product-
+  release registry) and flag broken / redirected / changed links.
+  Guards a regression class that is latent today (all URLs in the
+  rendered HTML appear live as of 2026-04-18) but that will emerge
+  as the paper ages between submission, peer review, and publication
+  (typically 8–16 weeks for Nature Methods; links added today may
+  have rotted by the time proofs are returned). Stdlib-only
+  (`urllib.request`), empirically-justified by the long-tail link-
+  rot curve. Slots cleanly into the iter-28 template.
+
+- **Third-highest: quarterly `recheck_references.py --online` cron.**
+  The five remaining author-/evidence-gated references include
+  `ref-bioimageagent2026` (arXiv preprint in-preparation) and
+  `ref-naparimcp2025` (software-release metadata) which are both
+  time-sensitive — a quarterly check would surface their Crossref
+  landing within 90 days rather than waiting for a manual iteration
+  to run the tool by hand. Uses the existing `schedule` skill.
+
+- **Biologist-voice programme is end-to-end complete as of iter 40;
+  iter 42 is an infrastructure iteration that does not touch body
+  prose.** Future biologist-voice iterations are Gate-G-dependent
+  (the §§5/6/7 pass lands with partner vignettes replacing the
+  current `[Partner-institution]` / `[IRB-number]` / per-course
+  `[C_k-delta]` / `[Postdoc-institution]` placeholder sets). No other
+  biologist-voice iteration the paper warrants remains. Iterations
+  43+ without new evidence are primarily: (a) dashboard-expansion
+  (per-figure-evidence-source row); (b) engineering-infrastructure
+  (seventh tool — check_links.py); (c) scheduled re-checks (quarterly
+  recheck_references cron); (d) author-gated Gate-I sign-off and
+  Gate-G partner landing prep.
+
+- **Six-tool matched-suite shell-script gate is now a pre-submission
+  readiness-check primitive.** A single shell-script that runs all
+  six tools in sequence (recheck → propagate → validate → discipline
+  → render-fidelity → chain-of-voice audit) and exits non-zero on
+  any failure is the mechanical codification of the iter-23
+  claim-preservation + iter-27 placeholder-scope + iter-34
+  dashboard-synchronisation + iter-37 chain-of-voice discipline.
+  Author-team sign-off at Gate I can cite the script's exit code
+  as evidence that the rendered manuscript is internally consistent
+  to the extent a six-linter suite can verify. Future iterations
+  that add a seventh tool should extend the shell script, not
+  replace it.
 
 ---
