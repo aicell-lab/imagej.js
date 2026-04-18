@@ -1205,3 +1205,231 @@ the discipline in the block header; any future edit that
 introduces an `EVIDENCE-GATED` packet field is a discipline
 regression and must be reverted.
 
+## Drafted prose — Submission readiness dashboard (v0.1, 2026-04-18)
+
+> **Status: READINESS DASHBOARD.** This block is a unified,
+> at-a-glance consolidation of every scorecard, completeness
+> measurement, and evidence gate already tracked elsewhere in
+> `preprint.md` — prose-block coverage, dry-run defensibility,
+> submission-packet completeness, figure slots, references
+> bibliographic verification, the three empirical corpora, and
+> the live placeholder inventory. **It introduces no new claim,
+> count, or commitment.** Every row in the scoreboard below is a
+> rephrasing of a measurement whose primary source is another
+> drafted-prose block. It exists because six independent
+> scorecards distributed across nine prose surfaces cannot be
+> read together at a glance; an editor, co-author, or reviewer
+> auditing submission readiness needs one screen. The dashboard
+> is a submission-engineering artefact, not body prose, and is
+> rendered as a distinct editorial appendix in the HTML view.
+> Discipline: any new scorecard introduced in a future iteration
+> must be added here in the *same* iteration, or a regression is
+> opened — the dashboard is only load-bearing if it is kept
+> synchronised with its sources.
+
+### Dashboard purpose and scope
+
+The paper now carries six independent completeness measurements,
+each of which was designed and drafted in the iteration that
+produced its source block: (i) the prose-block-coverage count
+(Abstract v0.5, §§1, 3, 8, 9, 10 v0.1, Online Methods v0.1, Cover
+letter v0.1, References v0.1, Figure captions v0.1, Supp outline
+v0.1, Release engineering v0.1, Dry run v0.1, Submission packet
+v0.1 — 14 blocks); (ii) the dry-run defensibility scorecard
+(preprint.md §"Drafted prose — Reviewer-response dry run", 12
+anticipated objections with current 10/12 answerable); (iii) the
+submission-packet defensibility note (preprint.md §"Drafted prose
+— Submission packet", 8 fields with current 4 ready / 4
+author-gated / 0 evidence-gated); (iv) the figure-slot table
+(preprint.md §"Drafted prose — Figure slots and captions", 6 slots
+with 3 full captions + 3 evidence-gated placeholders); (v) the
+references bibliographic verification state (preprint.md §"Drafted
+prose — References", every entry currently carries a
+`[VOL:PAGES, DOI]` placeholder pending verification against the
+journal record); (vi) the three-corpus evidence status (survey
+80/200 rows LLM-extracted; long-tail benchmark 0/30 tasks with
+harness defined; replay corpus 3/[N] candidates executed). The
+dashboard below reports all six in a single table, adds two
+derived metrics (placeholder inventory, overall submission
+posture), and names the specific evidence drops that promote each
+dimension.
+
+### Readiness scoreboard
+
+*Each row names a dimension, its current measurement, its gating
+path (what closes the remaining gap), and its source block inside
+`preprint.md`. The measurements here supersede any scattered
+references in other blocks if (and only if) they disagree; if the
+dashboard disagrees with a source block, the dashboard is the
+regression to fix, not the source.*
+
+1. **Prose-block coverage.** 14 / 14 required blocks drafted at
+   v0.1. Status: `STRUCTURAL-READY`. Remaining prose work is
+   evidence-gated version increments (v0.2+ when evidence lands)
+   and the author-gated packet sign-off, not new block creation.
+   Source: this file's §§ above.
+2. **Dry-run defensibility.** 10 / 12 objections answerable from
+   drafted prose. 1 partial (Q10, survey selection bias — gates
+   on `survey_schema.md` sampling-rule cross-reference into §2 /
+   Online Methods §1). 1 evidence-gated (Q3, foundation-model
+   benchmark — gates on `replay/foundation_models/MATCH_REPORT.md`
+   landing). Status: `83%-ANSWERABLE`. Source: §"Drafted prose —
+   Reviewer-response dry run" scorecard.
+3. **Submission packet.** 4 `READY` + 4 `AUTHOR-GATED` + 0
+   `EVIDENCE-GATED` of 8 total fields. Status:
+   `100%-NON-REGRESSION` (zero evidence-gated is the discipline
+   invariant; author-gated fields resolve in the author-team
+   sign-off pass, not through evidence). Source: §"Drafted prose
+   — Submission packet" §Submission-packet defensibility note.
+4. **Figures.** 3 / 6 full v0.1 captions landed (Fig 1 long tail;
+   Fig 2 needs→features; Fig 3 replay matrix). 3 / 6 placeholder
+   captions evidence-gated (Fig 4 teaching → §5 partner landing;
+   Fig 5 clinical → §6 partner landing; Fig 6 collaboration → §7
+   demo videos + `collab/` session logs). Status:
+   `50%-EVIDENCE-GATED`. Source: §"Drafted prose — Figure slots
+   and captions".
+5. **References bibliographic verification.** 0 / ~35 entries
+   fully verified against the journal record. Every entry carries
+   a `[VOL:PAGES, DOI]` placeholder pending verification per the
+   no-invented-metadata discipline. Status: `0%-VERIFIED`,
+   promoted in bulk at the pre-submission references pass (single
+   task, ~1 hour author time). Source: §"Drafted prose —
+   References" v0.1 + its cross-reference map.
+6. **Empirical corpora.** Three corpora, three separate statuses:
+   (a) Regime survey: 80 / 200 rows LLM-upgraded v2-extracted; 0 /
+   3 IRR dual-extractions completed; headline `[48]%` / `[48]%` /
+   `[20]%` are interim 80-row figures. (b) Long-tail foundation-
+   model benchmark: 30 / 30 tasks specified in `longtail_tasks.md`;
+   0 / 30 foundation-model runs; 0 / 30 human+ImageJ.JS runs;
+   gates the `[X]` mean-IoU, `[Y]/30`, `[Z]/30` across Abstract,
+   §1, §2, §8 ¶3, Cover letter, Key-points, Figure 1 panel c. (c)
+   Deterministic replay: 3 / [N] candidates re-executed (Drosophila
+   NMJ 2016 bundle-inconsistency; MRI Wound Healing 2020
+   cross-version drift; [third Week-1 candidate]); gates §4
+   scale-up numbers and the `replay/<candidate>/MATCH_REPORT.md`
+   index in §10. Status: **evidence-gated**, by design — these
+   three corpora *are* the empirical contribution, not a
+   precondition of it.
+7. **Placeholder inventory.** ~25 distinct placeholder labels open
+   across the paper surfaces (preprint.md, manuscript_html render,
+   References cross-reference map, Supp outline allocation tables,
+   Release engineering pin table, Dry-run scorecard, Submission
+   packet scorecard, Acknowledgements, Author contributions).
+   Headline labels: `[48]%` / `[20]%` (regime survey, resolved on
+   200-row landing); `[X]` / `[Y]` / `[Z]` (benchmark, resolved on
+   `MATCH_REPORT.md`); `[N]` / `[Y1–Y2]` (replay scale-up);
+   `[DAU]` / `[YYYY]` (live-instance analytics); `[URL]` /
+   `[LICENCE]` / `[DOI]` (availability tag + Zenodo); `[INITIALS]`
+   / `[NAME-n]` / `[AFFILIATION-n]` / `[FUNDING IDs]` (author-team
+   sign-off); `[TEACHING PARTNER]` / `[CLINICAL PARTNER]` /
+   `[COLLABORATION PARTNER-A/B]` (partner landings); `[VOL:PAGES,
+   DOI]` (references verification). The placeholder-propagation
+   script named as first-priority engineering primitive for seven
+   iterations running will resolve every label across seven
+   surfaces in a single pass once the resolution dictionary exists.
+
+### Go/no-go submission gates
+
+*The dashboard is not a release trigger — that role belongs to the
+author-team sign-off and the evidence-landing cadence. The gates
+below are the necessary-and-sufficient conditions for submission,
+drawn from `preprint.md §"Next actions (4 parallel tracks)"` and
+§"Kill criteria".*
+
+- **Gate A (prose):** all 14 prose blocks drafted at v0.1 or
+  better. **MET** (iteration 13).
+- **Gate B (defensibility):** dry-run scorecard shows 0
+  unanswerable objections, ≤ 1 evidence-gated objection, ≤ 1
+  partial. **MET** (current 10 answerable / 1 partial / 1
+  evidence-gated — the evidence-gated objection is Q3, which
+  resolves simultaneously with Gate E).
+- **Gate C (packet):** submission-packet scorecard shows 0
+  evidence-gated fields. **MET** (current 4 ready / 4
+  author-gated / 0 evidence-gated). Author-gated fields resolve
+  at sign-off, not as a submission blocker.
+- **Gate D (regime survey):** 200 / 200 rows extracted, 3 IRR
+  dual-extractions κ ≥ 0.7 / ICC ≥ 0.8, kill-criteria sanity
+  check re-run on the full 200. **PENDING** (source: §Empirical
+  evidence status §Next-action gating, §Kill criteria).
+- **Gate E (long-tail benchmark):** ≥ 4 named foundation models
+  evaluated across all 30 tasks; ≥ 10 `human+ImageJ.JS` macro
+  executions passing expert-biologist review; `[X]`, `[Y]`, `[Z]`
+  resolved. **PENDING** (source: §Empirical evidence status
+  §Next-action gating, `longtail_tasks.md`). Dry-run Q3 promotes
+  to ANSWERED on Gate E.
+- **Gate F (replay corpus):** ≥ 15 total replay candidates
+  executed, at least one in each of the four time-strata (2016,
+  2018, 2020, 2022), each with a committed `MATCH_REPORT.md`.
+  **PENDING** (source: `replay_candidates.md`, Week-1 report).
+- **Gate G (partner landings):** ≥ 1 teaching partner (for §5 /
+  Fig 4), ≥ 1 clinical partner (§6 / Fig 5), ≥ 1 cross-
+  institution collaboration demo (§7 / Fig 6), each with signed
+  agreement + at least one completed session + committed
+  `collab/<session-id>/` log or video. **PENDING** (source:
+  `outreach_emails.md`, `collaboration_sprint.md`).
+- **Gate H (references verification):** every References v0.1
+  entry promoted from `[VOL:PAGES, DOI]` to verified metadata
+  against the journal record. **PENDING** (estimated ~1 hour
+  author time at pre-submission pass).
+- **Gate I (author sign-off):** CRediT `[INITIALS]`, competing
+  interests, acknowledgements, funding IDs, and suggested
+  reviewer names entered; all author ORCIDs recorded at
+  `v1.0-paper` tag. **PENDING** (author-team sign-off pass).
+- **Gate J (placeholder resolution):** placeholder-propagation
+  script run; zero `[…]` markers remain in `preprint.md` or
+  `manuscript_html/index.html` at submission. **PENDING**
+  (script is the compounding engineering primitive named as
+  first-priority since Iteration 8).
+
+### Overall submission posture
+
+Structurally the paper is submission-ready: every prose block
+required by Nature Methods (body, Methods, References, Figures,
+Cover letter, Supp outline, Dry run, Submission packet, Release
+engineering) exists at v0.1 or better; the dry-run defensibility
+score is 10/12, above the submission-gate floor; the packet has
+zero evidence-gated fields. Empirically the paper is
+evidence-gated on Gates D, E, F, and G — the four pending
+pillars — whose resolution is precisely the paper's empirical
+contribution. The dashboard therefore records two distinct
+postures: **structural readiness: READY** (with author sign-off
++ references verification + placeholder resolution as mechanical
+pre-submission tasks), **empirical readiness: EVIDENCE-GATED**
+(the four Gates D–G resolve simultaneously with the four pillars
+landing). The paper is submission-ready the day Gates D–G are
+all MET; no structural prose work blocks submission today.
+
+### Dashboard discipline
+
+*Three rules govern this artefact and every future iteration of
+it, modelled on the dry-run and packet discipline blocks.*
+
+- **(i) Dashboard is rephrasing.** No dashboard row introduces a
+  measurement, count, or commitment not already reported in a
+  source block. If a future iteration wishes to introduce a new
+  measurement, that measurement must first appear in a source
+  block; the dashboard only re-reports.
+- **(ii) Dashboard is synchronised.** Any future iteration that
+  touches a source block (dry-run scorecard, packet scorecard,
+  figure-slot table, references verification state, corpus
+  counts, placeholder list) must update the dashboard in the
+  same iteration. Updating a source block without updating the
+  dashboard opens a silent regression and is a discipline
+  violation. The dashboard is only load-bearing if it is kept
+  in sync with its sources.
+- **(iii) Dashboard is not a release trigger.** Gate-list
+  MET / PENDING labels report status; they do not constitute a
+  decision to submit. Submission requires author-team sign-off
+  against Gates A–J, not the dashboard alone. The dashboard's
+  role is to make the sign-off decision *auditable* — the author
+  team can see the full gate-state on one screen — not to
+  replace it.
+
+### Readiness scoreboard summary (one-line)
+
+`14 / 14 prose drafted · 10 / 12 defensibility · 8 / 8 packet
+non-regression (0 evidence-gated) · 3 / 6 figure captions ·
+0 / ~35 references verified · 80 / 200 survey · 0 / 30 benchmark ·
+3 / [N] replay · ~25 placeholder labels open · structurally
+READY · empirically EVIDENCE-GATED on Gates D–G.`
+

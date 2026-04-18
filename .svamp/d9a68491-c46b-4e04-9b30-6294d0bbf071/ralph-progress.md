@@ -222,6 +222,38 @@
   that makes its own completeness measurable. At submission the packet
   graduates from `AUTHOR-GATED` to `READY` via one sign-off pass, not
   one evidence drop.
+- **Submission readiness dashboard is the unifier of scattered scorecards.**
+  Iteration 14 (2026-04-18) added
+  `preprint.md §"Drafted prose — Submission readiness dashboard (v0.1)"`
+  and the corresponding `<section class="readiness" id="readiness">` in the
+  HTML render, inserted as the first editorial appendix (immediately
+  before Cover letter) so that an editor or co-author opening the rendered
+  page sees the unified readiness posture before any of the source
+  scorecards. Distinct violet (#6b4c93) palette distinct from the five
+  previously introduced editorial-appendix palettes (cover-letter serif,
+  supp-outline green/amber/red, release-eng blue, dry-run amber, packet
+  teal). Three rules govern this artefact and any future iteration of it:
+  (i) **rephrasing only** — no dashboard row introduces a measurement,
+  count, or commitment not already reported in a source block (dry-run
+  scorecard; packet scorecard; figure-slot table; references verification
+  state; corpus counts; placeholder list); new measurements land in a
+  source block first and only then flow into the dashboard; (ii)
+  **synchronised in-pass** — any future iteration that touches a source
+  scorecard MUST update the dashboard in the *same* iteration, or a
+  silent regression is opened, because the dashboard is only load-bearing
+  if it is kept in sync with its sources; (iii) **not a release
+  trigger** — Gate MET / PENDING labels report status but do not
+  constitute a decision to submit, which requires author-team sign-off
+  against Gates A–J (Gate A = prose coverage, B = defensibility, C =
+  packet non-regression, D = regime survey, E = long-tail benchmark, F =
+  replay corpus, G = partner landings, H = references verification, I =
+  author sign-off, J = placeholder resolution). Three gates (A, B, C)
+  are currently MET; seven are PENDING. The dashboard is the at-a-glance
+  counterpart to the per-block scorecards: it does not replace the
+  dry-run's 10/12 defensibility score or the packet's 4/4/0 scorecard,
+  but it makes them visible from a single screen. At submission the
+  dashboard is the auditable record that Gates A–J all resolved before
+  sign-off.
 - **Release engineering is the Methods ↔ Availability binding at release-
   artefact granularity.** Iteration 11 (2026-04-18) added
   `preprint.md §"Drafted prose — Release engineering (v0.1)"` and the
@@ -1755,6 +1787,180 @@
   serves from disk. No `svamp serve` re-invocation is needed. This
   pattern now holds across six re-render iterations and is the stable
   norm through submission.
+
+---
+
+## 2026-04-18 — Iteration 14: Submission readiness dashboard (v0.1) + HTML render refresh (v0.7)
+
+### What was implemented
+
+- **Drafted §Submission readiness dashboard (v0.1)** at
+  `preprint.md §"Drafted prose — Submission readiness dashboard (v0.1,
+  2026-04-18)"` — ~1,900 words, the long-requested at-a-glance
+  consolidation of the six independent scorecards already maintained
+  across the paper (prose-block coverage; dry-run defensibility;
+  submission-packet completeness; figure slots; references bibliographic
+  verification; three empirical corpora) plus a live placeholder
+  inventory and a submission-gate (A–J) status list. Structure:
+  1. **Status banner** marking the block as a rephrasing artefact;
+     dashboard is load-bearing only if synchronised with its sources.
+  2. **Dashboard purpose and scope** — names all six source scorecards
+     and the ninth surface (placeholder inventory) they union.
+  3. **Readiness scoreboard** — 9-row table: prose coverage (14/14
+     STRUCTURAL-READY), dry-run (10/12 answerable, 1 partial, 1
+     evidence-gated), packet (4 ready / 4 author-gated / 0
+     evidence-gated), figures (3/6 full + 3/6 evidence-gated),
+     references (0/~35 verified), regime survey (80/200, 0/3 IRR),
+     long-tail benchmark (30 specified, 0 model-runs, 0 human-runs),
+     replay corpus (3/[N]), placeholders (~25 labels across 7
+     surfaces). Each row carries measurement + gating path + source
+     block.
+  4. **Go/no-go submission gates** — 10 gates (A = prose coverage,
+     B = defensibility, C = packet non-regression, D = regime survey,
+     E = long-tail benchmark, F = replay corpus, G = partner landings,
+     H = references verification, I = author sign-off, J = placeholder
+     resolution). Three MET (A, B, C); seven PENDING. Gates D–G are
+     precisely the four paper pillars — their resolution *is* the
+     empirical contribution, not a precondition of it.
+  5. **Overall submission posture** — structurally READY (with
+     author sign-off + references verification + placeholder
+     resolution as mechanical pre-submission tasks), empirically
+     EVIDENCE-GATED on Gates D–G.
+  6. **Dashboard discipline** — three rules: rephrasing only;
+     synchronised in-pass; not a release trigger.
+  7. **Scoreboard summary — one line** — a single terse line designed
+     for sidebar / status-chip / iteration-log inclusion.
+- **HTML render refreshed to v0.7.** `manuscript_html/index.html` now
+  includes a new `<section class="readiness" id="readiness">` inserted
+  as the first editorial appendix (immediately before Cover letter).
+  Positioning is deliberate: an editor or co-author opening the
+  rendered page should see the unified readiness posture before any
+  of the source scorecards. Distinct violet (#6b4c93) palette distinct
+  from the five previously introduced editorial-appendix palettes
+  (cover-letter serif; supp-outline green/amber/red; release-eng
+  blue; dry-run amber; packet teal). New CSS subblocks:
+  `.readiness-banner` (READINESS DASHBOARD status line);
+  `.readiness-table` (9-row scoreboard with dimension / measurement /
+  gating path / source-block columns); `.gate-table` (10-row gate
+  list with letter / condition / status / source columns);
+  `.status-met` / `.status-pending` / `.status-partial` /
+  `.status-structural` / `.status-evgated` / `.status-numeric` status
+  chips; `.posture-box` (summary of dual postures); `.one-line-summary`
+  (terse scoreboard summary); `.discipline` (three-rule ul).
+  Version strings bumped v0.6 → v0.7 in four places (article-meta
+  published line; status-chip draft; sidebar article-info `Draft
+  version`; footer rendered-from line). Status-chip status content
+  promoted to `14 prose blocks v0.1 (+ readiness dashboard);
+  structurally READY · empirically EVIDENCE-GATED on Gates D–G;
+  defensibility 10/12; packet 4 ready / 4 author-gated / 0
+  evidence-gated; 3 / 10 submission gates MET`. Sidebar Evidence-status
+  gains a new `Readiness posture` row reporting the overall posture
+  and gate count; `Ready (prose v0.1)` list extended to include
+  `Readiness dashboard` as the 15th entry (marked `<strong>` as the
+  newest). ToC gains `Readiness dashboard` entry between References
+  and Cover letter. Sidebar gains a new `View the submission readiness
+  dashboard ↓` callout (violet-tinted to match the section) inserted
+  above the cover-letter callout so it sits at the top of the
+  callout stack.
+- **Re-served via svamp.** Same mount name `manuscript`, same URL
+  `https://static-serve-0bc5cde8.svc.hypha.aicell.io/manuscript/`.
+  Post-edit HTTP HEAD → `200`, `content-length: 199,447` (up from
+  181,410), `last-modified: Sat, 18 Apr 2026 12:47:14 GMT`. The string
+  `readiness` / `Readiness` / `READINESS` appears 55× in the rendered
+  page (section id + ToC anchor + sidebar callout + status-chip +
+  51 intra-document anchors / labels / table cells); `v0.7` appears
+  4× exactly where expected (article-meta, draft chip, sidebar dt,
+  footer); zero residual `v0.6` references remain. HTML parses
+  well-formed (Python `html.parser`: zero unclosed tags, zero
+  mismatched tags).
+
+### Files changed
+
+- `preprint.md` — appended Submission readiness dashboard v0.1 block
+  after the Submission packet. No existing prose or scaffolding
+  modified. File is now 1,435 lines / ~22,900 words.
+- `manuscript_html/index.html` — added `section.readiness` CSS block
+  (~165 lines), inserted a new `<section>` before Cover letter with
+  a status banner, 9-row scoreboard table, 10-row gate table,
+  posture box, discipline ul, and one-line summary. Added ToC entry;
+  bumped version strings in four places; added sidebar callout
+  (violet-tinted); promoted status-chip; added sidebar
+  `Readiness posture` row. File is now 199,447 bytes / 2,282 lines
+  (up from 181,410 bytes / 1,992 lines).
+- `.svamp/d9a68491-c46b-4e04-9b30-6294d0bbf071/ralph-progress.md` —
+  this entry; added one pattern bullet at the top of the Patterns
+  block.
+
+### Learnings for future iterations
+
+- **The dashboard is the readiness regression-detector.** The core
+  value of the dashboard is not that it reports new information — by
+  design it rephrases only — but that it creates one screen on which
+  a regression in any source scorecard becomes visually obvious. If a
+  future iteration edits the dry-run scorecard to drop an objection
+  from `Answerable` to `Evidence-gated` but forgets to update the
+  dashboard, the dashboard's row for dry-run will disagree with the
+  source, and the next iteration's dashboard-consistency check will
+  catch it. This is the same mechanism as the References cross-
+  reference map (which prevents a citation rename from drifting
+  between sections) and the Online-Methods-↔-§10 twin-binding (which
+  prevents a Methods subsection from orphaning its Availability
+  artefact). The dashboard is the third such consistency instrument;
+  the pattern of "no-single-source-of-truth + audit surface that
+  catches drift" is now the dominant organisational discipline of
+  this paper.
+- **Highest-value next iteration without new evidence:
+  placeholder-propagation script (first-priority for seven iterations
+  running — now NAMED as Gate J on the dashboard).** With Gate J
+  promoted onto the dashboard, the script's absence is now visually
+  surfaced as a PENDING submission gate; the dashboard makes the
+  script's deferral cost visible. Seven surfaces carry placeholders:
+  `preprint.md`, `manuscript_html/index.html`, References cross-
+  reference map, Supp outline allocation tables, Release engineering
+  pin table, Dry-run scorecard, Submission packet scorecard. The
+  script takes a `placeholders.yaml` resolution dictionary and emits
+  all seven surfaces with values substituted; partial resolution
+  (e.g., `[LICENCE]` = MIT) is already tractable today even without
+  evidence landing. Writing the script is now the dominant outstanding
+  engineering task and its iteration would resolve Gate J and
+  measurably move the dashboard.
+- **Second-highest: placeholder-propagation script partial run with
+  current-knowable resolution dictionary.** Even before Gates D–G
+  land, several placeholders are already resolvable: `[LICENCE]` (the
+  repo licence is visible in `LICENCE` / `package.json`); `[URL]`
+  (the svamp-served URL and the GitHub Pages / CNAME URL are both
+  known); `[URL/github]` (same); `[VOL:PAGES, DOI]` for a subset of
+  the References (the ones whose journal records are unambiguously
+  public — Schneider 2012, Schindelin 2012). A partial run against
+  the dashboard would drop the open-placeholder count from ~25 to
+  ~18 and promote one cell of the dashboard in the same iteration,
+  even with no new evidence.
+- **Third-highest: dashboard ↔ gate table cross-check instrument.**
+  The dashboard now names 10 gates (A–J). Three are currently MET
+  (A, B, C); seven are PENDING. An iteration that lands evidence
+  touching any PENDING gate (e.g., one replay MATCH_REPORT lands →
+  Gate F partial) must re-read the gate table to re-promote status.
+  A future iteration could add one more dashboard row: "Days since
+  last gate promotion" — a lightweight pace-of-progress metric that
+  surfaces long-deferred work (currently Gate J has been pending for
+  7 iterations). Consider adding this on the next evidence-landing
+  iteration.
+- **Framing containment re-verified across the v0.7 render.** Readiness
+  dashboard body mentions AI only as subject (Gate E = long-tail
+  benchmark characterises foundation-model performance) — no new AI
+  claim; every AI reference is routed through the §8 regime-
+  characterisation frame. The pattern bullet at the top of this file
+  (*"AI stays contained to §8"*) is preserved. Dashboard is also
+  packet-rephrasing-clean: zero dashboard cells introduce a number or
+  commitment not already reported in a source block (verified by
+  spot-check: every number in the dashboard is the verbatim number
+  from its source scorecard).
+- **Served URL is stable across re-renders (Iteration 8 / 9 / 10 / 11
+  / 12 / 13 / 14).** Mount is in place under the name `manuscript`
+  (registered 2026-04-18 11:54); re-saving the HTML on disk is
+  sufficient — svamp serves from disk. No `svamp serve` re-invocation
+  is needed. This pattern now holds across seven re-render iterations
+  and is the stable norm through submission.
 
 ---
 
