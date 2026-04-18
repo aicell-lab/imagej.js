@@ -2,6 +2,27 @@
 
 ## Patterns
 
+- **CSS scoping discipline when an HTML element type is reused across section
+  roles.** Iteration 21 (2026-04-18) fixed a regression introduced silently in
+  iteration 20: the generic `aside { position:sticky; top:20px; border-top:2px
+  solid; ... }` sidebar rule applied to *all* `<aside>` elements, including the
+  newly-added `aside.nm-box` (Box 1). The Box therefore pinned to the top of
+  the viewport and covered body content as the reader scrolled past §1 — a
+  regression invisible to the HTML well-formed validator, to the placeholder-
+  inventory validator, and to every Gate-state scorecard, discoverable only by
+  a human viewing the rendered page. The fix narrowed six sidebar selectors
+  from `aside ...` to `aside.sidebar ...` and added `class="sidebar"` to the
+  actual sidebar element. **Rule**: when a new element-class combination is
+  introduced for a structurally-different role (`aside.nm-box` alongside an
+  existing sidebar `<aside>`), *first* audit every pre-existing CSS rule
+  targeting the raw element tag and *narrow* each to a role-discriminating
+  class before landing the new rule-set. A well-formed DOM is not a styled
+  DOM; CSS regressions are their own validation surface. Future iterations
+  adding another nm-box sibling (Box 3, etc.) do not re-trigger this class of
+  bug because the Box class is already narrowed; but iterations that introduce
+  a *new* tag-reuse (e.g., `<figure class="collab-vignette">` alongside the
+  existing `<figure class="figure">`) must repeat the audit.
+
 - **Biologist-facing pull-out box is a legitimate narrative-scaffolding surface
   distinct from body prose.** Iteration 20 (2026-04-18) added `Box 1 — Three
   working days with ImageJ.JS` between §1 Introduction and §2 Measurement,
@@ -3294,3 +3315,134 @@
   pass is blocked on network access.
 
 ---
+
+
+## 2026-04-18 — Iteration 21: Box 2 biologist-facing regime-boundary pull-out + sidebar-aside CSS-scoping regression fix (HTML render v0.14)
+
+### What was implemented
+
+- **Drafted Box 2 v0.1 (~430 words, one lede + three counter-vignettes)** in
+  `preprint.md §"Drafted prose — Box 2 What ImageJ.JS is not (v0.1,
+  2026-04-18)"`, positioned between §7 Real-time collaboration and §8 Limits
+  and complementarity. The lede names the Box's role (translating §8's
+  "we reject no method" into concrete counter-regime scenes) and its
+  containment rule (no new claim, method, or citation). Three counter-
+  vignettes follow: the 50 TB connectomics EM volume (→ §8 ¶2 · Fig 7),
+  the 384-well high-content screen (→ §8 ¶2 · Fig 7), and the Tuesday-
+  night emergency-department triage (→ §8 ¶4 · Fig 7). Every method named
+  — Cellpose, StarDist, CellProfiler, SAM, FDA-cleared DL classifiers —
+  is already defined and cited in §8's four paragraphs; every bracketed
+  placeholder follows the Fig 1c / §8 ¶3 inventory, so no new inventory
+  line is added.
+
+- **HTML render v0.14 adds `<aside class="nm-box" id="box2">` between §7 and
+  §8** using the `.nm-box` CSS rules introduced for Box 1 (iter 20),
+  preserving the Nature Methods pull-out idiom (light-blue tint, 4-px
+  accent left border, serif body with sans-serif box-tag/vignette headers,
+  italic lede, dotted separators). Three vignette subsections render with
+  bold sans-serif title + per-vignette cross-reference link row
+  ("→ §8 ¶2 · Fig 7" etc.) and a justified serif paragraph. A footer row
+  restates the no-new-claim rule.
+
+- **Version bumps v0.13 → v0.14** in all four places (article-meta, draft
+  chip, sidebar Draft version dd, footer rendered-from div). Status chip
+  extended with iteration-21 narrative; sidebar Ready (prose v0.1) list
+  extended with `Box 2 (regime-boundary pull-out, iter 21)` (bold).
+  Readiness dashboard banner augmented and prose-coverage row's count
+  increments 17/17 → 18/18 with `Box 2 added iter 21` chip; Gate-A
+  condition updated to name iteration 21 + Box 2.
+
+- **Fix: sidebar-aside CSS regression (user-reported at render-time).**
+  Iteration 20 introduced `aside.nm-box` to style Box 1 but did not narrow
+  the pre-existing generic `aside { position:sticky; top:20px; border-top:2px
+  solid; padding-top:18px; align-self:start; }` rule — which applied to
+  *all* `aside` elements, including the new Box 1. In v0.13 Box 1 pinned to
+  the top of the viewport and covered body content as the reader scrolled
+  past §1. The fix narrows six sidebar CSS selectors from `aside ...` to
+  `aside.sidebar ...` (including the mobile-viewport `order:2` rule) and
+  adds `class="sidebar"` to the actual sidebar `<aside>` element at line
+  3917. After the fix, `aside.nm-box` (Box 1, Box 2) inherits only
+  `.nm-box` styles — no sticky position, no top-border, no
+  `align-self: start` — and flows inline with the body prose as intended;
+  the sidebar continues to pin at `top: 20px` on wide viewports and drop
+  to `order: 2` below 900 px as before.
+
+- **HTML well-formed check passes.** Custom `html.parser` validator reports
+  zero tag issues across the full 373,951-byte file.
+
+- **Served URL confirmed stable.** Mount `manuscript` continues to serve
+  from disk. HTTP HEAD against
+  `https://static-serve-0bc5cde8.svc.hypha.aicell.io/manuscript/` → `200`,
+  `content-length: 373951` exactly matching `wc -c` on disk.
+
+### Files changed
+
+- `preprint.md` — appended one "Drafted prose" block (Box 2 v0.1, ~430 words,
+  one lede + three counter-vignettes) after the Box 1 v0.1 block. No
+  existing content modified.
+- `manuscript_html/index.html` — inserted a complete
+  `<aside class="nm-box" id="box2">…</aside>` block between §7 closing
+  `</section>` and `<!-- §8 -->`; bumped version strings v0.13 → v0.14 in
+  four places; extended status chip, Ready list, readiness dashboard banner,
+  prose-coverage row 17/17 → 18/18 with Box 2 chip and Gate-A condition,
+  footer rendered-from div; scoped six sidebar CSS rules `aside ...` →
+  `aside.sidebar ...` and added `class="sidebar"` to the sidebar `<aside>`
+  element at line 3917. File grew 368,132 → 373,951 bytes (+5,819 bytes net).
+- `.svamp/d9a68491-c46b-4e04-9b30-6294d0bbf071/ralph-progress.md` — this
+  entry; added one new Patterns bullet at the top (CSS scoping discipline
+  for section-role element reuse).
+
+### Learnings for future iterations
+
+- **CSS scoping is load-bearing when element types are reused across section
+  roles.** See the new Patterns bullet at top for the full rule. The bug
+  introduced in iteration 20 was invisible to every programmatic validator
+  on the repo (HTML well-formedness, placeholder inventory, Gate-state
+  scorecards) and discoverable only by visual inspection of the rendered
+  page. Future iterations should treat `visual rendering` as its own
+  validation surface distinct from `DOM well-formedness`.
+
+- **Box 2 landed the iteration-20 "second-highest next iteration" path
+  without further evidence.** At iteration 20 the highest-value next
+  iteration was Gate H (bibliographic verification, ~35 DOI lookups),
+  which requires network access; the second-highest was Box 2
+  "What ImageJ.JS is not". Iteration 21 took the second-highest.
+
+- **Placeholder-inventory discipline holds (third application).** Like
+  iterations 19 (§4 prose) and 20 (Box 1), Box 2 adds zero new placeholders.
+  Every bracketed value in Box 2 points at a token already carried by
+  Fig 1c, §2 ¶5, or §8 ¶3.
+
+- **Body prose remains AI-free outside §8.** Box 2 mentions DL methods only
+  as the *right tool* for regimes ImageJ.JS is *not* the right tool for —
+  which is §8's subject. The "AI stays contained to §8" pattern is extended
+  to include Box 2 as a §8-adjacent biologist-facing surface.
+
+- **Iteration kind (iter 21) was two-phase: narrative-scaffolding landing +
+  visual-regression fix.** This is a new iteration-kind-pair not catalogued
+  at iteration 20 (four kinds: body-prose promotion, figure/visual pass,
+  scorecard, narrative-scaffolding). `Regression fix` is a fifth kind
+  triggered by user-reported visual inspection. Future iterations that
+  combine narrative-scaffolding with a regression fix should name both
+  kinds explicitly.
+
+- **Highest-value next iteration without new evidence: Bibliographic
+  verification pass (Gate H), still deferred from iterations 16–20.**
+
+- **Second-highest next iteration without new evidence: Copy-edit /
+  biologist-tone pass across promoted prose (Abstract, §§1/2/4/5/6/7/8,
+  Box 1, Box 2).** Six structural-commitment prose blocks and two
+  biologist-facing pull-out Boxes have landed. A single copy-edit pass for
+  tone, voice, and citation form — without changing any claim — would raise
+  the prose quality of v0.14 to submission-grade.
+
+- **Third-highest next iteration: visual-rendering validation surface.**
+  Because the iteration-20 CSS regression was discoverable only by visual
+  inspection, a systematic pass looking at every pull-out, section
+  transition, and editorial-machinery scorecard with a human eye (or an
+  automated screenshot + DOM-layout check) would pre-empt the class of bug
+  this iteration fixed. This is a new, previously-uncatalogued quality
+  surface.
+
+---
+

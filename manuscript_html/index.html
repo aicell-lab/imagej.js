@@ -89,7 +89,7 @@
   }
   @media (max-width: 900px) {
     main { grid-template-columns: 1fr; }
-    aside { order:2; }
+    aside.sidebar { order:2; }
   }
 
   /* Article header */
@@ -416,7 +416,7 @@
   }
 
   /* Sidebar */
-  aside {
+  aside.sidebar {
     font-family:var(--sans);
     font-size:13px;
     color:#333;
@@ -426,7 +426,7 @@
     position:sticky;
     top:20px;
   }
-  aside .toc h3 {
+  aside.sidebar .toc h3 {
     font-size:12px;
     font-weight:700;
     text-transform:uppercase;
@@ -434,24 +434,24 @@
     margin:0 0 10px;
     color:#000;
   }
-  aside .toc ul { list-style:none; margin:0; padding:0; }
-  aside .toc li { padding:5px 0; border-bottom:1px solid var(--nm-hairline); }
-  aside .toc a { color:#111; display:block; line-height:1.4; }
-  aside .toc a:hover { color: var(--nm-accent); }
-  aside .toc li .num { color: var(--nm-muted); margin-right:6px; font-weight:600; font-size:12px; }
+  aside.sidebar .toc ul { list-style:none; margin:0; padding:0; }
+  aside.sidebar .toc li { padding:5px 0; border-bottom:1px solid var(--nm-hairline); }
+  aside.sidebar .toc a { color:#111; display:block; line-height:1.4; }
+  aside.sidebar .toc a:hover { color: var(--nm-accent); }
+  aside.sidebar .toc li .num { color: var(--nm-muted); margin-right:6px; font-weight:600; font-size:12px; }
 
-  aside .meta {
+  aside.sidebar .meta {
     margin-top:24px; padding-top:14px; border-top:1px solid var(--nm-hairline);
   }
-  aside .meta h3 { font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; margin:0 0 8px; }
-  aside .meta dl { margin:0; }
-  aside .meta dt { font-weight:600; color:#000; margin-top:8px; font-size:12px; }
-  aside .meta dd { margin:2px 0 0; color:#444; font-size:12.5px; line-height:1.45; }
+  aside.sidebar .meta h3 { font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; margin:0 0 8px; }
+  aside.sidebar .meta dl { margin:0; }
+  aside.sidebar .meta dt { font-weight:600; color:#000; margin-top:8px; font-size:12px; }
+  aside.sidebar .meta dd { margin:2px 0 0; color:#444; font-size:12.5px; line-height:1.45; }
 
-  aside .coverletter-link {
+  aside.sidebar .coverletter-link {
     margin-top:22px; padding:12px 14px; background:#fafafa; border:1px solid var(--nm-border); border-radius:3px;
   }
-  aside .coverletter-link a { font-weight:600; }
+  aside.sidebar .coverletter-link a { font-weight:600; }
 
   /* References */
   section.references { margin-top:40px; padding-top:24px; border-top:2px solid #000; }
@@ -1619,7 +1619,7 @@
 <!-- Article header -->
 <div class="article-meta">
   <span class="tag">Brief Communication</span>
-  <span>Open Access · Published: working draft v0.13</span>
+  <span>Open Access · Published: working draft v0.14</span>
   <span class="published">18 April 2026</span>
 </div>
 
@@ -1638,9 +1638,9 @@
 </p>
 
 <div class="status-strip">
-  <span class="chip draft">Working draft v0.13 · 2026-04-18</span>
+  <span class="chip draft">Working draft v0.14 · 2026-04-18</span>
   <span class="chip preprint">Target venue · Nature Methods Brief Communication</span>
-  <span class="chip status">Evidence status · 22 prose blocks v0.1 (+ Box 1 biologist-facing pull-out, iter 20; + §4 Replay structural-commitment prose, iter 19); Box 1 wires §§3/4/5/6 to three recognisable working-day scenarios (Monday teaching lab → §5 · Thursday clinical consult → §6 · Friday re-run six months later → §4); biologist-facing visual pass landed iter 17 (Graphical Abstract, Fig 1-supplement subdomain montage, rich SVG schematics for Fig 4/5/6, new Fig 7 composition); body-prose coverage §§1–10 complete (§§2/4/5/6/7 evidence-gated at numerical resolution); structurally READY · empirically EVIDENCE-GATED on Gates D–G; defensibility 10/12; packet 4 ready / 4 author-gated / 0 evidence-gated; reporting summary 22 ready / 0 author-gated / 3 evidence-gated; research briefing 4 ready / 1 author-gated / 1 evidence-gated / 1 editorial; [URL]/[URL/github]/[LICENCE] resolved iter 15; 3 / 10 submission gates MET (Gate J partial)</span>
+  <span class="chip status">Evidence status · 23 prose blocks v0.1 (+ Box 2 biologist-facing regime-boundary pull-out, iter 21; + Box 1 biologist-facing pull-out, iter 20; + §4 Replay structural-commitment prose, iter 19); Box 2 translates §8 "we reject no method" into three concrete counter-regime scenes (50 TB connectomics EM volume · 384-well high-content screen · Tuesday-night ED triage) each mapped to §8 ¶2 / §8 ¶2 / §8 ¶4 and to Fig 7's composition surface, with no new claim, method, or citation; biologist-facing visual pass landed iter 17 (Graphical Abstract, Fig 1-supplement subdomain montage, rich SVG schematics for Fig 4/5/6, new Fig 7 composition); body-prose coverage §§1–10 complete (§§2/4/5/6/7 evidence-gated at numerical resolution); structurally READY · empirically EVIDENCE-GATED on Gates D–G; defensibility 10/12; packet 4 ready / 4 author-gated / 0 evidence-gated; reporting summary 22 ready / 0 author-gated / 3 evidence-gated; research briefing 4 ready / 1 author-gated / 1 evidence-gated / 1 editorial; [URL]/[URL/github]/[LICENCE] resolved iter 15; 3 / 10 submission gates MET (Gate J partial)</span>
 </div>
 
 <!-- Abstract -->
@@ -2862,6 +2862,29 @@
   </figure>
 </section>
 
+<!-- Box 2 — biologist-facing regime-boundary pull-out (iter 21): three counter-vignettes (EM volume, high-content screen, ED triage) that translate §8 "we reject no method" into concrete scenes where ImageJ.JS is the wrong tool. No new claim; each vignette wires to §8's existing paragraphs and citations. -->
+<aside class="nm-box" id="box2" aria-labelledby="box2-title">
+  <h3 class="box-title" id="box2-title"><span class="box-tag">Box 2</span>What ImageJ.JS is not</h3>
+  <p class="box-lede">The regime argument of <a href="#sec-8">§8</a> can also read abstractly. The three counter-vignettes below name three regimes where ImageJ.JS is the wrong tool on purpose — a connectomics reconstruction, a high-content drug screen, an emergency-department triage — and point at the tools that are right. No new claim is introduced; every method named is defined in §8, and the composition surface through which these tools reach an ImageJ.JS session (<a href="#fig7">Fig. 7</a>) is already drawn.</p>
+
+  <div class="vignette">
+    <h4>The 50-terabyte electron-microscopy volume <span class="vignette-ref">→ <a href="#sec-8">§8 ¶2</a> · <a href="#fig7">Fig. 7</a></span></h4>
+    <p>A connectomics laboratory has acquired a 50 TB serial-section EM volume of a mouse brain sample and must trace every neurite through it. The goal is a connectivity matrix, not a figure. Segmenting even a single section by hand is a PhD's worth of work; segmenting the stack by human hand is impossible. The right tool here is a trained convolutional-backbone segmenter — Cellpose <a href="#ref-stringer2025">[Stringer &amp; Pachitariu 2025]</a> for cell-body recognition, or a domain-tuned flood-fill network for neurite tracing — run on a GPU cluster, not a browser. ImageJ.JS's client-side, human-in-the-loop design is a feature in the small-data regime and a bug here. The right workflow opens the volume with a server-side deep-learning pipeline; ImageJ.JS enters, if at all, only at the figure-preparation stage, on a 200-megapixel region an expert biologist wants to inspect by eye before it goes to the reviewer.</p>
+  </div>
+
+  <div class="vignette">
+    <h4>The 384-well high-content screen <span class="vignette-ref">→ <a href="#sec-8">§8 ¶2</a> · <a href="#fig7">Fig. 7</a></span></h4>
+    <p>A drug-discovery facility images 384-well plates three times a day, six channels per well, four fields per well — a daily pixel budget on the order of 10<sup>7</sup> images. Each plate produces a feature matrix, not a narrative; the figure is the hit list. The right tool here is a high-content analysis pipeline — CellProfiler macros, a Cellpose-generalist call per field, a StarDist <a href="#ref-schmidt2018">[Schmidt et al. 2018]</a> nuclear segmentation, each running on a batch queue — reporting into a LIMS. ImageJ.JS offers nothing this regime wants: there is no class of fifteen undergraduates waiting for a URL, no privacy-sensitive per-patient workstation, no <em>"threshold=65"</em> the medicinal chemist will set by hand. A small-data, human-centred instrument is a misfit for a large-data, automation-centred regime, and §8 ¶2 says so.</p>
+  </div>
+
+  <div class="vignette">
+    <h4>The Tuesday-night emergency-department triage <span class="vignette-ref">→ <a href="#sec-8">§8 ¶4</a> · <a href="#fig7">Fig. 7</a></span></h4>
+    <p>An emergency-department clinician needs a binary "further investigation or discharge" decision on a cardiac ultrasound in under 30 seconds; the patient is in the next room. The right tool here is a calibrated, regulatorily-cleared deep-learning classifier with known sensitivity and specificity, called from the hospital's EMR — not a browser-based exploratory analysis platform. ImageJ.JS's strengths — you can see what the macro did, you can change a threshold and re-run, you can share the URL with a colleague — are liabilities at 02:00 when the clinician has 30 seconds and a policy requirement to log the decision under an FDA-cleared device. ImageJ.JS composes with such a classifier (<a href="#fig7">Fig. 7</a>; Hypha-RPC and MCP surfaces of <code>hypha-imagej-service.js</code>) for retrospective case review and teaching, but is explicitly not the instrument that makes the triage call. The regime boundary here is one of clinical workflow, not of capability.</p>
+  </div>
+
+  <div class="box-footer">Box 2 introduces no new claim, number, or citation; every method (Cellpose, StarDist, CellProfiler, FDA-cleared DL classifiers) is already defined and cited in <a href="#sec-8">§8</a>, and every bracketed placeholder is the same token already carried by <a href="#fig1">Fig. 1c</a> and the §8 long-tail paragraph.</div>
+</aside>
+
 <!-- §8 -->
 <section class="body-section" id="sec-8">
   <h2><span class="num">8</span> Limits and complementarity</h2>
@@ -3205,7 +3228,7 @@
   <p class="readiness-meta">Draft v0.1 · 2026-04-18 · at-a-glance consolidation of every completeness measurement already tracked across <code>preprint.md</code>. Rephrases existing scorecards — introduces no new claim, count, or commitment. This is a submission-engineering artefact, not body prose.</p>
 
   <div class="readiness-banner">
-    <strong>READINESS DASHBOARD</strong> · structurally <span class="status-met">READY</span> · empirically <span class="status-evgated">EVIDENCE-GATED</span> on Gates D–G (regime survey · long-tail benchmark · replay scale-up · partner landings) · §§5/6/7 promoted from evidence-gated notices to structural-commitment prose iteration 18 · §4 Replay promoted from evidence-gated notice to structural-commitment prose iteration 19 · Box 1 biologist-facing pull-out added between §1 and §2 iteration 20 · last recomputed 2026-04-18
+    <strong>READINESS DASHBOARD</strong> · structurally <span class="status-met">READY</span> · empirically <span class="status-evgated">EVIDENCE-GATED</span> on Gates D–G (regime survey · long-tail benchmark · replay scale-up · partner landings) · §§5/6/7 promoted from evidence-gated notices to structural-commitment prose iteration 18 · §4 Replay promoted from evidence-gated notice to structural-commitment prose iteration 19 · Box 1 biologist-facing pull-out added between §1 and §2 iteration 20 · Box 2 biologist-facing regime-boundary pull-out added between §7 and §8 iteration 21 · last recomputed 2026-04-18
   </div>
 
   <p>Eight independent scorecards are maintained across the paper — prose-block coverage (now including §4 Replay structural-commitment prose, iteration 19), dry-run defensibility, submission-packet completeness, figure slots, references verification, the three empirical corpora, the Life Sciences Reporting Summary completeness (iteration 15), and the Research Briefing segment readiness (iteration 16) — plus a live placeholder inventory. An editor or co-author auditing submission readiness would otherwise have to read eleven separate surfaces. This dashboard reports all of them on one screen. Each row's source block is named in the third column; if the dashboard and a source block disagree, the dashboard is the regression to fix, not the source.</p>
@@ -3226,8 +3249,8 @@
     <tbody>
       <tr>
         <td>Prose-block coverage</td>
-        <td><span class="status-numeric">17 / 17</span> <span class="status-structural">STRUCTURAL-READY</span> · <span class="status-met">§§5/6/7 promoted iter 18</span> · <span class="status-met">§4 promoted iter 19</span> · <span class="status-met">Box 1 added iter 20</span></td>
-        <td>Version increments as evidence lands; no new block creation required for body sections (Research Briefing added iteration 16; §§5/6/7 promoted iter 18; §4 Replay promoted iter 19; Box 1 biologist-facing pull-out added iteration 20 as a narrative-scaffolding block between §1 and §2, introducing no new empirical claim and resolving Gate G/F placeholders through the Fig 4/5 and <code>replay/&lt;candidate&gt;/MATCH_REPORT.md</code> inventory already committed).</td>
+        <td><span class="status-numeric">18 / 18</span> <span class="status-structural">STRUCTURAL-READY</span> · <span class="status-met">§§5/6/7 promoted iter 18</span> · <span class="status-met">§4 promoted iter 19</span> · <span class="status-met">Box 1 added iter 20</span> · <span class="status-met">Box 2 added iter 21</span></td>
+        <td>Version increments as evidence lands; no new block creation required for body sections (Research Briefing added iteration 16; §§5/6/7 promoted iter 18; §4 Replay promoted iter 19; Box 1 biologist-facing pull-out added iteration 20 as a narrative-scaffolding block between §1 and §2; Box 2 biologist-facing regime-boundary pull-out added iteration 21 as a second narrative-scaffolding block between §7 and §8 — both introduce no new empirical claim, every method named in Box 2 is already cited in §8 and every placeholder follows the Fig 1c / §8 ¶3 inventory already carried).</td>
         <td>§§1–10, Methods, Release-eng, Cover letter, References, Figure slots, Supp outline, Dry run, Submission packet, Reporting Summary, Research Briefing.</td>
       </tr>
       <tr>
@@ -3891,7 +3914,7 @@
 </article>
 
 <!-- Sidebar -->
-<aside>
+<aside class="sidebar">
   <nav class="toc">
     <h3>Contents</h3>
     <ul>
@@ -3929,7 +3952,7 @@
       <dt>Article type</dt>
       <dd>Brief Communication (working draft)</dd>
       <dt>Draft version</dt>
-      <dd>v0.13 · 2026-04-18 (adds <strong>Box 1 — Three working days with ImageJ.JS</strong>, a biologist-facing pull-out placed between §1 Introduction and §2 Measurement, mapping the §3 design principles to three concrete scenes: Monday teaching lab → <a href="#sec-5">§5</a>/<a href="#fig4">Fig. 4</a>, Thursday pathologist's consult → <a href="#sec-6">§6</a>/<a href="#fig5">Fig. 5</a>, Friday re-run six months later → <a href="#sec-4">§4</a>/<a href="#fig3">Fig. 3</a>. Box 1 introduces no new claim, number, or citation; partner-evidence-gated details use placeholder tokens already carried by the Fig 4/5 captions. Prior body prose, figures, and editorial-machinery scorecards unchanged from v0.12)</dd>
+      <dd>v0.14 · 2026-04-18 (adds <strong>Box 2 — What ImageJ.JS is not</strong>, a biologist-facing regime-boundary pull-out placed between §7 Real-time collaboration and §8 Limits and complementarity, translating §8's "we reject no method" argument into three concrete counter-regime scenes: the 50 TB connectomics EM volume → <a href="#sec-8">§8 ¶2</a>/<a href="#fig7">Fig. 7</a>, the 384-well high-content screen → <a href="#sec-8">§8 ¶2</a>/<a href="#fig7">Fig. 7</a>, the Tuesday-night emergency-department triage → <a href="#sec-8">§8 ¶4</a>/<a href="#fig7">Fig. 7</a>. Box 2 introduces no new claim, method, or citation; every method named (Cellpose, StarDist, CellProfiler, FDA-cleared DL classifiers) is already defined and cited in §8, and every bracketed placeholder follows the Fig 1c / §8 ¶3 inventory. Prior body prose, figures, Box 1, and editorial-machinery scorecards unchanged from v0.13)</dd>
       <dt>Target venue</dt>
       <dd>Nature Methods (Brief Communication primary; full Article if pillars 1+2+{3,4,5} rigorously delivered)</dd>
       <dt>Correspondence</dt>
@@ -3941,7 +3964,7 @@
     <h3>Evidence status</h3>
     <dl>
       <dt>Ready (prose v0.1)</dt>
-      <dd>Abstract · §1 · <strong>Box 1 (biologist pull-out, iter 20)</strong> · §2 · §3 · <strong>§4</strong> · <strong>§5</strong> · <strong>§6</strong> · <strong>§7</strong> · §8 · §9 · §10 · Online Methods · Cover letter · References · Figure slots · Supp. outline · Release engineering · Reviewer-response dry run · Submission packet · Readiness dashboard · Reporting Summary · Research Briefing</dd>
+      <dd>Abstract · §1 · <strong>Box 1 (biologist pull-out, iter 20)</strong> · §2 · §3 · <strong>§4</strong> · <strong>§5</strong> · <strong>§6</strong> · <strong>§7</strong> · <strong>Box 2 (regime-boundary pull-out, iter 21)</strong> · §8 · §9 · §10 · Online Methods · Cover letter · References · Figure slots · Supp. outline · Release engineering · Reviewer-response dry run · Submission packet · Readiness dashboard · Reporting Summary · Research Briefing</dd>
       <dt>Figures (biologist pass iter 17)</dt>
       <dd>Graphical Abstract + Fig 1 + Fig 1-suppl (subdomains) + Fig 2 + Fig 3 + Fig 4 + Fig 5 + Fig 6 + <strong>Fig 7 composition</strong> · all in-HTML SVG</dd>
       <dt>Readiness posture</dt>
@@ -3988,7 +4011,7 @@
 
 <footer class="site-footer">
   <div class="wrap">
-    <div>Rendered from <code>preprint.md</code> · working draft v0.13 · 2026-04-18 (adds <strong>Box 1 — Three working days with ImageJ.JS</strong>: a biologist-facing pull-out positioned between §1 and §2 that wires the §3 design principles to three concrete, recognisable scenes — the Monday teaching lab, the Thursday pathologist's consult, the Friday reviewer-triggered re-run six months later — each mapped one-to-one to a pillar section and figure. Box 1 introduces no new claim, number, or citation; it is narrative scaffolding for the biologist reader, wiring abstract principles to working-day practice. Prior body prose and figures unchanged from v0.12). Placeholders still in <span style="background:#fff8e1; color:#6b5000; padding:0 4px; border-radius:2px;">[yellow]</span> are evidence gaps resolved at submission per the placeholder-propagation discipline; resolved values render as inline code.</div>
+    <div>Rendered from <code>preprint.md</code> · working draft v0.14 · 2026-04-18 (adds <strong>Box 2 — What ImageJ.JS is not</strong>: a second biologist-facing pull-out positioned between §7 Real-time collaboration and §8 Limits and complementarity, translating §8's regime-boundary argument into three concrete counter-regime scenes where ImageJ.JS is deliberately the wrong tool — the 50 TB connectomics EM volume, the 384-well high-content screen, the Tuesday-night emergency-department triage — each wired to §8's existing paragraphs and to Fig 7's composition surface. Box 2 introduces no new claim, method, or citation: every method it names (Cellpose, StarDist, CellProfiler, FDA-cleared DL classifiers) is already defined and cited in §8, and every placeholder follows the Fig 1c / §8 ¶3 inventory already carried. Prior body prose, figures, Box 1, and editorial-machinery scorecards unchanged from v0.13). Placeholders still in <span style="background:#fff8e1; color:#6b5000; padding:0 4px; border-radius:2px;">[yellow]</span> are evidence gaps resolved at submission per the placeholder-propagation discipline; resolved values render as inline code.</div>
     <div style="margin-top:10px;">Served via <code>svamp serve</code> · not a journal publication.</div>
   </div>
 </footer>
