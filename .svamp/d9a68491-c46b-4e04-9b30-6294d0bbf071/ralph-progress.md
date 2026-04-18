@@ -4092,3 +4092,275 @@
   layout sanity check on the rendered page).
 
 ---
+
+
+## 2026-04-18 — Iteration 25: Biologist-voice copy-edit of §8 Limits and complementarity (HTML render v0.18)
+
+### What was implemented
+
+- **Drafted §8 Limits and complementarity v0.2 (~960 words, claim-
+  preserving biologist-voice rewrite of v0.1)** in
+  `preprint.md §"Drafted prose — §8 Limits and complementarity (v0.2,
+  biologist-voice rewrite 2026-04-18)"`, appended as the 29th Drafted-
+  prose block after the §3 v0.2 block from iter 24. v0.2 preserves the
+  five-paragraph structure of v0.1 (regime framing; where DL is right;
+  where DL is not yet right; composition across regimes; agentic
+  landscape) but opens every paragraph on a biologist-recognisable
+  scene before any abstract regime claim. Specifically: ¶1 opens "A
+  biologist who has read this far is entitled to a concrete question:
+  what about deep learning?" (replacing editorial-voice "The argument
+  of this paper is that small-data, human-centred bioimage analysis is
+  a distinct regime…"); ¶2 opens with three large-data biologist
+  scenes (a high-content-screen microscopist imaging tens of thousands
+  of wells per plate; a connectomics group segmenting every neurite in
+  a 50-TB electron-microscopy volume; a live-cell lab tracking mitoses
+  across weeks of time-lapse) before naming Cellpose/StarDist/CellSAM/
+  deepImageJ; ¶3 opens with three long-tail biologist scenes (a
+  malaria researcher looking at forty *Plasmodium*-gametocyte thick-
+  smear images; a plant pathologist scoring Bielschowsky-silver
+  tangles in a rare neurodegenerative model line; a field ecologist
+  with a hundred phone photographs of agar plates taken in a Kenyan
+  greenhouse) before the benchmark-specification sentence; ¶4 opens
+  "A pathologist's working day often spans both regimes inside a
+  single case" before naming the Hypha-RPC / MCP composition surface;
+  ¶5 opens "Elsewhere, large language models are learning to drive
+  image-analysis tools" (replacing editorial-voice "Parallel to the
+  human-centred regime characterised here, a distinct research
+  direction has emerged…"). v0.2 also clarifies the third paragraph's
+  close with an explicit biologist-voice coda ("A biologist reasoning
+  about rare morphology from forty specimens on her hard drive is not
+  failing a fine-tuning exercise; she is working in a different
+  regime") and tightens the fourth paragraph's close by making the
+  boundary explicit ("The boundary we draw is a boundary of
+  contribution and of scope, not of composability: this paper does
+  not ship, benchmark, or advocate a deep-learning component; but the
+  tool is designed to be called by, and to call, any deep-learning
+  component, by any caller, including agentic ones").
+
+- **HTML render v0.18 replaces §8's five `<p>` elements with the v0.2
+  prose** and adds **five new `<h3>` subsection headings** for
+  navigability — matching the same sans-serif, brand-coloured,
+  14-px `h3` idiom that §3 and §4 already use. The five headings are
+  *Regime, not ranking* (¶1); *Where deep learning is the right tool*
+  (¶2); *Where deep learning is not (yet) the right tool* (¶3); *When
+  a single problem spans both regimes* (¶4); *Elsewhere, large
+  language models are learning to drive image-analysis tools* (¶5).
+  Two internal anchors are added inside the §8 prose: `<a
+  href="#sec-2">§2</a>` in ¶1 (for the bare "§2" regime cross-
+  reference), and an additional `<a href="#fig7">Fig. 7</a>` in ¶4
+  (replacing an unlinked "Fig. 7" — the Fig 7 anchor already exists
+  in ¶5 from v0.1 and is preserved). No new `id`, no new `<aside>`,
+  no new CSS.
+
+- **Version bumps v0.17 → v0.18** in all four canonical places:
+  article-meta line under Published; draft chip in the status strip;
+  sidebar Draft version dd; footer rendered-from div. The article-
+  meta dd and footer div paragraphs are rewritten with iter-25-
+  leading descriptions (paragraph-by-paragraph account of the scene-
+  first reframe; the five h3 subsection headings; the two new anchor
+  wrappers; the explicit biologist-first-contact chain extended to
+  Fig 7) at the same level of detail used for iter-23/24.
+
+- **Sidebar Ready (prose v0.1) list updated** to bold "§8 v0.2
+  (biologist-voice rewrite, iter 25)" in place of the previous
+  unbolded `§8` entry, matching the convention used for "§3 v0.2
+  (biologist-voice rewrite, iter 24)" and "§1 v0.2 (biologist-voice
+  promotion, iter 23)".
+
+- **Readiness dashboard synchronised in-pass.** Banner extended with
+  "§8 v0.2 biologist-voice iter 25"; prose-block coverage row
+  extended with a fresh `<span class="status-met">§8 v0.2 biologist-
+  voice iter 25</span>` chip after the iter-24 chip, preserving the
+  19/19 structural-commitment count (no new block was added).
+  Source-column paragraph extended with a five-sentence iter-25
+  description: reframing of the opening, biologist-scene openings of
+  ¶¶2–5, explicit navigability via the five h3 subsection headings,
+  claim-preservation discipline, and the extended biologist-first-
+  contact body chain through Fig 7.
+
+- **Supplementary-outline allocation table §8 row marker extended**
+  with "v0.2 biologist-voice rewrite, iter 25 — claim-preserving
+  copy-edit of v0.1; five h3 subsection headings added for
+  navigability; no change in Brief-Communication/Article allocation".
+
+- **Status-chip evidence-status text rewritten** to lead with the
+  iter-25 §8 rewrite description (five sentences) ahead of the iter-
+  24 §3 description, which is kept in chronological order below.
+
+- **HTML well-formed check passes.** Custom `html.parser`-based
+  validator reports zero tag issues and zero unclosed elements
+  (`errors: 0, unclosed: 0`) even with the five newly-added h3
+  elements.
+
+- **Anchor-integrity check passes.** The same `href="#…"` vs `id="…"`
+  Python lint that iter 24 ran as a standalone validation step reports
+  169 total `href` anchors, 48 unique, **0 broken** — the two newly-
+  added anchors (`#sec-2` in §8 ¶1 and an additional `#fig7` in §8 ¶4)
+  both resolve to existing section/figure ids. This is the second
+  iteration where the anchor-integrity check has been run as a first-
+  class validation step.
+
+- **Placeholder-inventory holds steady at 134 `placeholder-value`
+  spans and 302 bracketed tokens** — identical counts to v0.17 on the
+  same validator, ratifying the claim-preservation rule for a
+  biologist-voice copy-edit. Zero new placeholders introduced by §8
+  v0.2 (the `[X]`, `[Y] of 30`, `[Z] of 30` placeholders in ¶3 are
+  the identical tokens present in v0.1).
+
+- **Disk size 388,416 → 393,703 bytes** (+5,287 bytes: ~4.6 KB §8
+  prose delta from the scene-first reframe and five h3 headings +
+  ~100 bytes for the two new anchor wrappers + ~600 bytes for iter-
+  25 version-string descriptions in the four canonical places).
+
+- **Served URL confirmed stable.** Mount `manuscript` continues to
+  serve from disk. HTTP HEAD against
+  `https://static-serve-0bc5cde8.svc.hypha.aicell.io/manuscript/` →
+  `200`, `content-length: 393703` exactly matching `wc -c` on disk.
+  `curl … | grep -c "A biologist who has read this far"` returns 4
+  matches (§8 ¶1 + three version-string descriptions); `curl … |
+  grep -c "v0.18"` returns 4 matches (the four canonical version
+  bumps).
+
+- **Re-registered svamp session link** with v0.18 label:
+  `svamp session set-link "https://static-serve-0bc5cde8.svc.hypha.aicell.io/manuscript/" "Manuscript draft v0.18 (Nature Methods) — biologist-voice rewrite of §8 Limits and complementarity"`.
+
+### Files changed
+
+- `preprint.md` — appended one "Drafted prose — §8 Limits and
+  complementarity (v0.2, biologist-voice rewrite 2026-04-18)" block
+  after the §3 v0.2 block from iter 24. No existing content modified.
+  File grew ~16 lines (one blockquote-formatted prose block in the
+  same convention as §3 v0.2 from iter 24).
+- `manuscript_html/index.html` — replaced §8's five `<p>` elements
+  with v0.2 prose; added five h3 subsection headings (same inline-
+  styled idiom §3 and §4 use); added two internal anchor wrappers
+  (`#sec-2` in ¶1, `#fig7` in ¶4); bumped version strings v0.17 →
+  v0.18 in four places; promoted §8 in the sidebar Ready list to
+  bolded "§8 v0.2 (biologist-voice rewrite, iter 25)"; appended "§8
+  v0.2 biologist-voice iter 25" chip to the prose-coverage row;
+  extended the prose-coverage source-column paragraph, status-chip
+  evidence-status text, article-meta dd, footer rendered-from div,
+  and supp-outline allocation table §8 row marker with iter-25-
+  leading descriptions. File grew 388,416 → 393,703 bytes
+  (+5,287 bytes).
+- `.svamp/d9a68491-c46b-4e04-9b30-6294d0bbf071/config.json` —
+  `session_link` updated by `svamp session set-link` with v0.18
+  label.
+- `.svamp/d9a68491-c46b-4e04-9b30-6294d0bbf071/ralph-progress.md` —
+  this entry; no new Patterns bullet added (iter-23's biologist-voice
+  Patterns bullet, refined by iter 24, already covers iter 25 at its
+  third application; the sub-rule about optionally adding h3
+  navigational headings is covered by the existing structure-
+  preserving-vs-adding sub-rule, and the pattern that §3 and §4
+  already use h3 subsection headings is documented in the HTML
+  structure, not in memory).
+
+### Learnings for future iterations
+
+- **Iteration kind (iter 25) was biologist-voice copy-edit with
+  optional h3 navigational affordances** — the fifth iteration kind
+  catalogued in the iter-23 Patterns bullet, applied for the third
+  time. The iter-23 rules (zero new claims; surface-level edits only;
+  biologist-voice chain inspected as a whole) were honoured: (i)
+  every claim, citation (Stringer & Pachitariu 2025, Schmidt 2018,
+  Israel 2025, Gómez-de-Mariscal 2021, Kirillov 2023, Ma 2024, Archit
+  2024, Royer 2024, Chen 2026, Ouyang in prep), named mechanism
+  (`runMacro`, `takeScreenshot`, `getRoisAsGeoJson`, `executeJavaScript`,
+  `hypha-imagej-service.js`, `convertToMcpUrl`,
+  `hypha-imagej-service.js:880`, `longtail_tasks.md`), figure
+  reference (Fig 7), and placeholder (`[X]`, `[Y] of 30`, `[Z] of
+  30`) of v0.1 is preserved verbatim in v0.2; (ii) edits are
+  paragraph-opening reframes + one sentence-level clarification
+  coda in ¶3 + one boundary-restatement in ¶4 + addition of five h3
+  navigational headings; (iii) the biologist-voice chain after iter
+  25 reads Key Points → Abstract v0.6 → §1 v0.2 → Box 1 → §2 → Fig 1
+  → Box 2 → §3 v0.2 → Fig 2 → §4 → Fig 3 → §§5–7 → Fig 4–6 → §8
+  v0.2 → Fig 7 without editorial-voice seams. This is the complete
+  publication-ready biologist-voiced path through the paper's
+  argumentative spine.
+
+- **Sub-rule clarification (iter 25) on the surface-level-edits-only
+  rule:** adding navigational `<h3>` subsection headings is inside
+  the surface-level-edits-only envelope, because (i) it introduces
+  no new claim — each heading is a paraphrase of the opening clause
+  of the paragraph it introduces; (ii) it matches an already-
+  established idiom elsewhere in the paper (§3 and §4 both use the
+  identical inline-styled h3 form); (iii) it improves biologist
+  navigability without reorganising content. A future biologist-
+  voice pass is therefore authorised to add h3 subsection headings
+  where the paragraph structure warrants them, provided each
+  heading paraphrases existing prose rather than introducing new
+  claim or taxonomy.
+
+- **Claim-preservation discipline held strictly (seventh
+  application).** Like iters 19 (§4 prose), 20 (Box 1), 21 (Box 2),
+  22 (Key Points), 23 (Abstract + §1), and 24 (§3), iter 25 adds
+  zero new placeholders and zero new claims. The claim-diff against
+  §8 v0.1 is empty. The placeholder-inventory count is 134
+  `placeholder-value` spans / 302 bracketed tokens in both v0.17 and
+  v0.18.
+
+- **Body prose now contains AI discussion only in §8 (seventh
+  application of the containment rule).** §8 v0.2 is the only body
+  section that names Cellpose, StarDist, CellSAM, SAM, deepImageJ,
+  Omega, napari-mcp, BioImage-Agent, or CellVoyager; no other body
+  section mentions any of these. The "AI stays contained to §8"
+  pattern is preserved at v0.18 after the biologist-voice rewrite.
+
+- **No scorecard re-computation required.** Because the iteration
+  did not change any claim, no Gate state shifts; dry-run
+  defensibility, submission packet, reporting summary, readiness,
+  and research-briefing scorecards all remain valid at v0.18. The
+  prose-coverage row's count is unchanged at 19/19 (no new block).
+
+- **The biologist-first-contact body chain now extends through §8
+  v0.2 → Fig 7 — the complete argumentative spine.** After iter 24
+  the chain reached Key Points → Abstract v0.6 → §1 v0.2 → Box 1 →
+  §2 → Fig 1 → Box 2 → §3 v0.2 → Fig 2; after iter 25 it extends
+  through §4 → Fig 3 → §§5–7 → Fig 4–6 → §8 v0.2 → Fig 7. The paper
+  is now biologist-voiced end-to-end for the argumentative spine
+  (§§1–8 plus all narrative scaffolding). §9 Discussion implications
+  and §10 Availability remain in editorial voice by design — §9 is
+  the methodology-research reflection for the bioimage-methods
+  reader, and §10 is an availability-of-code catalogue. A biologist-
+  voice pass of §9 is **not recommended** because the intended
+  reader for §9 is the methodology-community colleague, not the
+  bench biologist; attempting a biologist-voice rewrite would change
+  the intended-reader frame of the section and constitute a
+  structural edit rather than a copy-edit. §10 is a fixed-format
+  availability statement where voice is pre-determined by genre.
+  The biologist-voice rewrite programme is therefore complete at
+  iter 25.
+
+- **Highest-value next iteration without new evidence (unchanged from
+  iters 22/23/24): Bibliographic verification pass (Gate H).** Still
+  ~35 `[VOL:PAGES, DOI]` placeholders in References v0.1 remain
+  unresolved; a focused single-pass verification against
+  Crossref / DOI.org / journal records resolves Gate H and drops the
+  placeholder-inventory count (currently 302 bracketed tokens / 134
+  placeholder-value spans) by a measurable margin. Since the
+  biologist-voice rewrite programme is complete, the bibliographic
+  verification pass is now the most-valuable next iteration without
+  new partner evidence.
+
+- **Second-highest next iteration without new evidence:
+  tools/validate_manuscript.py (anchor-integrity + placeholder-
+  inventory delta validator + HTML well-formed check).** The three
+  checks have now been run manually for three consecutive iterations
+  (iter 23, 24, 25). Extracting them into a single script pre-empts
+  the iter-21 CSS scoping regression class and turns
+  placeholder-inventory and anchor-integrity checks into regression
+  guards rather than manual recounts.
+
+- **Third-highest: draft Fig 4/5/6/7 full captions from the existing
+  Figure slots commitments.** Fig 4, 5, and 6 carry caption
+  placeholders only from iter 8, and Fig 7 carries an AI-composition
+  panel sketch from iter 17; each has enough structural-commitment
+  evidence that a v0.1 caption draft (inline in `manuscript_html`
+  and back-appended to `preprint.md §"Drafted prose — Figure slots
+  and captions"`) is authorisable without any new partner data, per
+  the caption-vs-evidence rule from iter 8. Writing all four
+  captions at v0.1 in a single iteration would close a visible
+  evidence-gated gap in the Figures block.
+
+---
