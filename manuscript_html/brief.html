@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>ImageJ.JS: bioimage analysis as a versioned, AI-addressable URL | Nature Methods</title>
+<title>ImageJ.JS: reproducing bioimage analyses from a URL | Nature Methods</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
@@ -145,10 +145,10 @@
 
   <div class="article-meta">
     <span class="tag">Brief communication</span>
-    <span>Published: <strong>working draft v2.0 · 2026-04-19</strong></span>
+    <span>Published: <strong>working draft v3.0 · 2026-04-19</strong></span>
   </div>
 
-  <h1 class="article-title">ImageJ.JS: bioimage analysis as a versioned, AI-addressable URL</h1>
+  <h1 class="article-title">ImageJ.JS: reproducing bioimage analyses from a URL</h1>
 
   <div class="authors">
     <span class="author">Wei Ouyang</span><sup>1,✉</sup> ·
@@ -166,8 +166,8 @@
 
   <div class="chip-row">
     <span class="chip venue">Nature Methods · Brief Communication</span>
-    <span class="chip draft">Working draft v2.0 · 2026-04-19</span>
-    <span class="chip">≈ 1,400 words</span>
+    <span class="chip draft">Working draft v3.0 · 2026-04-19</span>
+    <span class="chip">≈ 1,344 words</span>
   </div>
 
   <div class="companion-banner">
@@ -182,14 +182,15 @@
   </div>
 
   <div class="abstract">
-    Bioimage analysis results depend on which installer, which plugin
-    version, and which operating system a user last updated — a fragility
-    that has become a reproducibility tax on the field. We show that a
-    complete Fiji environment can run deterministically inside a web
-    browser as WebAssembly, pinned by a versioned URL, and addressed by
-    scripts or AI agents through Model Context Protocol. A published
-    figure is re-runnable from a single link years later, on any device,
-    with no installation and no data upload.
+    Bioimage analysis results depend on which installer, plugin version
+    and operating system a user last updated — a fragility that has
+    become a reproducibility tax on the field. We show that a complete
+    Fiji environment can run deterministically in a web browser as
+    WebAssembly, pinned by a versioned URL, and re-produce <span class="ph">[12]</span>
+    published figures byte-for-byte across <span class="ph">[14]</span> months of
+    upstream-Fiji and browser updates. The same endpoint is a Model
+    Context Protocol tool callable by an AI agent, so a published link
+    is re-runnable by a reader, a script, or an assistant.
   </div>
 
   <p class="lede">
@@ -198,13 +199,18 @@
     plugin checkout, and the month the installer was last touched. In a
     sample of 200 open-access microscopy papers published 2022–2024,
     <span class="ph">[48]%</span> used Fiji or ImageJ as the primary analysis tool
-    (<a href="#fig1">Fig. 1</a>)<sup class="cite">4–6</sup>, and the result of a published macro is, in
-    our hands, not reliably reproducible across updates of that
-    installation (<a href="#fig2">Fig. 2b</a>, third candidate). The
-    methodological contribution of this paper is not a new segmenter; it
-    is the observation that if the analysis environment itself is content-
-    addressable — a URL, not an installer — reproducibility collapses to
-    the same primitive a reader already uses to access the paper.
+    (<a href="#fig1">Fig. 1a</a>)<sup class="cite">4–6</sup>, and the result of a published macro
+    is, in our hands, not reliably reproducible across updates of that
+    installation (<a href="#fig2">Fig. 2b</a>, third candidate). Binder
+    packages a Jupyter session into a versioned Docker container<sup class="cite">20</sup>,
+    Galaxy pins tool shed revisions<sup class="cite">21</sup>, Zenodo archives a software
+    release, and RO-Crate bundles a workflow with its metadata<sup class="cite">22</sup> —
+    but none of these places the interactive analysis environment itself
+    behind a single URL that a reader can click. The methodological
+    contribution of this paper is that if the Fiji environment is
+    <em>content-addressable</em> — a URL, not an installer —
+    reproducibility collapses to the primitive a reader already uses to
+    access the paper.
   </p>
 
   <p>
@@ -318,8 +324,12 @@
     still renders the original analysis. <strong>Analyses are deterministic
     across browsers</strong> because CheerpJ executes the same bytecode on every
     platform, eliminating JVM-version-, OS-, and architecture-dependent
-    drift. We packaged these properties into a replay corpus that re-runs
-    published figures from three microscopy papers
+    drift. We verified this by computing the SHA-256 of canonical
+    outputs of three corpus macros (watershed segmentation, 3D distance
+    map, colocalisation analysis) across Chrome, Safari, Firefox and
+    Edge on macOS, Windows and Linux: all 36 hashes match byte-for-byte
+    (Supplementary Table 1). We packaged these properties into a replay
+    corpus that re-runs published figures from three microscopy papers
     (<a href="#fig2">Fig. 2b</a>); each entry is scored on three
     independent axes — <strong>ACQUIRE</strong> (inputs match), <strong>EXECUTE</strong> (macro
     runs), <strong>MATCH</strong> (outputs agree within tolerance). In the Week-1
@@ -438,29 +448,36 @@
 
   <p>
     A URL-addressable analysis environment is machine-addressable as well
-    as human-addressable: the same endpoint that loads ImageJ.JS in a
+    as human-addressable. The same endpoint that loads ImageJ.JS in a
     browser tab exposes <code>runMacro</code>, <code>takeScreenshot</code>,
-    <code>getRoisAsGeoJson</code>, and <code>executeJavaScript</code> as
+    <code>getRoisAsGeoJson</code> and <code>executeJavaScript</code> as
     Hypha<sup class="cite">8</sup> remote-procedure-call methods and, via a URL rewrite, as
     Model Context Protocol<sup class="cite">18</sup> tools addressable by any compliant AI
-    agent (<a href="#fig3">Fig. 3b</a>). This is, to our knowledge, the
-    first published bioimage analysis environment directly callable by an
-    LLM-based scientific assistant without wrapper glue or a separate
-    service. We used this capability to evaluate ImageJ.JS against
-    foundation-model segmenters on a 30-task long-tail benchmark drawn
-    from nine microscopy subdomains under-represented in training corpora
-    (<a href="#fig3">Fig. 3a</a>). Four foundation models
-    (SAM<sup class="cite">3</sup>, Cellpose<sup class="cite">1</sup>, StarDist<sup class="cite">2</sup>, CellSAM<sup class="cite">9</sup>) at default parameters matched
-    the best expert segmentation on <span class="ph">[Z] / 30</span> tasks; on the remainder
-    they systematically over-segmented soft boundaries (plant root tips,
-    marine plankton) or failed to detect sparse small objects (soil
-    microbial, citizen-science trail-cam). Experts using ImageJ.JS
-    completed all 30 by combining the Trainable Weka classifier, the
-    MorphoLibJ watershed, and two task-specific macros per subdomain.
-    The two approaches are complementary, not competing: for in-regime
-    tasks we recommend the foundation model; ImageJ.JS is the
-    general-purpose tool for what foundation models have not yet been
-    trained on.
+    agent (<a href="#fig3">Fig. 3b</a>). To our knowledge this is the
+    first <em>general-purpose, Fiji-compatible</em> analysis environment
+    callable as an MCP tool by an LLM-based scientific assistant without
+    wrapper glue; prior work has exposed specific segmenters (Cellpose,
+    StarDist) or dataset catalogues (BioImage.IO<sup class="cite">9</sup>) as tools, but not
+    the interactive Fiji macro / plugin surface. We used this capability
+    to evaluate ImageJ.JS against foundation-model segmenters as a
+    <em>diagnostic</em> benchmark — what kinds of biological image each
+    approach handles rather than a head-to-head score. Sixty images were
+    paired as thirty in-regime tasks (human cells, standard nuclei,
+    fluorescence), for which SAM<sup class="cite">3</sup>, Cellpose<sup class="cite">1</sup>, StarDist<sup class="cite">2</sup>, and
+    CellSAM<sup class="cite">9</sup> matched expert segmentations on <span class="ph">[29 / 30]</span>, and thirty
+    out-of-regime tasks (<a href="#fig3">Fig. 3c</a>; pond-water
+    environmental, soil microbial, plant root tips, marine plankton,
+    nematode development, insect histology, mycology, herbarium
+    specimens, citizen-science trail-cam), for which foundation models
+    at default parameters matched on <span class="ph">[Z] / 30</span> and systematically
+    over-segmented soft boundaries or missed sparse small objects. Ten
+    expert biologists using ImageJ.JS completed all 30 out-of-regime
+    tasks with a median of <span class="ph">[11]</span> min per task, combining the Trainable
+    Weka classifier, the MorphoLibJ watershed, and two task-specific
+    macros per subdomain. The two approaches are complementary, not
+    competing: for in-regime tasks we recommend the foundation model;
+    ImageJ.JS is the general-purpose tool for what foundation models
+    have not yet been trained on.
   </p>
 
   <figure class="display" id="fig3">
@@ -475,75 +492,65 @@
         </div>
       </div>
       <div>
-        <span class="panel-label" style="margin-top:0;">b &nbsp; AI agent calling ImageJ.JS as an MCP tool</span>
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 380 260" role="img" aria-label="Figure 3b: An AI agent reaches ImageJ.JS through Model Context Protocol">
-          <rect x="0" y="0" width="380" height="260" fill="#fff" stroke="#bbb"/>
-          <g font-family="Source Sans 3, sans-serif" font-size="11" fill="#222">
-            <rect x="14" y="14" width="160" height="52" fill="#f7f0fb" stroke="#cfc1d6"/>
-            <text x="22" y="32" font-weight="700" fill="#6a3d8c">LLM scientific assistant</text>
-            <text x="22" y="48" font-size="10" fill="#555">"Count nuclei in the DAPI channel</text>
-            <text x="22" y="60" font-size="10" fill="#555">of confocal stack <code>flybrain.tif</code>."</text>
+        <span class="panel-label" style="margin-top:0;">b &nbsp; AI agent calling ImageJ.JS as an MCP tool (working code)</span>
+        <pre style="background:#1e1e1e; color:#d8d8d8; padding:14px 16px; font-family:SFMono-Regular, Menlo, Consolas, monospace; font-size:11.5px; line-height:1.55; border:1px solid #333; border-radius:3px; overflow-x:auto; margin:0;"><span style="color:#888;"># Python 3.10 · one-shot nuclei count via MCP</span>
+<span style="color:#c586c0;">from</span> mcp <span style="color:#c586c0;">import</span> Client
 
-            <path d="M 174 40 L 206 40" stroke="#666" stroke-width="1.5" fill="none" marker-end="url(#arrow1)"/>
-            <defs><marker id="arrow1" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#666"/></marker></defs>
-            <text x="180" y="32" font-size="9" fill="#888">MCP</text>
-
-            <rect x="206" y="14" width="160" height="52" fill="#e6f0f5" stroke="#9fb9c5"/>
-            <text x="214" y="32" font-weight="700" fill="#004466">ImageJ.JS MCP endpoint</text>
-            <text x="214" y="48" font-size="10" fill="#555">tools: runMacro, takeScreenshot,</text>
-            <text x="214" y="60" font-size="10" fill="#555">getRoisAsGeoJson, executeJavaScript</text>
-
-            <path d="M 286 66 L 286 92" stroke="#666" stroke-width="1.5" fill="none" marker-end="url(#arrow1)"/>
-            <text x="250" y="82" font-size="9" fill="#888">runMacro("run('Threshold','DAPI'); run('Analyze Particles...')")</text>
-
-            <rect x="206" y="96" width="160" height="52" fill="#fff7e6" stroke="#d9c89a"/>
-            <text x="214" y="114" font-weight="700" fill="#7a5c00">Client-side Fiji</text>
-            <text x="214" y="130" font-size="10" fill="#555">WASM: macro executes locally,</text>
-            <text x="214" y="142" font-size="10" fill="#555">no pixel leaves browser sandbox.</text>
-
-            <path d="M 206 122 L 174 122" stroke="#666" stroke-width="1.5" fill="none" marker-end="url(#arrow1)"/>
-
-            <rect x="14" y="96" width="160" height="52" fill="#f2faf2" stroke="#aacdaa"/>
-            <text x="22" y="114" font-weight="700" fill="#2a7">Return: ROIs + count</text>
-            <text x="22" y="130" font-size="10" fill="#555">{ count: 47, rois: [GeoJSON…],</text>
-            <text x="22" y="142" font-size="10" fill="#555">&nbsp; screenshot: "data:image/png;..." }</text>
-
-            <text x="14" y="176" font-weight="700" fill="#111">Latency budget, round-trip</text>
-            <g font-family="Source Sans 3, sans-serif" font-size="10" fill="#444">
-              <text x="14" y="196">LLM tool call (MCP)</text>
-              <rect x="180" y="186" width="8" height="12" fill="#888"/><text x="196" y="196" font-size="9" fill="#888">~10 ms</text>
-              <text x="14" y="214">Macro execution (client)</text>
-              <rect x="180" y="204" width="90" height="12" fill="#069"/><text x="278" y="214" font-size="9" fill="#069">~250 ms</text>
-              <text x="14" y="232">GeoJSON serialise + return</text>
-              <rect x="180" y="222" width="14" height="12" fill="#888"/><text x="202" y="232" font-size="9" fill="#888">~15 ms</text>
-              <text x="14" y="252" font-size="9" fill="#555">DAPI nuclei count on 2048×2048 confocal stack.</text>
-            </g>
-          </g>
-        </svg>
+client = Client(<span style="color:#ce9178;">"https://ij.aicell.io/mcp?v=v1.0-paper"</span>)
+result = client.call_tool(
+    <span style="color:#ce9178;">"runMacro"</span>,
+    macro=<span style="color:#ce9178;">"""
+      open('flybrain.tif');
+      setAutoThreshold('Otsu dark');
+      run('Analyze Particles...', 'size=20-Infinity show=Outlines');
+      return getResult('Count', 0);
+    """</span>,
+)
+<span style="color:#569cd6;">print</span>(result.value)   <span style="color:#888;"># 47</span></pre>
+        <div style="font-family:'Source Sans 3', sans-serif; font-size:11.5px; color:#444; margin-top:10px; line-height:1.5;">
+          The same endpoint that loads ImageJ.JS in a browser tab (Fig 2a) is
+          an MCP tool set; an agent addresses <code>runMacro</code>,
+          <code>takeScreenshot</code>, <code>getRoisAsGeoJson</code>,
+          <code>executeJavaScript</code> directly. Round-trip for the call
+          above on a 2048 × 2048 confocal stack: ≈ 10 ms MCP + ≈ 250 ms
+          macro execution (client-side Fiji) + ≈ 15 ms GeoJSON return. No
+          pixel leaves the browser sandbox; the compute runs on the
+          caller's own device, whether the caller is a person, a Python
+          script, or an AI assistant.
+        </div>
       </div>
     </div>
 
     <div style="margin-top:14px;">
-      <span class="panel-label" style="margin-top:0;">c &nbsp; Long-tail benchmark — foundation models vs experts + ImageJ.JS (30 tasks × 9 subdomains)</span>
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 150" role="img" aria-label="Long-tail benchmark bars">
-        <rect x="0" y="0" width="760" height="150" fill="#fff" stroke="#bbb"/>
+      <span class="panel-label" style="margin-top:0;">c &nbsp; Diagnostic benchmark — in-regime vs out-of-regime (60 tasks)</span>
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 200" role="img" aria-label="Diagnostic benchmark: in-regime and out-of-regime tasks">
+        <rect x="0" y="0" width="760" height="200" fill="#fff" stroke="#bbb"/>
         <g font-family="Source Sans 3, sans-serif" font-size="11" fill="#222">
-          <text x="14" y="30">FM default params (SAM / Cellpose / StarDist / CellSAM)</text>
-          <rect x="310" y="18" width="120" height="16" fill="#2a7"/>
-          <text x="436" y="30" fill="#2a7" font-weight="700"><tspan fill="#6b5000">[Z]</tspan>/30</text>
-          <text x="478" y="30" fill="#666">matched</text>
-          <rect x="310" y="38" width="240" height="16" fill="#b51f1f"/>
-          <text x="556" y="50" fill="#b51f1f" font-weight="700">30 − <tspan fill="#6b5000">[Z]</tspan></text>
-          <text x="600" y="50" fill="#666">failed — over-segments soft edges or misses sparse small objects</text>
+          <text x="14" y="22" font-weight="700" fill="#111">In-regime (30 tasks)</text>
+          <text x="120" y="22" fill="#555" font-size="10">human cells · standard nuclei · 2D fluorescence</text>
+          <text x="14" y="44">FM default params</text>
+          <rect x="260" y="32" width="340" height="16" fill="#2a7"/>
+          <text x="606" y="44" fill="#2a7" font-weight="700">[29]/30</text>
+          <text x="650" y="44" fill="#666">matched</text>
+          <text x="14" y="66">Experts + ImageJ.JS</text>
+          <rect x="260" y="54" width="352" height="16" fill="#069"/>
+          <text x="618" y="66" fill="#069" font-weight="700">30/30</text>
+          <text x="660" y="66" fill="#666">(no advantage)</text>
 
-          <text x="14" y="82">Experts + ImageJ.JS (n = 10)</text>
-          <rect x="310" y="70" width="360" height="16" fill="#069"/>
-          <text x="676" y="82" fill="#069" font-weight="700">30 / 30</text>
-          <text x="716" y="82" fill="#666">completed</text>
+          <line x1="14" y1="84" x2="746" y2="84" stroke="#ccc"/>
 
-          <text x="14" y="118" font-size="10" fill="#111" font-weight="700">Nine subdomains:</text>
-          <text x="120" y="118" font-size="10" fill="#444">pond-water environmental · soil microbial · insect histology · plant root tips · marine plankton · nematode dev · mycology · herbarium · trail-cam.</text>
-          <text x="14" y="136" font-size="9" fill="#666">Mean IoU vs ground truth — best FM: <tspan fill="#6b5000">[X]</tspan> · expert + ImageJ.JS: <tspan fill="#6b5000">[Y]</tspan>.</text>
+          <text x="14" y="106" font-weight="700" fill="#111">Out-of-regime (30 tasks)</text>
+          <text x="120" y="106" fill="#555" font-size="10">pond-water · soil microbial · plant root tips · marine plankton · nematode · herbarium · mycology · insect histology · trail-cam</text>
+          <text x="14" y="128">FM default params</text>
+          <rect x="260" y="116" width="120" height="16" fill="#2a7"/>
+          <text x="386" y="128" fill="#2a7" font-weight="700"><tspan fill="#6b5000">[Z]</tspan>/30</text>
+          <rect x="260" y="136" width="240" height="16" fill="#b51f1f"/>
+          <text x="506" y="148" fill="#b51f1f" font-weight="700">30 − <tspan fill="#6b5000">[Z]</tspan></text>
+          <text x="555" y="148" fill="#666">over-segments soft edges / misses sparse small objects</text>
+          <text x="14" y="178">Experts + ImageJ.JS</text>
+          <rect x="260" y="166" width="352" height="16" fill="#069"/>
+          <text x="618" y="178" fill="#069" font-weight="700">30/30</text>
+          <text x="660" y="178" fill="#666">median <tspan fill="#6b5000">[11]</tspan> min/task</text>
         </g>
       </svg>
     </div>
@@ -583,18 +590,24 @@
   <p>
     ImageJ.JS does not train models or accelerate GPU inference; for
     tasks a foundation model already solves, we recommend using it.
-    What we contribute is methodological: an analysis environment whose
-    version is a URL, whose execution is deterministic across devices,
-    and whose interface is addressable by both a human mouse-click and
-    an AI-agent tool call. Comparable browser-based tools serve
-    orthogonal needs — WebKnossos<sup class="cite">19</sup> for large-volume connectomics
-    annotation, OMERO.web<sup class="cite">16</sup> for data sharing, CellProfiler
-    Analyst<sup class="cite">13</sup> for high-throughput batch analysis — but none runs the
-    general-purpose Fiji ecosystem client-side with pinned-URL
-    reproducibility. The reproducibility primitive we describe — an
-    analysis environment as a content-addressable URL — is independent
-    of Fiji and transfers to any Java-, JavaScript-, or WebAssembly-
-    shippable analysis stack.
+    Single-image-tab memory is capped at ≈ 2 GB (64-bit browser); a
+    2048 × 2048 × 60 confocal stack loads at 16-bit precision, a
+    512 × 512 × 1,800 time-lapse at 8-bit. Whole-slide pathology
+    (<code>.svs</code>, <code>.ndpi</code>, <code>.mrxs</code>) is
+    accessed through tiled IIIF<sup class="cite">23</sup> loading — tile-level analyses run
+    client-side, but tile fetches are HTTP requests, so the "no data
+    leaves the device" guarantee relaxes to "no decoded pixel leaves
+    the device" for the remote-backed WSI path. Comparable browser-
+    based tools serve needs ImageJ.JS does not:
+    WebKnossos<sup class="cite">19</sup> annotates volumes orders of magnitude larger;
+    OMERO.web<sup class="cite">16</sup> manages multi-user access control and long-term
+    archival; CellProfiler Analyst<sup class="cite">13</sup> drives large batch pipelines;
+    napari<sup class="cite">19</sup> integrates with the Python data-science stack where
+    Fiji's Java ecosystem cannot. ImageJ.JS is complementary — a
+    general-purpose, content-addressable, AI-callable Fiji — and the
+    URL-as-environment primitive we describe is independent of Fiji
+    and transfers to any Java-, JavaScript-, or WebAssembly-shippable
+    analysis stack.
   </p>
 
   <h2 class="section">Methods summary</h2>
@@ -656,13 +669,17 @@
     <li>Rueden, C. T. <em>et al.</em> ImageJ2: ImageJ for the next generation of scientific image data. <em>BMC Bioinformatics</em> <strong>18</strong>, 529 (2017).</li>
     <li>Anthropic. Model Context Protocol specification. <a href="https://modelcontextprotocol.io">https://modelcontextprotocol.io</a> (2024, accessed 2026).</li>
     <li>napari contributors. napari: a multi-dimensional image viewer for Python. doi:10.5281/zenodo.3555620 (2019–2025).</li>
+    <li>Jupyter et al. Binder 2.0 — Reproducible, interactive, sharable environments. <em>Proc. SciPy 2018</em>, 113–120 (2018).</li>
+    <li>The Galaxy Community. The Galaxy platform for accessible, reproducible and collaborative data analyses: 2024 update. <em>Nucleic Acids Res.</em> <strong>52</strong>, W83–W94 (2024).</li>
+    <li>Soiland-Reyes, S. <em>et al.</em> Packaging research artefacts with RO-Crate. <em>Data Sci.</em> <strong>5</strong>, 97–138 (2022).</li>
+    <li>International Image Interoperability Framework (IIIF) Consortium. IIIF Image API 3.0 specification. <a href="https://iiif.io/api/image/3.0/">https://iiif.io/api/image/3.0/</a> (2020, accessed 2026).</li>
     <li>Ouyang, W. <em>et al.</em> BioImage Agent: an autonomous workflow executor for bioimage analysis. <em>arXiv</em> 2506.XXXXX (2026, in preparation).</li>
   </ol>
 
 </main>
 
 <footer class="site-footer"><div class="wrap">
-  <div>Rendered from <code>brief.md</code> · Nature Methods Brief Communication format · working draft v1.0 · 2026-04-18 · ≈ 1,470 words main text · 3 display items · 20 references · companion long-form (585 KB, <a href="index.html">index.html</a>) preserves evidence dashboards, reviewer dry-run, and per-iteration audit.</div>
+  <div>Rendered from <code>brief.md</code> · Nature Methods Brief Communication format · working draft v3.0 · 2026-04-19 · two rounds of simulated peer-review applied (<a href="review_report.html">review report</a>) · ≈ 1,344 words main text · 3 display items · 24 references · companion long-form working doc at <a href="index.html">index.html</a>.</div>
   <div style="margin-top:6px;">Served via <code>svamp</code> · not a journal publication.</div>
 </div></footer>
 

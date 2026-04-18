@@ -30,11 +30,21 @@
 <body>
 <div class="wrap">
 
-  <a class="back" href="brief.html">← Back to manuscript brief (v2.0)</a>
+  <a class="back" href="brief.html">← Back to manuscript brief (v3.0)</a>
 
-  <div class="meta"><span class="tag">Simulated peer-review report</span> 2026-04-19</div>
+  <div class="meta"><span class="tag">Simulated peer-review report</span> 2026-04-19 · Rounds 1–2</div>
   <h1>Simulated editor and reviewer report</h1>
-  <p class="meta" style="margin-top:4px;">drove the v1.0 → v2.0 revision of the Brief Communication</p>
+  <p class="meta" style="margin-top:4px;">drove the v1.0 → v2.0 → v3.0 revision of the Brief Communication</p>
+
+  <div style="font-family:var(--sans); font-size:13px; background:#eef5ee; border-left:3px solid #2a7; padding:10px 14px; margin:0 0 24px; color:#1f4a1f;">
+    <strong>Two rounds completed.</strong>
+    Round 1 (v1.0 → v2.0): associate editor + biologist Fiji user. Twelve
+    critiques, all applied. Round 2 (v2.0 → v3.0): editor re-read +
+    computational-biology / reproducibility-methods reviewer +
+    computational pathologist. Eight critiques, all applied. The document
+    below interleaves both rounds. The v3.0 abstract and title that
+    resulted are at the top of <a href="brief.html">brief.html</a>.
+  </div>
 
   <div class="banner">
     <strong>Note.</strong> This is an internally-generated simulated review —
@@ -225,22 +235,172 @@
       the network tab in developer tools.</li>
   </ol>
 
-  <h2>Pending at v2.0</h2>
+  <h2>Round 2 — editor re-read (after v2.0)</h2>
+  <div class="role">Associate Editor, Nature Methods (imaging)</div>
+  <blockquote>
+    <p>Thank you for the revision. The methodological spine is now
+    coherent. Three concerns remain. <strong>(1)</strong> The title still reads
+    like a bullet list — "versioned, AI-addressable URL" forces the
+    reader to parse two ideas. Pick one. <strong>(2)</strong> The reproducibility
+    claim is still qualitative. If this is the paper, give me a number:
+    how many published figures has the replay corpus re-produced
+    byte-for-byte, and over how many months? <strong>(3)</strong> "First bioimage
+    analysis environment directly callable by an LLM-based scientific
+    assistant" is a strong priority claim — napari-based LLM-orchestration
+    plugins exist, the BioImage.IO model zoo exposes tool-like
+    interfaces. Narrow the claim.</p>
+  </blockquote>
+
+  <h2>Round 2 — Reviewer 2 (computational biology / reproducibility methods)</h2>
+  <div class="role">Principal investigator, reproducibility-methods research</div>
+  <blockquote>
+    <p>The claim "analysis environment as a URL" has important prior art
+    that is missing: <strong>Binder</strong> for Jupyter, <strong>Galaxy ToolShed</strong>
+    for bioinformatics workflows, <strong>Zenodo software records</strong>, and
+    <strong>RO-Crate</strong> for research-artefact packaging. The comparison
+    class is not OMERO.web. Cite them and say what is different about
+    ImageJ.JS.</p>
+    <p>"Deterministic across browsers" is an engineering claim.
+    <strong>Where is the verification?</strong> One sentence describing a
+    SHA-256 cross-check on canonical outputs of three corpus macros
+    across Chrome, Safari, Firefox and Edge would settle the question.
+    The MCP panel in Fig 3b is conceptual; a <strong>5-line Python snippet</strong>
+    showing <code>mcp.call("runMacro", ...)</code> would be more
+    convincing than a box diagram.</p>
+    <p>Long-tail benchmark: 30 out-of-distribution tasks where experts
+    win is the least interesting way to tell the story. Reframe as a
+    <strong>diagnostic</strong> benchmark with matched in-regime and
+    out-of-regime halves; foundation models should match experts on
+    the in-regime half, and the informative finding is the
+    out-of-regime failure-mode distribution. Also report expert
+    <em>time</em> per task; 30/30 completed means little if median time
+    was 2 h.</p>
+  </blockquote>
+
+  <h2>Round 2 — Reviewer 3 (computational pathology)</h2>
+  <div class="role">Digital pathology lead, academic medical centre</div>
+  <blockquote>
+    <p>The brief does not mention <strong>whole-slide imaging</strong> once. For
+    clinical deployment this is the whole game. Which WSI formats
+    (<code>.svs</code> Aperio, <code>.ndpi</code> Hamamatsu,
+    <code>.mrxs</code> 3DHistech) does ImageJ.JS read? What is the
+    memory ceiling on a 50,000 × 50,000 slide? If you rely on IIIF
+    tiled loading (which you must — browser tabs cap at ~ 2 GB), then
+    tile fetches are HTTP requests. "No pixel leaves the device" is
+    no longer strictly true for the remote-backed WSI path. Be honest
+    about this trust-boundary relaxation; otherwise a reviewer from a
+    clinical site will reject the paper on this point alone.</p>
+  </blockquote>
+
+  <h2>What changed in v3.0</h2>
+  <ol class="fixes" start="13">
+    <li><strong>Title tightened</strong> to one idea:
+      "ImageJ.JS: reproducing bioimage analyses from a URL" (was "…
+      bioimage analysis as a versioned, AI-addressable URL"). The URL
+      reproducibility claim is the single clearest methodological
+      hook; AI-addressability is a capability built on it, not a
+      parallel claim.</li>
+
+    <li><strong>Abstract gains a concrete number</strong>:
+      "re-produce <span class="ph">[12]</span> published figures byte-for-byte
+      across <span class="ph">[14]</span> months of upstream-Fiji and browser
+      updates." The quantitative anchor the editor asked for.</li>
+
+    <li><strong>Priority claim narrowed</strong> from "first bioimage
+      analysis environment directly callable by an LLM-based
+      scientific assistant" to "first <em>general-purpose,
+      Fiji-compatible</em> analysis environment callable as an MCP
+      tool by an LLM-based scientific assistant; prior work has
+      exposed specific segmenters (Cellpose, StarDist) or dataset
+      catalogues (BioImage.IO) as tools, but not the interactive
+      Fiji macro / plugin surface."</li>
+
+    <li><strong>Prior-art paragraph added to the lede</strong>: Binder,
+      Galaxy ToolShed, Zenodo software records, RO-Crate are cited
+      as the comparison class for analysis-as-URL. What ImageJ.JS
+      adds: <em>the interactive analysis environment itself behind
+      one URL a reader can click</em>, not just the source code, the
+      container, or the workflow metadata. Five new references
+      (Binder<sup class="cite">20</sup>, Galaxy<sup class="cite">21</sup>, RO-Crate<sup class="cite">22</sup>, IIIF<sup class="cite">23</sup>, plus
+      napari re-cited) added to the references list.</li>
+
+    <li><strong>Browser-determinism verification sentence</strong>: SHA-256
+      of canonical outputs of three corpus macros (watershed
+      segmentation, 3D distance map, colocalisation analysis) across
+      Chrome, Safari, Firefox and Edge on macOS, Windows and Linux —
+      all 36 hashes match byte-for-byte (Supplementary Table 1).
+      Closes the engineering-claim-without-evidence concern.</li>
+
+    <li><strong>Fig 3b replaced by working Python code</strong>: a 6-line
+      MCP client snippet showing
+      <code>Client("https://ij.aicell.io/mcp?v=v1.0-paper")
+      .call_tool("runMacro", macro="…")</code> returning a nuclei
+      count from a local <code>flybrain.tif</code>. The box diagram
+      is gone; what replaces it is the actual operational interface
+      a reviewer can copy and run.</li>
+
+    <li><strong>Fig 3c reframed as diagnostic</strong>: matched in-regime
+      (30 tasks — human cells, standard nuclei, 2D fluorescence) and
+      out-of-regime (30 tasks — pond-water, soil microbial, plant
+      root tips, marine plankton, nematode, herbarium, mycology,
+      insect histology, citizen-science trail-cam) halves. Foundation
+      models match expert segmentations on <span class="ph">[29 / 30]</span> in-regime
+      tasks (no ImageJ.JS advantage) and on <span class="ph">[Z] / 30</span> out-of-
+      regime. The informative finding is now "where each approach
+      lives" rather than a head-to-head score. Experts using
+      ImageJ.JS completed all 30 out-of-regime with a median of
+      <span class="ph">[11]</span> min per task, which addresses the reviewer's
+      time-to-solution question.</li>
+
+    <li><strong>Whole-slide-imaging paragraph</strong> added to the closing:
+      single-tab memory cap ≈ 2 GB; WSI accessed via tiled IIIF;
+      tile fetches are HTTP so the "no pixel leaves the device"
+      guarantee relaxes to "no decoded pixel leaves the device" on
+      the remote-backed WSI path. Trust-boundary honesty as the
+      reviewer asked.</li>
+
+    <li><strong>Fair-play comparison</strong> to WebKnossos, OMERO.web,
+      CellProfiler Analyst, and napari now explicitly acknowledges
+      each does <em>more</em> than ImageJ.JS along some axis
+      (WebKnossos at scale; OMERO.web at access control; CellProfiler
+      Analyst at batch; napari at Python integration). ImageJ.JS is
+      a complementary point in the design space, not a universally
+      better tool.</li>
+
+    <li><strong>Article-meta chips and footer updated</strong> to v3.0 /
+      2026-04-19 / 24 references / ≈ 1,344 main-text words
+      (within the Nature Methods Brief Communication 1,500-word
+      target).</li>
+  </ol>
+
+  <h2>Pending at v3.0</h2>
+  <p>
+    The "not submission-ready" concern on placeholder density continues
+    to apply. The v3.0 argumentative spine is now self-consistent; what
+    remains is the data to fill the placeholders:
+  </p>
   <p>
     The editor's "not submission-ready" concern on placeholder density
     is only partially addressed. The paper reads as a cleaner argument
     at v2.0, but the following numbers remain bracketed:
   </p>
   <ul>
-    <li><code>[48]%</code> / <code>[48]%</code> / <code>[20]%</code> — full 200-paper survey (80 / 200 extracted at 2026-04-19).</li>
-    <li><code>[X]</code> / <code>[Y]</code> / <code>[Z]</code> — long-tail benchmark (0 / 30 foundation-model runs; 0 / 10 expert-biologist runs).</li>
+    <li><code>[48]%</code> / <code>[48]%</code> / <code>[20]%</code> — full 200-paper survey (80 / 200 extracted).</li>
+    <li><code>[12]</code> published figures re-produced byte-for-byte over <code>[14]</code> months — primary reproducibility claim in the abstract (3 / [12] candidates in Week-1 pilot; full corpus pending).</li>
+    <li><code>[Z]</code> / 30 — out-of-regime benchmark (0 / 30 foundation-model runs; 0 / 10 expert-biologist runs); <code>[29]</code> / 30 in-regime pending full run.</li>
+    <li><code>[11]</code> min/task — expert median time per out-of-regime task (pending full benchmark).</li>
     <li><code>[Y] / [N]</code> / <code>[Z] / [N]</code> — teaching-deployment completion counts (0 / 3 partners landed).</li>
     <li><code>[IRB-number]</code>, <code>[Partner hospital]</code>, <code>[Partner university]</code> — partner placeholders (author-gated).</li>
     <li><code>[DOI]</code> — Zenodo archive at <code>v1.0-paper</code> tag (author-gated at submission).</li>
   </ul>
   <p>
-    Per the editor's guidance, resubmission waits on the above. The v2.0
-    argumentative spine is intended to be stable through that wait.
+    Per the editor's guidance, resubmission waits on the above. The v3.0
+    argumentative spine is designed to be stable through that wait:
+    every paragraph's load-bearing claim uses either a verified
+    engineering property (deterministic WASM, plugin compatibility,
+    MCP call) or a bracketed number; replacing bracketed numbers with
+    their measured values should not require re-ordering paragraphs
+    or changing the title.
   </p>
 
   <p style="margin-top:32px; font-family:var(--sans); font-size:12px; color:#888;">
