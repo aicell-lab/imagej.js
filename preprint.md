@@ -2247,3 +2247,54 @@ We present **ImageJ.JS**: the unmodified Fiji/ImageJ codebase compiled via Cheer
 
 ---
 
+## Drafted prose — Figure slots and captions (v0.2 — Fig 4/5/6/7 structural captions + Fig 7 slot registration, 2026-04-18)
+
+*Back-appends the four structural-commitment figure captions that were drafted in-HTML at iter 17 (Fig 4 Teaching, Fig 5 Clinical, Fig 6 Collaboration) and iter 17's AI-composition panel (Fig 7), so that the working document and the rendered surface now agree on the caption text for every figure in the paper. v0.1 of this block (above) drafted full captions only for Fig 1/2/3 and reserved Fig 4/5/6 as "Caption placeholder — draft at evidence-landing time"; v0.1 did not carry a Fig 7 entry at all. The captions below are the same text that appears in `manuscript_html/index.html` at figures `#fig4`, `#fig5`, `#fig6`, `#fig7`; they are reproduced here verbatim so that a reviewer reading the working doc does not have to consult the rendered HTML to see what the figure asserts. Claim-preservation invariant holds: every caption names mechanisms, constraints, and placeholders already carried by §§5/6/7/8 structural-commitment prose; no new claim, no new citation, no new placeholder is introduced by this block. Partner evidence (course IDs, enrolment counts, IRB protocol numbers, clinical partner institutions, per-case audit excerpts, collaboration-session recordings, benchmark IoU resolutions) still resolves at Gates D–G — the captions are labelled "schematic preview" to make the structural-commitment-ahead-of-evidence posture visible to the reader.*
+
+### Fig 4 — Teaching deployments (structural preview caption, v0.1)
+
+> **Teaching deployments (schematic preview).** (**a**) In a representative partner course, a single URL opens the analysis for all thirty students simultaneously; every seat — Chromebook, iPad, laptop — runs ImageJ.JS in the browser, with no administrator install and no per-seat plugin management. (**b**) Pre/post concept-check scores from partner-designed instruments will resolve the gain magnitude at evidence-landing time; panel is shown with placeholder values. (**c**) Instructor quotations are reserved for partner-approved copy, attributed by course ID. (**d**) The deployment envelope is set by the partner institution's IT policy: devices IT will allow, not devices the tool would prefer. This schematic establishes the structural commitment of §5; final panels resolve with partner data and IRB approval numbers.
+
+*Resolves at Gate G (≥ 1 partner course + IRB approval).* Placeholders: `[X]` students per seat, `[Y]` partner courses, `[C1-delta]`/`[C2-delta]`/`[C3-delta]` concept-check gains, `[partner-approved quotation 1]`/`[partner-approved quotation 2]`, `[Course ID]`, `[IRB-number]`. Every placeholder shares its resolution path with §5 prose.
+
+### Fig 5 — Clinical pathology deployment (structural preview caption, v0.1)
+
+> **On-device clinical pathology (schematic preview).** (**a**) A hospital-locked whole-slide image is opened directly from the local disk into ImageJ.JS; a pathologist draws a freehand ROI over the tumour region using the same tools they would use in desktop Fiji, without an install and without uploading the slide anywhere. (**b**) Every session action is recorded to a per-session audit log with Hypha-authenticated identity and an explicit *image-egress check* that confirms, at session close, that no image bytes left the device. (**c**) A per-partner data-governance confirmation box enumerates exactly what left the hospital network (ROI coordinates, derived measurements, the audit log) and what never did (image pixels, patient identifiers, file handles after tab close). (**d**) The image lives on the hospital laptop; a remote second-reader joins the session through Hypha and sees only rendered frames and ROI overlays. The schematic is structural; partner-specific panels resolve at evidence-landing.
+
+*Resolves at Gate G (≥ 1 clinical partner + IRB protocol + data-governance review).* Placeholders: `[Partner-institution]`, `[N=1–3]` case count, `[M=10–30]` case panel size, `[IRB-protocol-number]`. All four share resolution paths with §6 prose.
+
+### Fig 6 — Real-time collaborative analysis vignettes (structural preview caption, v0.1)
+
+> **Real-time collaborative analysis without data movement (schematic preview).** (**a**) One driver device holds the image; a Hypha service broadcasts only rendered frames and ROI overlays to *n* observer devices, which can request control but never receive pixels. Every action is logged against a Hypha-authenticated identity. (**b**) *Cross-institution PI review*: a postdoc in one lab drives the analysis; the PI in another lab sees the same canvas, suggests a threshold change, and watches the object count update. (**c**) *Teaching-lab observer cohort*: an instructor's threshold choice propagates to five observer students on their own devices; per-student follow-up questions attach to the event log. (**d**) *Pathology consultation*: a primary pathologist flags a region; a remote second reader adjusts the ROI; the audit trail records the discrepancy explicitly. *v1 constraints*: driver requires Chrome (File System Access API), no session persistence across driver tab-close, observer-notes do not fork sessions — reported verbatim in the caption at evidence-landing. Supp. Video 1 captures an end-to-end PI-review session (~3 min).
+
+*Resolves at Gate G (v1 collaboration sprint ships + 2–3 recorded sessions).* Placeholders: `[Postdoc-institution]`, `[PI-institution]`, `[partner-approved quotation]` per vignette. All share resolution paths with §7 prose and `collaboration_sprint.md §"v1 constraints"`.
+
+### Fig 7 — ImageJ.JS is composable, not captive (structural caption, v0.1)
+
+*One-sentence claim.* The boundary the paper draws between regimes (§8) is a boundary of scope and contribution, not of composability — every in-browser analysis step is exposed through a named service surface that any deep-learning inference service, any notebook caller, and any agentic LLM runtime can address as a peer.
+
+*Evidence source.* Shipped code: `hypha-imagej-service.js` method surface (`runMacro:48`, `takeScreenshot:143`, `getRoisAsGeoJson:657`, `executeJavaScript:379`); MCP-surface conversion `convertToMcpUrl:880`; Hypha service registration `:1567–1578`. No partner or benchmark evidence required — the composition point is a property of the shipped release (`v1.0-paper` git tag, §10).
+
+*Panels.* Single schematic: a central ImageJ.JS browser-session box; four inbound edges from deep-learning inference services (SAM, Cellpose, StarDist, CellSAM, lab models) emitting GeoJSON candidate ROIs over WebSocket; a human analyst's hand at the ImageJ.JS session adjudicating and refining the ROIs; a measurement-output arrow to the downstream figure; a second outbound edge labelled MCP (via `convertToMcpUrl`) showing the same service surface addressed by an LLM-orchestrator runtime.
+
+*Caption (v0.1, reproduced from iter 17 HTML render).*
+> **ImageJ.JS is composable, not captive.** Deep-learning services (SAM, Cellpose, StarDist, CellSAM, lab models) emit candidate ROIs as GeoJSON over WebSocket into a running ImageJ.JS session, where a human analyst adjudicates, refines, and takes the classical measurements that appear in the figure. The same in-browser service surface — `runMacro`, `takeScreenshot`, `getRoisAsGeoJson`, `executeJavaScript` — is simultaneously exposed to MCP-native agent runtimes by a URL rewrite (`convertToMcpUrl` in `hypha-imagej-service.js:880`), so that an LLM orchestrator can drive the same browser session that a human was driving a moment earlier. This is the concrete composition point §8 describes in prose: the boundary this paper draws is a boundary of scope and contribution, not a boundary of composability, and every shipped interface in the diagram is in the `v1.0-paper` git tag (§10).
+
+*Venue-path position.* Main-body figure on the full-Article path (seventh main figure, adjacent to §8). On the Brief Communication condensation path, Fig 7 is retained in the main body — it is the one AI-adjacent figure whose containment-in-§8 the reviewer will expect to see, and condensing it into a supplementary note would weaken §8's composability claim. Row added to supp-outline allocation tables in the next iteration that touches them.
+
+### Figure count update (v0.2)
+
+| Figure | v0.1 state | v0.2 state |
+|---|---|---|
+| Fig 1 | Full caption drafted | Full caption drafted (unchanged) |
+| Fig 2 | Full caption drafted | Full caption drafted (unchanged) |
+| Fig 3 | Full caption drafted | Full caption drafted (unchanged) |
+| Fig 4 | Placeholder only | **Structural preview caption drafted** |
+| Fig 5 | Placeholder only | **Structural preview caption drafted** |
+| Fig 6 | Placeholder only | **Structural preview caption drafted** |
+| Fig 7 | Not in v0.1 block | **Structural caption drafted (new slot)** |
+
+Figure slots dashboard row updates accordingly: `3 / 6 full captions · 3 / 6 evidence-gated` → `7 / 7 structural captions drafted · 3 / 7 still evidence-gated on numerical resolution (Fig 4 concept-check gain + instructor quotes; Fig 5 partner institution + IRB + case audit; Fig 6 per-vignette institutional attribution)`. Fig 7 is structurally RESOLVED (no evidence gating — its evidence source is shipped code).
+
+---
+
