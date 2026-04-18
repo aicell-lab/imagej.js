@@ -1,0 +1,385 @@
+{
+  "generated_at": "2026-04-18T17:28:37+00:00",
+  "source_html": "manuscript_html/index.html",
+  "source_worklist": "tools/references_worklist.json",
+  "online": true,
+  "total_refs": 18,
+  "resolved": 11,
+  "unresolved": 7,
+  "entries": [
+    {
+      "ref_id": "ref-lord2024",
+      "status": "resolved",
+      "placeholder_tokens": [],
+      "author_str": "Lord SJ, Velle KB, Mullins RD, Fritz-Laylin LK.",
+      "hint": {},
+      "candidates": []
+    },
+    {
+      "ref_id": "ref-ma2024",
+      "status": "resolved",
+      "placeholder_tokens": [],
+      "author_str": "Ma J, He Y, Li F, Han L, You C, Wang B.",
+      "hint": {},
+      "candidates": []
+    },
+    {
+      "ref_id": "ref-archit2024",
+      "status": "resolved",
+      "placeholder_tokens": [],
+      "author_str": "",
+      "hint": {},
+      "candidates": []
+    },
+    {
+      "ref_id": "ref-schneider2012",
+      "status": "resolved",
+      "placeholder_tokens": [],
+      "author_str": "Schneider CA, Rasband WS, Eliceiri KW.",
+      "hint": {},
+      "candidates": []
+    },
+    {
+      "ref_id": "ref-schindelin2012",
+      "status": "resolved",
+      "placeholder_tokens": [],
+      "author_str": "",
+      "hint": {},
+      "candidates": []
+    },
+    {
+      "ref_id": "ref-mri2020",
+      "status": "unresolved",
+      "placeholder_tokens": [
+        "[DOI]"
+      ],
+      "author_str": "BIOP-EPFL and CNRS MRI.",
+      "hint": {
+        "author": "BIOP EPFL MRI",
+        "title": "Wound Healing Tool macro self-test bundle",
+        "year": 2020,
+        "journal_hint": "figshare"
+      },
+      "candidates": []
+    },
+    {
+      "ref_id": "ref-kirillov2023",
+      "status": "resolved",
+      "placeholder_tokens": [],
+      "author_str": "",
+      "hint": {},
+      "candidates": []
+    },
+    {
+      "ref_id": "ref-stringer2025",
+      "status": "resolved",
+      "placeholder_tokens": [],
+      "author_str": "Stringer C, Pachitariu M.",
+      "hint": {},
+      "candidates": []
+    },
+    {
+      "ref_id": "ref-schmidt2018",
+      "status": "resolved",
+      "placeholder_tokens": [],
+      "author_str": "Schmidt U, Weigert M, Broaddus C, Myers G.",
+      "hint": {},
+      "candidates": []
+    },
+    {
+      "ref_id": "ref-israel2025",
+      "status": "resolved",
+      "placeholder_tokens": [],
+      "author_str": "",
+      "hint": {},
+      "candidates": []
+    },
+    {
+      "ref_id": "ref-deepimagej2021",
+      "status": "resolved",
+      "placeholder_tokens": [],
+      "author_str": "",
+      "hint": {},
+      "candidates": []
+    },
+    {
+      "ref_id": "ref-royer2024",
+      "status": "newly-resolved",
+      "placeholder_tokens": [
+        "[VOL:PAGES, DOI]"
+      ],
+      "author_str": "",
+      "hint": {
+        "author": "Royer",
+        "title": "Omega napari LLM image analysis",
+        "year": 2024,
+        "journal_hint": "Nature Methods"
+      },
+      "candidates": [
+        {
+          "doi": "10.1038/s41592-024-02310-w",
+          "title": "Omega — harnessing the power of large language models for bioimage analysis",
+          "authors": [
+            "Royer LA"
+          ],
+          "journal": "Nature Methods",
+          "volume": "21",
+          "issue": "8",
+          "page": "1371-1373",
+          "article_number": null,
+          "year": 2024,
+          "type": "journal-article",
+          "score": 85.0
+        },
+        {
+          "doi": "10.1007/s10915-024-02691-2",
+          "title": "Complexity Analysis of Regularization Methods for Implicitly Constrained Least Squares",
+          "authors": [
+            "Onwunta A",
+            "Royer CW"
+          ],
+          "journal": "Journal of Scientific Computing",
+          "volume": "101",
+          "issue": "3",
+          "page": null,
+          "article_number": "54",
+          "year": 2024,
+          "type": "journal-article",
+          "score": 60.0
+        },
+        {
+          "doi": "10.3389/feduc.2024.1444394",
+          "title": "Student-delivered behavior-specific praise: a systematic literature review and meta-analysis",
+          "authors": [
+            "Royer DJ",
+            "Ennis RP"
+          ],
+          "journal": "Frontiers in Education",
+          "volume": "9",
+          "issue": null,
+          "page": null,
+          "article_number": "1444394",
+          "year": 2024,
+          "type": "journal-article",
+          "score": 60.0
+        }
+      ]
+    },
+    {
+      "ref_id": "ref-naparimcp2025",
+      "status": "newly-resolved",
+      "placeholder_tokens": [
+        "[URL, commit hash]"
+      ],
+      "author_str": "Contributors.",
+      "hint": {
+        "author": "napari",
+        "title": "napari-mcp Model Context Protocol server",
+        "year": 2025,
+        "journal_hint": ""
+      },
+      "candidates": [
+        {
+          "doi": "10.1038/s41591-025-03859-5",
+          "title": "Building the world’s first truly global medical foundation model",
+          "authors": [
+            "Tham YC",
+            "Goh JHL",
+            "Nderitu P",
+            "Zhou Y",
+            "Ran AR",
+            "Srinivasan S"
+          ],
+          "journal": "Nature Medicine",
+          "volume": "31",
+          "issue": "11",
+          "page": "3580-3585",
+          "article_number": null,
+          "year": 2025,
+          "type": "journal-article",
+          "score": 60.0
+        }
+      ]
+    },
+    {
+      "ref_id": "ref-bioimageagent2026",
+      "status": "newly-resolved",
+      "placeholder_tokens": [
+        "[arXiv-id, DOI]"
+      ],
+      "author_str": "[Authors, TBV].",
+      "hint": {
+        "author": "",
+        "title": "BioImage-Agent specialised agent tooling bioimage visualisation",
+        "year": 2026,
+        "journal_hint": "arXiv"
+      },
+      "candidates": [
+        {
+          "doi": "10.64898/2026.01.22.701051",
+          "title": "High-fidelity bioimage restoration via adversarial learning",
+          "authors": [
+            "Rey-Paniagua G",
+            "Lachowski D",
+            "Muñoz-Barrutia A"
+          ],
+          "journal": "",
+          "volume": null,
+          "issue": null,
+          "page": null,
+          "article_number": null,
+          "year": 2026,
+          "type": "posted-content",
+          "score": 60.0
+        },
+        {
+          "doi": "10.1038/s44303-026-00159-6",
+          "title": "Bioimage analysis for multiplexed FUCCI acquisitions powered by deep learning",
+          "authors": [
+            "Zimmermann J",
+            "Pezzotti M",
+            "Torchia E",
+            "Enrico A",
+            "Rigolli S",
+            "Di Sante M"
+          ],
+          "journal": "npj Imaging",
+          "volume": "4",
+          "issue": "1",
+          "page": null,
+          "article_number": "27",
+          "year": 2026,
+          "type": "journal-article",
+          "score": 60.0
+        },
+        {
+          "doi": "10.1117/12.3089365",
+          "title": "4D OCT imaging and bioimage informatics of embryonic mouse heart over development",
+          "authors": [
+            "Wang S"
+          ],
+          "journal": "Light in Cardiology 2026",
+          "volume": null,
+          "issue": null,
+          "page": "1",
+          "article_number": null,
+          "year": 2026,
+          "type": "proceedings-article",
+          "score": 60.0
+        }
+      ]
+    },
+    {
+      "ref_id": "ref-chen2026",
+      "status": "newly-resolved",
+      "placeholder_tokens": [
+        "[VOL:PAGES, DOI]"
+      ],
+      "author_str": "",
+      "hint": {
+        "author": "Chen",
+        "title": "CellVoyager autonomous agent single cell analysis",
+        "year": 2026,
+        "journal_hint": "Nature Methods"
+      },
+      "candidates": [
+        {
+          "doi": "10.1038/s41592-026-03029-6",
+          "title": "CellVoyager: AI CompBio agent generates new insights by autonomously analyzing biological data",
+          "authors": [
+            "Alber S",
+            "Chen B",
+            "Sun E",
+            "Isakova A",
+            "Wilk AJ",
+            "Zou J"
+          ],
+          "journal": "Nature Methods",
+          "volume": "23",
+          "issue": "4",
+          "page": "749-759",
+          "article_number": null,
+          "year": 2026,
+          "type": "journal-article",
+          "score": 85.0
+        },
+        {
+          "doi": "10.1097/bs9.0000000000000259",
+          "title": "A pipeline for single-cell chromatin accessibility data analysis",
+          "authors": [
+            "Zhang M",
+            "Chen C"
+          ],
+          "journal": "Blood Science",
+          "volume": "8",
+          "issue": "1",
+          "page": "e00259",
+          "article_number": null,
+          "year": 2026,
+          "type": "journal-article",
+          "score": 80.0
+        },
+        {
+          "doi": "10.2139/ssrn.6128252",
+          "title": "Event-Triggered Autonomous Synchronization of a Class of Heterogeneous Multi-Agent Systems",
+          "authors": [
+            "Guo Y",
+            "Chen Z",
+            "Fan Y"
+          ],
+          "journal": "",
+          "volume": null,
+          "issue": null,
+          "page": null,
+          "article_number": null,
+          "year": 2026,
+          "type": "posted-content",
+          "score": 70.0
+        }
+      ]
+    },
+    {
+      "ref_id": "ref-ouyangcompanion",
+      "status": "resolved",
+      "placeholder_tokens": [],
+      "author_str": "",
+      "hint": {
+        "author": "Ouyang",
+        "title": "agent-facing bioimage analysis ImageJ",
+        "year": 2026,
+        "journal_hint": "Nature Methods"
+      },
+      "candidates": []
+    },
+    {
+      "ref_id": "ref-cheerpj",
+      "status": "unresolved",
+      "placeholder_tokens": [
+        "[URL, archived snapshot]"
+      ],
+      "author_str": "Leaning Technologies Ltd.",
+      "hint": {
+        "author": "Leaning Technologies",
+        "title": "CheerpJ WebAssembly JVM Java",
+        "year": 2025,
+        "journal_hint": ""
+      },
+      "candidates": []
+    },
+    {
+      "ref_id": "ref-fsa",
+      "status": "unresolved",
+      "placeholder_tokens": [
+        "[URL, date-accessed]"
+      ],
+      "author_str": "Web Incubator Community Group.",
+      "hint": {
+        "author": "WICG",
+        "title": "File System Access API",
+        "year": 2024,
+        "journal_hint": ""
+      },
+      "candidates": []
+    }
+  ]
+}

@@ -1,0 +1,51 @@
+{
+  "_comment": "Author / title / year hints for references whose Crossref records were author- or evidence-gated at iter 32. Consumed by tools/recheck_references.py. Each key matches an anchor id in manuscript_html/index.html. Iter-32 rule: anchor ids are preserved even when the year / first-author changes.",
+  "ref-mri2020": {
+    "author": "BIOP EPFL MRI",
+    "title": "Wound Healing Tool macro self-test bundle",
+    "year": 2020,
+    "journal_hint": "figshare"
+  },
+  "ref-royer2024": {
+    "author": "Royer",
+    "title": "Omega napari LLM image analysis",
+    "year": 2024,
+    "journal_hint": "Nature Methods"
+  },
+  "ref-naparimcp2025": {
+    "author": "napari",
+    "title": "napari-mcp Model Context Protocol server",
+    "year": 2025,
+    "journal_hint": ""
+  },
+  "ref-bioimageagent2026": {
+    "author": "",
+    "title": "BioImage-Agent specialised agent tooling bioimage visualisation",
+    "year": 2026,
+    "journal_hint": "arXiv"
+  },
+  "ref-chen2026": {
+    "author": "Chen",
+    "title": "CellVoyager autonomous agent single cell analysis",
+    "year": 2026,
+    "journal_hint": "Nature Methods"
+  },
+  "ref-ouyangcompanion": {
+    "author": "Ouyang",
+    "title": "agent-facing bioimage analysis ImageJ",
+    "year": 2026,
+    "journal_hint": "Nature Methods"
+  },
+  "ref-cheerpj": {
+    "author": "Leaning Technologies",
+    "title": "CheerpJ WebAssembly JVM Java",
+    "year": 2025,
+    "journal_hint": ""
+  },
+  "ref-fsa": {
+    "author": "WICG",
+    "title": "File System Access API",
+    "year": 2024,
+    "journal_hint": ""
+  }
+}
