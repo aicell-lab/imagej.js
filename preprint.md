@@ -554,3 +554,97 @@ The survey is limited by open-access sampling: paywalled methods-rich venues (Ce
 All survey data (`survey_production_v2.csv`, `survey_production_frame.csv`, `survey_production_regex_baseline.csv`, `survey_schema.md`), benchmark data (`longtail_tasks.md`, per-task imagery where licence permits), replay corpora (`replay/<candidate>/` with `macro.*`, `INPUTS.json`, `run_replay.py`, `outputs/`, `MATCH_REPORT.md`), source code (`index.html`, `hypha-imagej-service.js`, `collab/`), and the pinned runtime (the `v1.0-paper` git tag, archived on Zenodo at DOI [DOI]) are released under [LICENCE] at [URL/github] and cross-referenced against every empirical claim in §§2–8. The Availability section (§10) provides the reviewer-facing index of these artefacts. Any claim in the main text that cannot be audited against a named artefact in this Methods section or in §10 is an error and should be flagged as such by reviewers; the paper stakes its regime-correctness argument on this property.
 
 ---
+
+## Drafted prose — Supplementary material outline (v0.1, 2026-04-18)
+
+*First systematic allocation of every drafted-prose paragraph and every figure slot to a venue-specific location: main body, supplementary material, or discarded. Two parallel allocations are drafted here — the Brief Communication path (≤ 1500 main-text words, 3 main figures, 1 supplementary video) and the full Article path (≤ 5000 main-text words, 6–7 main figures, supplementary methods + video). The outline is the instrument the submission-pass condensation executes against: after this block is accepted, reducing the paper to its target length is a mechanical re-layout, not an editorial decision. Each allocation cites the drafted-prose block by its existing heading (`§N`, `Abstract`, `Cover letter`, `Online Methods §<subsection>`, `Fig N`) so that when the source prose is edited in a future iteration, the allocation table survives intact; when a new prose block lands (e.g., §§2, 4, 5, 6, 7 evidence-gated paragraphs), one row is appended to the corresponding allocation table and no other row is disturbed. Placeholders in [brackets] follow the evidence-gap convention. The allocation table is not itself body prose; it is a submission-engineering artefact intended for the author team and (if requested) the editor.*
+
+### Allocation principles
+
+Three principles govern every row of the allocation.
+
+First, **regime-of-claim preservation**. A paragraph whose load-bearing contribution is a regime claim (the 48 % / 48 % / 20 % survey headline; the long-tail benchmark IoU summary; the driver/observer collaboration vignette; the two Week-1 replay failure classes) is kept in the main body of both paths — the paper's regime argument cannot be communicated without these. A paragraph whose load-bearing contribution is a methodological detail (extraction-schema thresholds; IRR targets; per-task inclusion criteria; audit-log row format) collapses to one sentence in the Brief Comm main body with a pointer to Supplementary Methods, and expands back into the main body only on the full Article path. Second, **mechanism-anchor preservation**. Every `file:line` anchor that grounds a design or reproducibility claim (`index.html:447`; `hypha-imagej-service.js:880`; `convertToMcpUrl`; `v1.0-paper` git tag) survives the condensation pass in at least one surface readers can find — typically in §10 Availability on the Brief Comm path, and in both §3 and §10 on the full Article path. Third, **containment preservation**. The AI-discussion containment rule (substantively in §8 only; glanced in §9 and Cover letter; absent from Abstract, §1, §3, §10, Methods) must hold on both paths. Supplementary material does not re-open AI discussion; if the condensation would push an AI-adjacent paragraph into the supplementary, the paragraph moves to `§8 Supplementary` (a clearly scoped subsection), not to an unmarked supplementary note.
+
+### Allocation table — Brief Communication path (target 1500 words, 3 main figs)
+
+| Block | Paragraph / unit | BC main body | BC supplementary | Word budget |
+|---|---|---|---|---|
+| Abstract | all | **kept** (verbatim) | — | 230 |
+| §1 Introduction | ¶1 (regime-mismatch opening) | **kept** (verbatim) | — | 180 |
+| §1 Introduction | ¶2 (survey + benchmark headline) | **compressed** to one sentence citing Fig 1 | `Supp §S1` = full ¶2 | 80 |
+| §1 Introduction | ¶3 (human-out-performs-AI + Fiji substrate) | **kept** (verbatim) | — | 220 |
+| §1 Introduction | ¶4 (four-contribution preview) | **kept** (verbatim) | — | 120 |
+| §2 Measurement | survey narrative (existing gated notice) | **compressed** to 1 paragraph citing Fig 1a–b | `Supp §S2` = full narrative + v2 reframing | 140 |
+| §3 Design | ¶1 opening premise | **compressed** to 1 sentence | `Supp §S3.0` = full ¶1 | 40 |
+| §3 Design | ¶2 continuity-with-Fiji | **compressed** to 1 sentence citing Fig 2 row 1 | `Supp §S3.1` = full ¶2 | 60 |
+| §3 Design | ¶3 zero-install-as-correctness | **kept** (load-bearing for §§5–7) | — | 200 |
+| §3 Design | ¶4 URL-addressable reproducibility | **compressed** to 1 sentence citing Fig 2 row 3 + §10 | `Supp §S3.3` = full ¶4 | 60 |
+| §3 Design | ¶5 collaboration-as-tool-property | **compressed** to 1 sentence citing §7 vignette | `Supp §S3.4` = full ¶5 | 60 |
+| §3 Design | ¶6 deliberate-non-design | **kept** (1 sentence only, pre-empts OME-Zarr / GPU pushback) | — | 40 |
+| §§4–7 Pillars | evidence-gated paragraphs | **collapsed** into a single "field evidence" ¶ citing condensed Fig 3 | `Supp §S4`–`S7` + Supp Vid 1 | 200 |
+| §8 Limits | ¶1 regime question | **kept** (verbatim) | — | 140 |
+| §8 Limits | ¶2 where DL is right tool | **compressed** to 2 sentences | `Supp §S8.2` = full ¶2 | 60 |
+| §8 Limits | ¶3 long-tail benchmark result | **kept** (verbatim, cites Fig 1c) | — | 180 |
+| §8 Limits | ¶4 Hypha-RPC composition | **compressed** to 1 sentence citing §10 | `Supp §S8.4` = full ¶4 | 40 |
+| §8 Limits | ¶5 agentic-bioimage landscape | **kept** (verbatim; containment is load-bearing) | — | 160 |
+| §9 Discussion | ¶1 joint-claim summary | **kept** (1 sentence only) | — | 40 |
+| §9 Discussion | ¶2 regime-fit / regime-correctness argument | **kept** (verbatim; §9's one new move) | — | 200 |
+| §9 Discussion | ¶3 re-reading §3 decisions | **collapsed** to 2 sentences | `Supp §S9.3` = full ¶3 | 60 |
+| §9 Discussion | ¶4 agentic-substrate boundary | **compressed** to 1 sentence | `Supp §S9.4` = full ¶4 | 40 |
+| §9 Discussion | ¶5 regime measurement as contribution | **kept** (verbatim; closes on adoption call) | — | 140 |
+| §10 Availability | all 4 paragraphs | **compressed** to 1 paragraph (live instance + 3 corpora + RPC + collab telemetry) | `Supp §S10` = full 4 paragraphs + `docs/rpc-examples/` index | 120 |
+| Online Methods | all 8 subsections | — | `Supp §Methods` (all 8 subsections verbatim; Nature Methods' *Online Methods* is supplementary under the Brief Comm format) | 0 (body) |
+| Fig 1 | panels a–c | **main Fig 1** (3 panels, verbatim caption) | — | — |
+| Fig 2 | needs→features schematic | **main Fig 2** (condensed 3-row schematic; row selection per main-body-kept principles above) | `Supp Fig S2` = full 5-row schematic | — |
+| Figs 3–6 | replay + teaching + clinical + collab | **collapsed into main Fig 3** (4-panel "field evidence"; one panel per pillar) | `Supp Fig S3`–`S6` = per-pillar detail panels; `Supp Vid 1` = cross-institution PI review recording | — |
+| References | all entries | **kept** (no per-entry compression; the cross-reference map is not printed) | — | — |
+| Cover letter | all | **separate submission artefact** (not counted against 1500 BC body words) | — | 730 (sep) |
+
+**Brief-Comm main-body word total at budget.** Summing the "Word budget" column for `kept` + `compressed` rows = 2,350 words if every kept paragraph is verbatim and every compressed paragraph hits its single-sentence target. The 850-word overshoot is the expected compression load: during submission-pass condensation, each verbatim `kept` block is re-read once for incidental tightening (typically 10–15 %), which brings the total to 2,000 words. A second pass consolidates the four §1 paragraphs into three (merging ¶3's Fiji-substrate sentence into ¶2), the five §3 paragraphs into two (only ¶3 zero-install and ¶6 non-design survive as full paragraphs), and the five §9 paragraphs into two (only ¶2 regime-fit and ¶5 adoption-call survive). The result lands at ~1,450–1,550 words depending on table vs. inline treatment of §§4–7 field evidence. This is tight but achievable; the condensation is mechanical because the per-paragraph allocation has been pre-committed.
+
+### Allocation table — Full Article path (target 5000 words, 6–7 main figs)
+
+| Block | Full-Article disposition |
+|---|---|
+| Abstract | v0.5 draft verbatim; extended by one sentence on the replay corpus' two surfaced failure classes if word budget permits. |
+| §1 Introduction | All four paragraphs verbatim. No collapse. |
+| §2 Measurement | Full prose (currently an evidence-gated notice in the render) replaces the notice with a ~500-word prose block on the extraction schema's three-axis decomposition and the v2 reframing ("ImageJ is the substrate every biologist still opens"). Cites Fig 1a–b. |
+| §3 Design principles | All six paragraphs verbatim (v0.1). |
+| §4 Replay | ~400-word prose block with Fig 3 matrix and the two Week-1 failure-class zooms as inset panels. Drafted when [N = 15] replay corpus lands. |
+| §5 Teaching | ~400-word prose block with Fig 4. Drafted when course partnerships land. |
+| §6 Clinical | ~400-word prose block with Fig 5. Drafted when clinical partnership lands. |
+| §7 Collaboration | ~500-word prose block with Fig 6 + Supp Vid 1. Drafted when the v1 collab sprint ships and the three vignettes are filmed. |
+| §8 Limits | All five paragraphs verbatim (v0.1). |
+| §9 Discussion | All five paragraphs verbatim (v0.1). |
+| §10 Availability | All four paragraphs verbatim (v0.1). |
+| Online Methods | Full 8-subsection block (v0.1) verbatim in main Methods (Nature Methods' full-Article format places Online Methods post-§10). |
+| Fig 1 | Main; 3 panels (a histogram, b stacked bar, c scatter); verbatim caption. |
+| Fig 2 | Main; full 5-row needs→features schematic. |
+| Fig 3 | Main; replay matrix + 2 zooms. |
+| Fig 4 | Main; teaching deployments. |
+| Fig 5 | Main; clinical deployment. |
+| Fig 6 | Main; collaboration vignettes. |
+| Supp Vid 1 | Cross-institution PI-review session recording. |
+| Supplementary Methods | Replay per-candidate reports; benchmark per-task reports; IRR dual-extraction subsample reports. |
+| References | Full References v0.1 (17 entries + placeholders). |
+| Cover letter | Separate submission artefact. |
+
+**Full-Article main-body word total at budget.** Summing kept-verbatim across §§1, 3, 8, 9, 10 = ~3,400 words; §§2, 4, 5, 6, 7 evidence-gated prose at target ~400 words each = ~2,200 words; total ~5,600 — 600 over the Nature Methods full-Article target. The condensation load is symmetric with the Brief Comm path: each evidence-gated section is drafted to ~350 words (not 400) at landing time, the §9 discussion is read once for incidental tightening, and the v0.5 Abstract does not extend. Target lands at ~4,900–5,100 depending on table vs. inline in §2's extraction-schema treatment.
+
+### Figure condensation map (Brief-Comm, mechanical collapse)
+
+The Brief-Comm 3-figure budget is executed as: **Fig 1** (long tail, 3 panels) verbatim; **Fig 2** (needs→features) condensed from 5 rows to 3 (rows: zero-install-correctness; URL-addressable reproducibility; collaboration-as-tool-property — these are the rows the Brief-Comm main body keeps as full paragraphs); **Fig 3** (field evidence) replaces full-Article Figs 3–6 with a single 4-panel figure — (a) replay matrix summary (Week-1 pilot + small [N]-replay sample at submission); (b) teaching deployment (one partner-course panel); (c) clinical deployment (one partner-institution audit-trail excerpt); (d) collaboration vignette (one recorded PI-review session). Each panel's detail is pushed to `Supp Fig S3`–`S6`. **Supp Vid 1** is the cross-institution PI-review recording end-to-end.
+
+### Cross-reference-map discipline for the outline
+
+Every row of both allocation tables cites the drafted-prose block by its existing heading (`§N ¶K`, `Online Methods §<subsection>`, `Fig N panel P`, `Abstract`, `Cover letter`). When a prose block is edited in a future iteration, the allocation row survives — the heading is the stable anchor. When a new prose block lands (evidence-gated §§2, 4, 5, 6, 7 paragraphs at the moment they drop), one row is appended to both tables and no other row is disturbed; this parallels the References cross-reference-map discipline. When the submission pass executes, the outline becomes a checklist: each row is marked `resolved` when its target-location text is finalised, and the condensation is complete when every row is `resolved`. Drift between the outline and the render is the failure mode the discipline guards against; re-running the allocation against the rendered HTML before every submission-candidate save is the check.
+
+### Interaction with the venue-path figure reconciliation block
+
+The Figure slots and captions block (v0.1, above) already committed the Brief-Comm figure-collapse path (Figs 3–6 → single multi-panel "field evidence"). The Supplementary material outline is the *prose-side* counterpart to that figure-side reconciliation: the figure plan is complete because each main-body figure now has a matching main-body-prose allocation that calls it. When a figure is demoted to supplementary (Fig 4 → Supp Fig S4, etc.), the prose block that would have called it (§5 ¶1) moves in tandem to `Supp §S5`. A figure cannot be in the main body with its calling prose demoted; a prose paragraph cannot be in the main body with its figure demoted. Both tables in this outline are constructed so that this invariant holds.
+
+### Non-goal: this outline is not editorial judgement
+
+The outline allocates prose and figures to locations on word-budget grounds. It does not decide which claims the paper should make, nor does it decide what evidence is required for each claim — those decisions live in the drafted-prose blocks (Abstract through §10 + Online Methods) and in the Evidence-status section. A future iteration that wants to tighten a specific claim should edit the drafted-prose block, not this outline. Conversely, a future iteration that wants to change the venue (e.g., from Brief Comm to full Article, or from Nature Methods to eLife Tools) updates this outline's target-budget figures and re-derives the allocation from the same drafted-prose blocks. This separation of concerns — prose is authored once; allocation to venue is re-derived per venue — is the load-bearing property the outline is engineered to preserve.
+
+---

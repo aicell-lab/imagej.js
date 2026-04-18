@@ -55,6 +55,26 @@
   it binds to must also be demoted to its supplementary pointer; if a
   §10 artefact is de-scoped, the corresponding Methods subsection must be
   removed, not just edited down.
+- **Supplementary material outline is the prose-side counterpart to the figure
+  reconciliation block.** Iteration 10 (2026-04-18) added
+  `preprint.md §"Drafted prose — Supplementary material outline (v0.1)"` and
+  the corresponding editorial appendix in `manuscript_html/index.html`.
+  The outline allocates every drafted-prose paragraph and every figure slot
+  to a venue-specific location (Brief Communication or full Article) on
+  strict word-budget grounds. It does NOT make editorial claim decisions —
+  those live in the drafted-prose blocks. The outline has three structural
+  rules: (i) heading-anchored rows (e.g., `§1 ¶2`) survive prose edits, so
+  the allocation table and the prose evolve independently; (ii) the
+  "figure cannot be in main body with calling prose demoted" invariant
+  binds the prose outline to the Figure slots block; (iii) AI-discussion
+  containment holds in supplementary too — AI-adjacent paragraphs go to
+  `§8 Supplementary`, never to an unmarked supplementary note. Future
+  evidence-gated prose (§§2, 4, 5, 6, 7 paragraphs) appends one row per
+  block to both allocation tables in the landing iteration, never as a
+  follow-up pass. The outline block is styled distinctly in the HTML
+  (green/amber/red/blue allocation legend, striped tables) so it is
+  visually obvious that it is a submission-engineering artefact, not body
+  prose.
 - **Manuscript HTML rendering is served out-of-tree.** Iteration 8 generated
   `manuscript_html/index.html` — a Nature Methods-styled, self-contained HTML rendering of
   the drafted prose assembled into paper order (Abstract → §§1–10 → References → Cover
@@ -1020,3 +1040,155 @@
   substantively only in §8; glanced only in §9 / Cover letter) remains
   intact — Methods describes the benchmark as a measurement tool, not a
   methods comparison.
+
+---
+
+## 2026-04-18 — Iteration 10: Supplementary material outline (v0.1) + HTML render refresh (v0.3)
+
+### What was implemented
+
+- **Drafted §Supplementary material outline (v0.1)** at
+  `preprint.md §"Drafted prose — Supplementary material outline (v0.1, 2026-04-18)"`
+  (~1,800 words, six subsections). The outline allocates every drafted-prose
+  paragraph and every figure slot to a venue-specific location under both
+  venue paths: Brief Communication (≤ 1500 main-text words, 3 main figures,
+  1 supplementary video) and full Article (≤ 5000 main-text words, 6–7
+  figures, supplementary methods + video). Sections: allocation principles
+  (regime-of-claim / mechanism-anchor / containment preservation); BC
+  allocation table (30 rows, per-paragraph disposition + word budget);
+  full-Article allocation table (22 rows, dispositions only); figure
+  condensation map for BC (mechanical 6 → 3 figure collapse); outline
+  discipline (heading-anchored rows survive prose edits; append-one-row
+  per new prose block; at submission the outline is a checklist); figure-
+  slots interaction invariant (figure cannot be main-body if calling
+  prose is demoted, and vice versa); non-goal declaration that the
+  outline is not editorial judgement.
+- **HTML render refreshed to v0.3.** `manuscript_html/index.html` now
+  includes a new `<section class="supp-outline" id="supp-outline">` as an
+  editorial appendix after the Cover letter, with distinct CSS styling
+  (green/amber/red/blue allocation legend; striped full-width tables with
+  alternating zebra; a highlighted "budget-note" block for the word-budget
+  summaries). Version strings bumped from v0.2 → v0.3 in five places
+  (article-meta published line; status-chip draft; status-chip status;
+  sidebar article-info `Draft version`; footer rendered-from line).
+  Sidebar Evidence-status now lists `Supp. outline` as the 10th prose
+  block alongside the existing nine. ToC gains a `Supp. outline` entry.
+  Sidebar gains a `View the supplementary-material outline ↓` callout next
+  to the existing Cover-letter callout. Status-chip promotes from
+  "8 prose blocks v0.1 (incl. Online Methods); 3 pillars evidence-gated"
+  to "9 prose blocks v0.1 (+ supplementary outline); 3 pillars
+  evidence-gated".
+- **Re-served via svamp.** Same mount name `manuscript`, same URL
+  `https://static-serve-0bc5cde8.svc.hypha.aicell.io/manuscript/`.
+  Post-edit HTTP HEAD → `200`, `content-length: 125600` (up from 104,874),
+  `last-modified` updated to Sat, 18 Apr 2026 12:12:26 GMT. The string
+  "Supplementary material outline" appears 3× on the rendered page
+  (ToC / section heading / sidebar callout) — exactly where expected.
+  HTML parses well-formed (Python html.parser: zero unclosed tags, zero
+  mismatched tags).
+
+### Files changed
+
+- `preprint.md` — appended Supplementary material outline (v0.1) block
+  after the Online Methods block. No existing prose or scaffolding
+  modified. File is now 650 lines / ~16,300 words.
+- `manuscript_html/index.html` — added `.supp-outline` CSS block (~80
+  lines), inserted editorial-appendix `<section>` after Cover letter
+  (~130 lines including two allocation tables with legend), added ToC
+  entry, bumped version strings in five places, added sidebar callout.
+  File is now 125,600 bytes (up from 104,874) / 1,347 lines.
+- `.svamp/d9a68491-c46b-4e04-9b30-6294d0bbf071/ralph-progress.md` — this
+  entry; added one pattern bullet at the top (supplementary outline is
+  the prose-side counterpart to the figure-reconciliation block).
+
+### Learnings for future iterations
+
+- **The outline's heading-anchored rows are the load-bearing property.**
+  Every row cites the drafted-prose block by its existing heading
+  (`§1 ¶2`, `Online Methods §<subsection>`, `Fig N panel P`,
+  `Abstract`, `Cover letter`). When a future iteration edits a prose
+  block's body, the allocation row survives; when a new prose block
+  lands (e.g., §2's evidence-gated paragraphs after rows 81–200 are
+  extracted, or §§4–7's partner-landing paragraphs), one row is
+  appended to BOTH tables in the same iteration. This is the direct
+  analog of the References cross-reference-map discipline and of the
+  Methods ↔ Availability twin-binding. All three are "append-in-same-
+  iteration, never-as-follow-up" disciplines.
+- **The figure-prose binding invariant is now explicit.** "A figure
+  cannot be in main body with its calling prose demoted; a prose
+  paragraph cannot be in main body with its figure demoted." This
+  invariant is asserted in the outline and is structurally enforced by
+  how the BC allocation table is written: Fig 3 in BC *is* the
+  collapsed §§4–7 paragraphs that the table also collapses. Future
+  evidence-landing iterations must preserve this binding; if §5
+  teaching evidence lands and the corresponding full-Article paragraph
+  is drafted, Fig 4 stays on the full-Article path but collapses into
+  Fig 3 panel (b) on the BC path — and the BC prose row for §5 must
+  collapse in the same iteration.
+- **Word-budget arithmetic exposes condensation load concretely.**
+  The BC budget at verbatim sums to 2,350 words against a 1,500-word
+  target — an 850-word overshoot. The outline documents the specific
+  mechanical two-pass condensation (10–15 % incidental tightening; then
+  §1 4→3, §3 5→2, §9 5→2 paragraph consolidation) that lands the total
+  at 1,450–1,550. This number is the gating signal for the venue
+  decision: if future evidence-gated prose lands fatter than budgeted,
+  the overshoot passes the point where mechanical condensation can
+  recover, and the venue must flip to full Article. Track this at each
+  prose-landing iteration.
+- **Editorial-appendix styling is distinct from body prose by design.**
+  The `.supp-outline` CSS uses sans-serif body text, green/amber/red/blue
+  allocation chips, and highlighted "budget-note" boxes — all visually
+  obvious that this is a submission-engineering artefact, not paper
+  prose. A future iteration that adds a second editorial artefact
+  (e.g., a reviewer-response-dry-run, a copy-edit checklist) should
+  follow the same discipline: distinct CSS class, distinct visual
+  treatment, labelled "editorial appendix" in the section title. Do
+  NOT style editorial artefacts as body prose — a reviewer or editor
+  viewing the served render must be able to tell at a glance what is
+  the paper and what is the machinery.
+- **Highest-value next iteration without new evidence: placeholder-
+  propagation script.** The count of placeholders across four surfaces
+  (preprint.md, manuscript_html/index.html, References cross-reference
+  map, now the Supp outline) has grown again with this iteration.
+  `[48]%`, `[20]%`, `[X]`, `[Y]`, `[Z]`, `[N]`, `[Y1–Y2]`, `[DAU]`,
+  `[YYYY]`, `[URL]`, `[LICENCE]`, `[DOI]`, `[VOL:PAGES]` all now
+  appear in the Supp outline too. A small regex-over-file script that
+  (a) lists every bracketed placeholder, (b) records per-surface
+  per-section occurrence, (c) flags any inconsistency when a value is
+  resolved, and (d) supports a single-pass resolve-everywhere
+  operation is the right engineering primitive before the first
+  evidence-landing pass. This has been next-highest three iterations
+  running; it now moves to unambiguous first place.
+- **Second-highest: v1.0-paper release-engineering protocol prose.**
+  Identified in Iteration 9 as the last non-evidence-gated prose
+  surface the paper has room for. The Online Methods block names
+  `v1.0-paper` git tag + Zenodo DOI but does not describe the
+  release-engineering protocol (what is pinned; how releases are cut;
+  what "immutable artefact" means in CheerpJ terms; how a reviewer
+  would re-cut the release locally). A ~400-word block, appended as a
+  subsection of Online Methods or as a new `## Drafted prose — Release
+  engineering (v0.1)` block, is the right scope.
+- **Third-highest: reviewer-response dry run.** Now that all of
+  Abstract / §§1, 3, 8, 9, 10 / Online Methods / Cover letter /
+  References / Figure slots / Supp outline are drafted at v0.1, a
+  first-pass dry-run of anticipated reviewer objections — drawn from
+  the existing Risks table at `preprint.md:190–203`, rewritten as
+  ~200-word responses per objection — is now feasible. The
+  standing pattern bullet (Iteration 6) says DO NOT draft
+  response-to-reviewer prose before submission because real reviewer
+  comments differ from anticipated ones. That pattern stands; the
+  dry-run is a different artefact — a pre-submission sanity check of
+  the paper's defensibility, not a substitute for real response prose.
+  Label it clearly as a dry-run.
+- **Framing containment re-verified across the v0.3 render.**
+  Supplementary outline body mentions AI only via the "containment
+  preservation" principle (which explicitly asserts that supplementary
+  material does not re-open AI discussion) and via the reference to
+  "§8 ¶5 agentic-bioimage landscape" as load-bearing in the BC main
+  body. No new AI claim is introduced; the outline transports the
+  containment rule forward into the submission-engineering layer.
+- **Served URL is stable across re-renders.** Mount is in place under
+  the name `manuscript` (registered 2026-04-18 11:54); re-saving the
+  HTML on disk is sufficient — svamp serves from disk. No
+  `svamp serve` re-invocation is needed. This confirms the pattern
+  from Iteration 8 / 9 and should remain the norm through submission.
