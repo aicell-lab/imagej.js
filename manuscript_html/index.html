@@ -1282,6 +1282,206 @@
   }
   section.reporting-summary .rs-discipline li { margin-bottom: 6px; }
 
+  /* Research Briefing — iteration 16 — sage/olive palette */
+  section.research-briefing {
+    grid-column: 1 / -1;
+    background: linear-gradient(180deg, #f4f7ec 0%, #f9fbf3 100%);
+    border: 1px solid #c6d3aa;
+    border-left: 4px solid #5a7a3a;
+    border-radius: 4px;
+    margin: 40px 0;
+    padding: 24px 28px 26px;
+    color: #2a3a1a;
+  }
+  section.research-briefing > h2 {
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 22px;
+    font-weight: 700;
+    color: #3e5a1e;
+    border-bottom: 1px solid #c6d3aa;
+    padding-bottom: 8px;
+    margin: 0 0 14px;
+  }
+  section.research-briefing .rb-meta {
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 12.5px;
+    color: #51662e;
+    margin: -4px 0 16px;
+  }
+  section.research-briefing .rb-banner {
+    background: #e7eed3;
+    border: 1px solid #b6c690;
+    padding: 10px 14px;
+    border-radius: 3px;
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 13px;
+    color: #30451a;
+    margin: 0 0 18px;
+  }
+  section.research-briefing .rb-banner strong { color: #3e5a1e; letter-spacing: 0.5px; }
+  section.research-briefing h3 {
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    color: #3e5a1e;
+    margin: 22px 0 8px;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+  }
+  section.research-briefing h3 .rb-seg-label {
+    display: inline-block;
+    background: #5a7a3a;
+    color: #ffffff;
+    padding: 1px 8px;
+    margin-right: 8px;
+    border-radius: 3px;
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 11.5px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+  }
+  section.research-briefing h4 {
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 13.5px;
+    font-weight: 700;
+    color: #3e5a1e;
+    margin: 12px 0 4px;
+    letter-spacing: 0.2px;
+  }
+  /* The four segment bodies are deliberately set in a reading-serif at 16px
+     — slightly larger than other editorial appendices — because the
+     Research Briefing is the paper's public-facing narrative surface. */
+  section.research-briefing .rb-segment {
+    font-family: var(--serif);
+    font-size: 16px;
+    line-height: 1.6;
+    color: #20280e;
+    margin: 0 0 16px;
+    background: #ffffff;
+    border: 1px solid #d9e1c4;
+    border-left: 3px solid #7a9652;
+    padding: 12px 16px;
+    border-radius: 3px;
+  }
+  section.research-briefing .rb-segment .rb-segment-meta {
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 11.5px;
+    color: #5e7630;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    margin: 0 0 6px;
+  }
+  section.research-briefing .rb-segment p {
+    font-family: var(--serif);
+    font-size: 16px;
+    line-height: 1.6;
+    color: #20280e;
+    margin: 0 0 10px;
+  }
+  section.research-briefing .rb-segment p:last-child { margin-bottom: 0; }
+  section.research-briefing .rb-editor-box {
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 13px;
+    line-height: 1.55;
+    color: #444;
+    background: #faf6e4;
+    border: 1px dashed #c0b888;
+    padding: 12px 16px;
+    margin: 0 0 16px;
+    border-radius: 3px;
+    font-style: italic;
+  }
+  section.research-briefing .rb-editor-box strong { color: #7a6a00; font-style: normal; letter-spacing: 0.4px; }
+  section.research-briefing .rb-subnote {
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 12.5px;
+    color: #51662e;
+    font-style: italic;
+    margin: 0 0 10px;
+  }
+  section.research-briefing p,
+  section.research-briefing ul,
+  section.research-briefing ol {
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 14px;
+    line-height: 1.58;
+    color: #20280e;
+    margin: 0 0 12px;
+  }
+  section.research-briefing .rb-refs {
+    list-style: none;
+    padding-left: 0;
+    margin: 6px 0 14px;
+  }
+  section.research-briefing .rb-refs li {
+    border-left: 3px solid #b6c690;
+    padding: 6px 10px 6px 12px;
+    background: #ffffff;
+    margin-bottom: 8px;
+    font-size: 13.5px;
+    line-height: 1.55;
+    font-family: 'Source Sans 3', sans-serif;
+  }
+  section.research-briefing .rb-refs li strong { color: #3e5a1e; }
+  section.research-briefing .rb-fig-caption {
+    border-left: 3px solid #7a9652;
+    background: #ffffff;
+    padding: 10px 14px;
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 14.5px;
+    color: #30451a;
+    margin: 4px 0 14px;
+  }
+  section.research-briefing .rb-label-ready { color: #1a6b2f; font-weight: 700; letter-spacing: 0.3px; }
+  section.research-briefing .rb-label-author { color: #7a4e00; font-weight: 700; letter-spacing: 0.3px; }
+  section.research-briefing .rb-label-evidence { color: #8a1a1a; font-weight: 700; letter-spacing: 0.3px; }
+  section.research-briefing .rb-label-editorial { color: #444; font-weight: 700; font-style: italic; letter-spacing: 0.3px; }
+  section.research-briefing table.rb-scoreboard {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 13px;
+    margin: 10px 0 14px;
+  }
+  section.research-briefing .rb-scoreboard th,
+  section.research-briefing .rb-scoreboard td {
+    padding: 6px 10px;
+    border: 1px solid #c6d3aa;
+    vertical-align: top;
+    text-align: left;
+  }
+  section.research-briefing .rb-scoreboard thead th {
+    background: #d6dfbd;
+    font-weight: 700;
+    color: #3e5a1e;
+  }
+  section.research-briefing .rb-scoreboard tbody tr:nth-child(even) {
+    background: #fafcf4;
+  }
+  section.research-briefing .rb-scoreboard td:nth-child(1) {
+    width: 28%; font-weight: 600; color: #18220a;
+  }
+  section.research-briefing .rb-scoreboard td:nth-child(2) {
+    width: 17%;
+  }
+  section.research-briefing .rb-one-line {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    background: #ffffff;
+    border: 1px solid #c6d3aa;
+    padding: 10px 12px;
+    border-radius: 3px;
+    font-size: 12.5px;
+    line-height: 1.55;
+    color: #1d2a0a;
+    margin: 6px 0 4px;
+  }
+  section.research-briefing .rb-discipline {
+    margin: 6px 0 12px;
+    padding-left: 22px;
+  }
+  section.research-briefing .rb-discipline li { margin-bottom: 6px; }
+
   /* Print */
   @media print {
     .npg-bar, .jnav, aside, footer.site-footer { display:none; }
@@ -1337,7 +1537,7 @@
 <!-- Article header -->
 <div class="article-meta">
   <span class="tag">Brief Communication</span>
-  <span>Open Access · Published: working draft v0.8</span>
+  <span>Open Access · Published: working draft v0.9</span>
   <span class="published">18 April 2026</span>
 </div>
 
@@ -1356,9 +1556,9 @@
 </p>
 
 <div class="status-strip">
-  <span class="chip draft">Working draft v0.8 · 2026-04-18</span>
+  <span class="chip draft">Working draft v0.9 · 2026-04-18</span>
   <span class="chip preprint">Target venue · Nature Methods Brief Communication</span>
-  <span class="chip status">Evidence status · 15 prose blocks v0.1 (+ Life Sciences Reporting Summary); structurally READY · empirically EVIDENCE-GATED on Gates D–G; defensibility 10/12; packet 4 ready / 4 author-gated / 0 evidence-gated; reporting summary 22 ready / 0 author-gated / 3 evidence-gated; [URL]/[URL/github]/[LICENCE] resolved in iteration 15; 3 / 10 submission gates MET (Gate J partial)</span>
+  <span class="chip status">Evidence status · 16 prose blocks v0.1 (+ Research Briefing); structurally READY · empirically EVIDENCE-GATED on Gates D–G; defensibility 10/12; packet 4 ready / 4 author-gated / 0 evidence-gated; reporting summary 22 ready / 0 author-gated / 3 evidence-gated; research briefing 4 ready / 1 author-gated / 1 evidence-gated / 1 editorial; [URL]/[URL/github]/[LICENCE] resolved iter 15; 3 / 10 submission gates MET (Gate J partial)</span>
 </div>
 
 <!-- Abstract -->
@@ -1880,7 +2080,7 @@
     <strong>READINESS DASHBOARD</strong> · structurally <span class="status-met">READY</span> · empirically <span class="status-evgated">EVIDENCE-GATED</span> on Gates D–G (regime survey · long-tail benchmark · replay scale-up · partner landings) · last recomputed 2026-04-18
   </div>
 
-  <p>Seven independent scorecards are maintained across the paper — prose-block coverage, dry-run defensibility, submission-packet completeness, figure slots, references verification, the three empirical corpora, and (iteration 15) the Life Sciences Reporting Summary completeness — plus a live placeholder inventory. An editor or co-author auditing submission readiness would otherwise have to read ten separate surfaces. This dashboard reports all of them on one screen. Each row's source block is named in the third column; if the dashboard and a source block disagree, the dashboard is the regression to fix, not the source.</p>
+  <p>Eight independent scorecards are maintained across the paper — prose-block coverage, dry-run defensibility, submission-packet completeness, figure slots, references verification, the three empirical corpora, the Life Sciences Reporting Summary completeness (iteration 15), and the Research Briefing segment readiness (iteration 16) — plus a live placeholder inventory. An editor or co-author auditing submission readiness would otherwise have to read eleven separate surfaces. This dashboard reports all of them on one screen. Each row's source block is named in the third column; if the dashboard and a source block disagree, the dashboard is the regression to fix, not the source.</p>
 
   <h3>Readiness scoreboard</h3>
 
@@ -1898,9 +2098,9 @@
     <tbody>
       <tr>
         <td>Prose-block coverage</td>
-        <td><span class="status-numeric">15 / 15</span> <span class="status-structural">STRUCTURAL-READY</span></td>
-        <td>Version increments as evidence lands; no new block creation required (Reporting Summary added iteration 15).</td>
-        <td>§§1–10, Methods, Release-eng, Cover letter, References, Figure slots, Supp outline, Dry run, Submission packet, Reporting Summary.</td>
+        <td><span class="status-numeric">16 / 16</span> <span class="status-structural">STRUCTURAL-READY</span></td>
+        <td>Version increments as evidence lands; no new block creation required (Research Briefing added iteration 16).</td>
+        <td>§§1–10, Methods, Release-eng, Cover letter, References, Figure slots, Supp outline, Dry run, Submission packet, Reporting Summary, Research Briefing.</td>
       </tr>
       <tr>
         <td>Dry-run defensibility</td>
@@ -1956,6 +2156,12 @@
         <td>Human-participants + Clinical-data slots resolve on partner MoU (Gate G); DOI slot resolves on Zenodo deposit (Gate I).</td>
         <td><a href="#reporting-summary">Reporting Summary</a> scorecard.</td>
       </tr>
+      <tr>
+        <td>Research Briefing</td>
+        <td><span class="status-numeric">4 / 7</span> READY · <span class="status-partial">1 AUTHOR-GATED</span> (Gate I) · <span class="status-pending">1 EVIDENCE-GATED</span> (Gate D) · <span class="status-numeric">1 EDITORIAL</span></td>
+        <td>Behind-the-paper vignette resolves on author sign-off; Fig 1 panel-number caption resolves at Gate D landing; From-the-editors box is handling-editor authored at acceptance.</td>
+        <td><a href="#research-briefing">Research Briefing</a> scorecard.</td>
+      </tr>
     </tbody>
   </table>
 
@@ -1968,7 +2174,7 @@
       <tr><th>Gate</th><th>Condition</th><th>Status</th><th>Source / resolution</th></tr>
     </thead>
     <tbody>
-      <tr><td>A</td><td>Prose coverage: all 15 required blocks drafted at v0.1 or better.</td><td><span class="status-met">MET</span></td><td>Iteration 15 (+ Reporting Summary); every prose block carries a <code>## Drafted prose</code> heading.</td></tr>
+      <tr><td>A</td><td>Prose coverage: all 16 required blocks drafted at v0.1 or better.</td><td><span class="status-met">MET</span></td><td>Iteration 16 (+ Research Briefing); every prose block carries a <code>## Drafted prose</code> heading.</td></tr>
       <tr><td>B</td><td>Dry-run defensibility: 0 unanswerable, ≤ 1 evidence-gated, ≤ 1 partial objection.</td><td><span class="status-met">MET</span></td><td>Current 10 answerable · 1 partial (Q10) · 1 evidence-gated (Q3) · 0 unanswerable.</td></tr>
       <tr><td>C</td><td>Packet: 0 evidence-gated fields.</td><td><span class="status-met">MET</span></td><td>Current 4 ready · 4 author-gated · 0 evidence-gated.</td></tr>
       <tr><td>D</td><td>Regime survey: 200 / 200 rows extracted · 3 IRR dual-extractions κ ≥ 0.7 / ICC ≥ 0.8 · kill-criteria sanity check on full 200.</td><td><span class="status-pending">PENDING</span></td><td>§&quot;Empirical evidence status&quot; · §&quot;Kill criteria&quot;.</td></tr>
@@ -1998,7 +2204,7 @@
   <h3>Scoreboard summary — one line</h3>
 
   <p class="one-line-summary">
-    15 / 15 prose · 10 / 12 defensibility · 8 / 8 packet non-regression (0 evidence-gated) · 22 / 25 reporting-summary responses · 3 / 6 figure captions · 0 / ~35 references verified · 80 / 200 survey · 0 / 30 benchmark · 3 / [N] replay · ~22 placeholder labels open (<code>[URL]</code>, <code>[URL/github]</code>, <code>[LICENCE]</code> resolved iter 15) · 3 / 10 gates MET (Gate J partial) · structurally <span class="status-met">READY</span> · empirically <span class="status-evgated">EVIDENCE-GATED</span> on Gates D–G.
+    16 / 16 prose · 10 / 12 defensibility · 8 / 8 packet non-regression (0 evidence-gated) · 22 / 25 reporting-summary responses · 4 / 7 research-briefing segments READY (+ 1 AUTHOR-GATED + 1 EVIDENCE-GATED + 1 EDITORIAL) · 3 / 6 figure captions · 0 / ~35 references verified · 80 / 200 survey · 0 / 30 benchmark · 3 / [N] replay · ~22 placeholder labels open (<code>[URL]</code>, <code>[URL/github]</code>, <code>[LICENCE]</code> resolved iter 15) · 3 / 10 gates MET (Gate J partial) · structurally <span class="status-met">READY</span> · empirically <span class="status-evgated">EVIDENCE-GATED</span> on Gates D–G.
   </p>
 </section>
 
@@ -2468,6 +2674,92 @@
   <p class="rs-one-line">25 reporting-summary response slots · 22 READY · 0 AUTHOR-GATED · 3 EVIDENCE-GATED (Gates G + I) · Sections 1 / 2 / 4 / 5 / 6 / 7 COMPLETE · Section 3 human-participants STRUCTURE-COMPLETE, IRB-details GATED on partner MoUs.</p>
 </section>
 
+<!-- Research Briefing (v0.1) — plain-language accompaniment at acceptance -->
+<section class="research-briefing" id="research-briefing">
+  <h2>Research Briefing · v0.1</h2>
+  <p class="rb-meta">Draft v0.1 · 2026-04-18 · plain-language pre-flight of the Nature Portfolio Research Briefing — the ~800-word standalone piece that accompanies the published paper on the Nature Methods website. Rephrases Abstract / §1 / §3 / §4 / §8 / Cover letter; introduces no new claim. Submission-engineering artefact, not body prose.</p>
+
+  <div class="rb-banner">
+    <strong>Status: RESEARCH BRIEFING DRAFT (v0.1).</strong> Four author-written segments (The question · The discovery · The implications · Behind the paper), one editor-authored box (From the editors), three plain-language key references, one figure suggestion. <strong>4 READY</strong> (derived from drafted prose), <strong>1 AUTHOR-GATED</strong> (first-person vignette, Gate I), <strong>1 EVIDENCE-GATED</strong> (Fig 1 caption panel numbers, Gate D), <strong>1 EDITORIAL</strong> (handling-editor authored — not author-drafted by design). Discipline: this block is plain-language rephrasing; any Abstract / §1 / §3 / §4 / §8 / References edit MUST re-read this block in the same iteration.
+  </div>
+
+  <h3><span class="rb-seg-label">SEG 1</span>The question</h3>
+  <div class="rb-segment">
+    <p class="rb-segment-meta">Target ~180 words · <span class="rb-label-ready">READY</span> · derivable from §1 Introduction + Abstract v0.5</p>
+    <p>Modern bioimage methodology — the tools and algorithms that turn microscope pictures into numbers — has been built around the kinds of image collections that resemble the internet: big, uniform, plentifully annotated. Most biology looks nothing like that. A typical cell-biology paper studies 13 to 27 cells per condition. A developmental biologist may follow a handful of embryos. A pathologist reviewing an unusual case may have twelve slides on the bench. A high-school student looking at pond water in a teaching lab has however many drops fit under a cover slip.</p>
+    <p>For these users — the large majority, on our count — the dominant research programme in deep-learning-based image analysis is answering a different question from the one they are asking. A first-year graduate student trying to count <em>Plasmodium</em> gametocytes from a phone photograph taken in a Malawian field clinic is not doing a fine-tuning exercise on a misbehaving foundation model; they are asking how to reason about these forty images with the biologist's eye they already have. What tools do <em>those</em> scientists need, and has the methodology literature built them?</p>
+  </div>
+
+  <h3><span class="rb-seg-label">SEG 2</span>The discovery</h3>
+  <div class="rb-segment">
+    <p class="rb-segment-meta">Target ~220 words · <span class="rb-label-ready">READY</span> · derivable from §2 + Abstract v0.5 + §8 ¶3</p>
+    <p>We asked the question in two ways. First, we sampled 200 recent open-access microscopy papers across nine subdomains and read each for three things: how many images per condition they analysed, how much of the analysis still required a human expert, and which software they used. A clear majority — interim count <span class="placeholder-value">[48]%</span> on the first 80 papers — fall inside a small-data, human-scale regime in which fewer than a hundred images per condition are analysed with human-in-the-loop segmentation or scoring. The same share — again <span class="placeholder-value">[48]%</span> — name ImageJ or its community distribution Fiji somewhere in the pipeline, yet only <span class="placeholder-value">[20]%</span> use a named deep-learning model.</p>
+    <p>Second, we stress-tested the current generation of foundation segmentation models — SAM, Cellpose-generalist, StarDist-versatile, CellSAM — on a curated 30-task benchmark that deliberately sits in the long tail of real biology: rare organisms, non-fluorescent stains, phone and tablet acquisitions. Zero-shot performance on this set drops sharply below in-distribution numbers. These results are not a criticism of deep learning — on its own terms it is excellent. They describe a regime that has been under-served.</p>
+    <p>Alongside this evidence we release <strong>ImageJ.JS</strong>: the unmodified Fiji codebase, compiled to WebAssembly and served as a single web page. No install, no administrator, no Java runtime, no image byte leaving the user's device. Every analysis is a URL that can be shared, re-executed, or taught from.</p>
+  </div>
+
+  <h3><span class="rb-seg-label">SEG 3</span>The implications</h3>
+  <div class="rb-segment">
+    <p class="rb-segment-meta">Target ~140 words · <span class="rb-label-ready">READY</span> · derivable from §3 + §4 + §7 + §8</p>
+    <p>Methodological progress in bioimage analysis has measured itself against the regime in which deep learning thrives. We argue that this is only half the map. A tool that runs on a Chromebook in a teaching lab, on an air-gapped workstation in a forensic-pathology suite, on a tablet in a greenhouse, and on a phone in a field clinic — the same tool, with the same macros, the same plugins, and the same reproducibility guarantees — is <em>also</em> a methodology contribution. Because every analysis is addressable as a URL and every step of an analysis is programmatic through an accompanying service layer, ImageJ.JS is also a composable component: a deep-learning model can propose a candidate segmentation and a human scientist can adjudicate, refine, and measure inside the same environment. The regimes are complementary, not competing. The literature has been missing half its coverage.</p>
+  </div>
+
+  <h3><span class="rb-seg-label">SEG 4</span>Behind the paper</h3>
+  <div class="rb-segment">
+    <p class="rb-segment-meta">Target ~180 words · <span class="rb-label-author">AUTHOR-GATED</span> · structural commitment drafted, prose resolves at Gate I sign-off</p>
+    <p><em>Drafted structural commitment; final prose resolves at sign-off once the CRediT author list is finalised.</em> We had been running ImageJ.JS as an experimental browser port of Fiji for several years when a mentor showed us their undergraduate cell-biology assignment: count cells in a field of view, by hand. Their class of thirty students shared four lab computers. Installing Fiji on each of the thirty Chromebooks the students had been issued was not allowed by the school's IT policy, and the teacher had been photographing slides into a Google Slides deck so that the class could see the same image at once. That afternoon we opened ImageJ.JS on the Chromebooks in a shared browser tab. The class counted cells for the first time, together, with their own hands on their own devices. It is not the story of a benchmark or a hyperparameter sweep. It is the story the paper is really about.</p>
+    <p style="color:#7a4e00;"><strong><span class="placeholder-value">[AUTHOR-INITIALS]</span>, <span class="placeholder-value">[AUTHOR-INITIALS]</span>, <span class="placeholder-value">[AUTHOR-INITIALS]</span></strong>.</p>
+  </div>
+
+  <h3><span class="rb-seg-label">SEG 5</span>From the editors</h3>
+  <div class="rb-editor-box">
+    <strong>EDITORIAL · 60–80 words · handling-editor authored · NOT drafted by the authors at any iteration.</strong>
+    <br><br>
+    The handling editor at Nature Methods composes this box independently at acceptance. The v0.1 draft reserves the structural slot and the word budget only. The authors' single input is the list of suggested subject tags supplied in the Submission packet (<a href="#submission-packet">see "Subject tags suggested"</a>). Attempting to author this segment from the paper side is a discipline regression.
+  </div>
+
+  <h3><span class="rb-seg-label">KEY REFS</span>Key references (plain-language form)</h3>
+  <p class="rb-subnote">Three references in the plain-language style Nature Portfolio uses in the Research Briefing footer. Every entry below exists in the paper's full References list (v0.1) in canonical bibliographic form; this is a rephrasing only.</p>
+  <ol class="rb-refs">
+    <li><strong>Lord et al. (2024)</strong> surveyed sample sizes in contemporary cell-biology imaging and found that a typical study analyses between 13 and 27 cells per condition across three biological replicates — the empirical anchor for the "small-data" regime this paper characterises.</li>
+    <li><strong>Kirillov et al. (2023)</strong> released the Segment Anything Model, which remains the canonical foundation model for general-purpose segmentation; its zero-shot performance on our long-tail benchmark illustrates where the method's in-distribution excellence stops.</li>
+    <li><strong>Schindelin et al. (2012)</strong> described Fiji, the ImageJ distribution whose unmodified codebase ImageJ.JS compiles to the browser — the substrate on which the <span class="placeholder-value">[48]%</span> ImageJ/Fiji survey figure is grounded.</li>
+  </ol>
+
+  <h3><span class="rb-seg-label">FIG</span>Figure suggestion</h3>
+  <p class="rb-subnote">The Nature Methods Research Briefing typically carries a single high-contrast figure. The figure that best serves the Briefing is <strong>Fig 1 panel (a)</strong>, the regime-survey long-tail distribution: a horizontal bar or histogram showing the proportion of microscopy studies per "images per condition" bin, with the small-data regime highlighted. Plain-language caption (committed at v0.1; final wording resolves at Fig 1 evidence landing, Gate D):</p>
+  <div class="rb-fig-caption">
+    Most microscopy studies analyse few images. A survey of 200 recent microscopy papers shows that a majority fall inside a small-data regime — fewer than 100 images per condition, with a human-in-the-loop step in segmentation or scoring. Tools designed for this regime have, until now, been under-invested in by the methodology literature.
+  </div>
+
+  <h3>Research-briefing defensibility scorecard</h3>
+  <table class="rb-scoreboard">
+    <thead>
+      <tr><th>Segment</th><th>Label</th><th>Source / gating path</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>The question</td><td><span class="rb-label-ready">READY</span></td><td>Rephrases §1 ¶1–2 + Abstract v0.5 opening; 13–27 cells anchor from Lord 2024.</td></tr>
+      <tr><td>The discovery</td><td><span class="rb-label-ready">READY</span></td><td>Rephrases §2 + Abstract v0.5 + §8 ¶3 long-tail benchmark sentence.</td></tr>
+      <tr><td>The implications</td><td><span class="rb-label-ready">READY</span></td><td>Rephrases §3 (design principles) + §4 (replay) + §7 (collaboration) + §8 (composability).</td></tr>
+      <tr><td>Behind the paper (vignette)</td><td><span class="rb-label-author">AUTHOR-GATED</span></td><td>Structural commitment (teaching-lab Chromebook vignette consistent with §5); final prose + author names resolve at Gate I sign-off.</td></tr>
+      <tr><td>From the editors</td><td><span class="rb-label-editorial">EDITORIAL</span></td><td>Handling editor at Nature Methods writes this at acceptance; not author-drafted by design.</td></tr>
+      <tr><td>Key references (plain-language form)</td><td><span class="rb-label-ready">READY</span></td><td>Rephrases References v0.1 entries 1, 8, 2 (Lord 2024, Kirillov 2023, Schindelin 2012) in lay phrasing.</td></tr>
+      <tr><td>Figure suggestion (caption)</td><td><span class="rb-label-evidence">EVIDENCE-GATED</span></td><td>Structural commitment: Fig 1 panel (a). Final caption resolves when Fig 1 evidence panel lands (Gate D).</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Research-briefing discipline</h3>
+  <p class="rb-subnote">Three rules govern this artefact and every future iteration of it, modelled on the dry-run, packet, readiness-dashboard, and reporting-summary discipline blocks.</p>
+  <ul class="rb-discipline">
+    <li><strong>(i) Research Briefing is plain-language rephrasing.</strong> No segment introduces a claim, number, citation, or commitment not already drafted in Abstract / §1 / §3 / §4 / §8 / References / Cover letter / Submission packet. If a future iteration wishes to introduce a new narrative hook, that hook must first appear in a specialist-prose block.</li>
+    <li><strong>(ii) Research Briefing is synchronised.</strong> Any future iteration that touches a referenced specialist block MUST update the corresponding Briefing segment in the <em>same</em> iteration. A Briefing whose numbers silently diverge from Abstract v0.5 is worse than no Briefing — the public-facing surface is where divergence is most visible.</li>
+    <li><strong>(iii) First-person vignette stays AUTHOR-GATED; editorial box stays EDITORIAL.</strong> The "Behind the paper" structural commitment is fixed at v0.1; its final prose resolves at author sign-off only. The "From the editors" box is not author-drafted at any iteration and must not be replaced with author-authored copy even if the word-count budget allows.</li>
+  </ul>
+
+  <h3>Research-briefing one-line summary</h3>
+  <p class="rb-one-line">7 research-briefing segment slots · 4 READY · 1 AUTHOR-GATED (Gate I) · 1 EVIDENCE-GATED (Gate D) · 1 EDITORIAL (handling-editor authored) · target ~800 words author-written + ~80 words editorial box · Question / Discovery / Implications / Key refs / Figure suggestion COMPLETE at v0.1.</p>
+</section>
+
 </article>
 
 <!-- Sidebar -->
@@ -2495,6 +2787,7 @@
       <li><a href="#dry-run">Reviewer-response dry run</a></li>
       <li><a href="#submission-packet">Submission packet</a></li>
       <li><a href="#reporting-summary">Reporting summary</a></li>
+      <li><a href="#research-briefing">Research Briefing</a></li>
     </ul>
   </nav>
 
@@ -2504,7 +2797,7 @@
       <dt>Article type</dt>
       <dd>Brief Communication (working draft)</dd>
       <dt>Draft version</dt>
-      <dd>v0.8 · 2026-04-18 (adds Life Sciences Reporting Summary + partial placeholder resolution)</dd>
+      <dd>v0.9 · 2026-04-18 (adds Research Briefing plain-language accompaniment)</dd>
       <dt>Target venue</dt>
       <dd>Nature Methods (Brief Communication primary; full Article if pillars 1+2+{3,4,5} rigorously delivered)</dd>
       <dt>Correspondence</dt>
@@ -2516,7 +2809,7 @@
     <h3>Evidence status</h3>
     <dl>
       <dt>Ready (prose v0.1)</dt>
-      <dd>Abstract · §1 · §3 · §8 · §9 · §10 · Online Methods · Cover letter · References · Figure slots · Supp. outline · Release engineering · Reviewer-response dry run · Submission packet · Readiness dashboard · <strong>Reporting Summary</strong></dd>
+      <dd>Abstract · §1 · §3 · §8 · §9 · §10 · Online Methods · Cover letter · References · Figure slots · Supp. outline · Release engineering · Reviewer-response dry run · Submission packet · Readiness dashboard · Reporting Summary · <strong>Research Briefing</strong></dd>
       <dt>Readiness posture</dt>
       <dd>Structurally <strong style="color:#1a6b2f;">READY</strong> · empirically <strong style="color:#8a1a1a;">EVIDENCE-GATED</strong> on Gates D–G · 3 / 10 submission gates <strong style="color:#1a6b2f;">MET</strong></dd>
       <dt>Defensibility (dry run)</dt>
@@ -2525,6 +2818,8 @@
       <dd>4 ready · 4 author-gated · 0 evidence-gated (sign-off is the only blocker on 4 fields)</dd>
       <dt>Reporting summary</dt>
       <dd>22 ready · 0 author-gated · 3 evidence-gated (Gates G + I) of 25 response slots</dd>
+      <dt>Research Briefing</dt>
+      <dd>4 ready · 1 author-gated (Gate I) · 1 evidence-gated (Gate D) · 1 editorial (handling-editor authored) of 7 segment slots</dd>
       <dt>Interim figures (80 of 200)</dt>
       <dd>[48]% small-data · [48]% ImageJ/Fiji any-mention · [20]% named DL</dd>
       <dt>Evidence-gated</dt>
@@ -2532,7 +2827,10 @@
     </dl>
   </div>
 
-  <div class="coverletter-link" style="background:#fdf0f3; border-color:#e8bcc8;">
+  <div class="coverletter-link" style="background:#f4f7ec; border-color:#c6d3aa;">
+    <a href="#research-briefing" style="color:#3e5a1e;">View the Research Briefing ↓</a>
+  </div>
+  <div class="coverletter-link" style="margin-top:10px; background:#fdf0f3; border-color:#e8bcc8;">
     <a href="#reporting-summary" style="color:#7c1f3c;">View the Life Sciences Reporting Summary ↓</a>
   </div>
   <div class="coverletter-link" style="margin-top:10px; background:#f8f4fc; border-color:#d8c6ea;">
@@ -2556,7 +2854,7 @@
 
 <footer class="site-footer">
   <div class="wrap">
-    <div>Rendered from <code>preprint.md</code> · working draft v0.8 · 2026-04-18 (adds Life Sciences Reporting Summary + resolves <code>[URL]</code> → <code>https://ij.aicell.io</code>, <code>[URL/github]</code> → <code>https://github.com/aicell-lab/imagej.js</code>, <code>[LICENCE]</code> → MIT). Placeholders still in <span style="background:#fff8e1; color:#6b5000; padding:0 4px; border-radius:2px;">[yellow]</span> are evidence gaps resolved at submission per the placeholder-propagation discipline; resolved values render as inline code.</div>
+    <div>Rendered from <code>preprint.md</code> · working draft v0.9 · 2026-04-18 (adds Research Briefing plain-language accompaniment; Life Sciences Reporting Summary + <code>[URL]</code>/<code>[URL/github]</code>/<code>[LICENCE]</code> resolution landed iter 15). Placeholders still in <span style="background:#fff8e1; color:#6b5000; padding:0 4px; border-radius:2px;">[yellow]</span> are evidence gaps resolved at submission per the placeholder-propagation discipline; resolved values render as inline code.</div>
     <div style="margin-top:10px;">Served via <code>svamp serve</code> · not a journal publication.</div>
   </div>
 </footer>

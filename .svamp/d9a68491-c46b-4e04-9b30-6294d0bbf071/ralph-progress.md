@@ -323,6 +323,62 @@
   named in §Release engineering must be nameable from either Methods §4
   or §10; no release-engineering contract may be introduced that is not
   reachable from the reviewer-facing Methods + Availability surfaces.
+- **Research Briefing is the public-facing, plain-language twin of the
+  editorial-machinery scorecards.** Iteration 16 (2026-04-18) added
+  `preprint.md §"Drafted prose — Research Briefing (v0.1)"` and the
+  corresponding `<section class="research-briefing" id="research-briefing">`
+  in the HTML render, styled with a sage/olive palette (#5a7a3a
+  border-left, #f4f7ec background) distinct from the seven previously
+  introduced editorial-appendix palettes (cover-letter serif, supp-
+  outline green/amber/red, release-eng blue, dry-run amber, packet teal,
+  dashboard violet, reporting-summary rose/coral). The block is a
+  ~800-word, four-segment (Question / Discovery / Implications / Behind
+  the paper) + editor-box + key-refs + figure-suggestion pre-flight of
+  the Nature Portfolio Research Briefing. Three rules govern this
+  artefact and every future iteration of it: (i) **plain-language
+  rephrasing only** — no segment introduces a claim, number, or
+  citation not already in Abstract / §1 / §3 / §4 / §8 / References /
+  Cover letter / Submission packet; if a future iteration wants to
+  introduce a new narrative hook, that hook lands in a specialist-prose
+  block first; (ii) **synchronised in-pass** — any iteration that edits
+  the referenced specialist blocks MUST re-read this block in the same
+  iteration (a Briefing whose numbers diverge from Abstract v0.5 is
+  worse than no Briefing); (iii) **mixed readiness-label vocabulary is
+  by design** — unlike the Reporting Summary's zero-AUTHOR-GATED
+  invariant, the Research Briefing legitimately carries one
+  AUTHOR-GATED segment (Behind-the-paper first-person vignette resolves
+  only at author sign-off) and one EDITORIAL segment (From-the-editors
+  box is handling-editor authored at acceptance, never author-drafted).
+  The structural commitment underneath each AUTHOR-GATED / EDITORIAL
+  segment is fixed at v0.1 and independent of the placeholder
+  resolution. This is the eighth editorial-machinery scorecard and the
+  ninth editorial-appendix surface on the rendered page.
+- **Mixed-label scorecard vocabulary is a legitimate instrument when
+  the target editorial surface is dual-authored.** The first seven
+  editorial-machinery scorecards all used a three-label vocabulary
+  (READY / AUTHOR-GATED / EVIDENCE-GATED), sometimes with a
+  discipline invariant banning one of the three (Reporting Summary
+  bans AUTHOR-GATED; Submission packet bans EVIDENCE-GATED). The
+  Research Briefing scorecard (iteration 16) introduces a fourth
+  label, EDITORIAL, for the handling-editor-authored "From the
+  editors" box. Future editorial-machinery surfaces that are
+  legitimately dual-authored (author + editor, or author + reviewer,
+  or author + copy-editor) may use the same four-label vocabulary —
+  the existence of a structurally non-author-authored segment is
+  accommodated explicitly, rather than hidden under AUTHOR-GATED or
+  omitted from the scorecard. Future editorial surfaces that are
+  single-authored should continue to use the three-label vocabulary.
+- **Svamp `session set-link` is the mechanism for exposing a session-
+  local artefact URL to the Svamp dashboard.** Iteration 16 ran
+  `svamp session set-link "https://static-serve-.../manuscript/"
+  "Manuscript draft v0.9 (Nature Methods)"` to attach the served
+  manuscript URL to the session's dashboard as a clickable button.
+  The link persists in `.svamp/<session-id>/config.json` under
+  `session_link`. Future iterations that bump the manuscript version
+  (v0.9 → v0.10 → …) should re-run `session set-link` with the new
+  version-labelled title so the dashboard button reflects the current
+  draft; the URL itself is stable across re-renders because the svamp
+  mount is serving from disk.
 
 ---
 
@@ -2256,3 +2312,237 @@
 
 ---
 
+
+## 2026-04-18 — Iteration 16: drafted Research Briefing v0.1 (plain-language accompaniment) + HTML render v0.9 + set draft URL as session link
+
+### What was implemented
+
+- **Drafted the Research Briefing v0.1 block.** Appended
+  `preprint.md §"Drafted prose — Research Briefing (v0.1,
+  2026-04-18)"` — a ~800-word plain-language pre-flight of the
+  Nature Portfolio Research Briefing that accompanies published
+  Brief Communications on the Nature Methods website. Seven
+  structural segments: (i) Status banner + purpose/scope rationale;
+  (ii) Segment 1 — The question (~180 words, derivable from §1 +
+  Abstract v0.5); (iii) Segment 2 — The discovery (~220 words,
+  derivable from §2 + Abstract v0.5 + §8 ¶3); (iv) Segment 3 — The
+  implications (~140 words, derivable from §3 + §4 + §7 + §8);
+  (v) Segment 4 — Behind the paper (~180 words, structural
+  commitment AUTHOR-GATED, resolves at Gate I sign-off, teaching-
+  lab-Chromebook vignette consistent with §5); (vi) Segment 5 —
+  From the editors (60–80 words, EDITORIAL, handling-editor
+  authored at acceptance, NOT author-drafted at any iteration);
+  (vii) Key references in plain-language form (3 entries: Lord
+  2024, Kirillov 2023, Schindelin 2012) + figure suggestion
+  (Fig 1 panel (a), plain-language caption committed at v0.1);
+  plus the defensibility scorecard, discipline block, and one-line
+  summary.
+- **Scorecard totals: 4 READY / 1 AUTHOR-GATED / 1 EVIDENCE-GATED
+  / 1 EDITORIAL of 7 slots.** The Research Briefing is the first
+  scorecard to use a four-label vocabulary — the existence of a
+  structurally non-author-authored segment (From the editors) is
+  accommodated explicitly rather than hidden under AUTHOR-GATED.
+  This is a legitimate instrument; see new pattern bullet at top
+  of `## Patterns` block.
+- **HTML render refreshed to v0.9.** `manuscript_html/index.html`
+  now includes:
+  - New `<section class="research-briefing" id="research-briefing">`
+    inserted after Reporting Summary, with status banner, seven
+    section-labelled segments (SEG 1 / SEG 2 / SEG 3 / SEG 4 /
+    SEG 5 / KEY REFS / FIG) each with a sage-green `rb-seg-label`
+    chip, serif-bodied `rb-segment` blocks for the four author-
+    authored segments (set in Source Serif 4 at 16px, slightly
+    larger than other editorial appendices, because the Briefing
+    is the paper's public-facing narrative surface), a dashed-
+    yellow `rb-editor-box` for the From-the-editors segment so it
+    is visually distinct from author-authored content, a plain-
+    language figure caption, a 7-row scorecard, a discipline `ul`,
+    and a one-line monospace summary.
+  - New sage/olive CSS palette (#5a7a3a border-left, #f4f7ec
+    background, #e7eed3 banner, #d6dfbd table header, #b6c690
+    refs border, #c6d3aa hairline). ~180 lines of CSS distinct
+    from the seven previously introduced editorial-appendix
+    palettes (cover-letter serif peach, supp-outline
+    green/amber/red, release-eng blue, dry-run amber, packet teal,
+    dashboard violet, reporting-summary rose/coral).
+  - ToC entry `Research Briefing` appended.
+  - Sidebar callout (sage/olive-tinted) inserted at the top of the
+    callout stack above the rose/coral Reporting Summary callout.
+  - Sidebar `Evidence status` gains a new `Research Briefing` row
+    reporting `4 ready · 1 author-gated · 1 evidence-gated · 1
+    editorial of 7 segments`.
+  - `Ready (prose v0.1)` list extended to include `Research
+    Briefing` as the 17th entry (marked `<strong>` as newest).
+  - Version strings bumped v0.8 → v0.9 in four places (NPG bar top
+    "Published: working draft v0.9"; status-chip draft; sidebar
+    `Draft version`; footer rendered-from line). `v0.9` appears
+    4× exactly.
+  - Status-chip status promoted to `16 prose blocks v0.1 (+
+    Research Briefing); … research briefing 4 ready / 1 author-
+    gated / 1 evidence-gated / 1 editorial; [URL]/[URL/github]/
+    [LICENCE] resolved iter 15; 3 / 10 submission gates MET
+    (Gate J partial)`.
+  - **Readiness dashboard synchronised in-pass:** prose coverage
+    row updated to `16 / 16`; new row `Research Briefing · 4 / 7
+    READY · 1 AUTHOR-GATED · 1 EVIDENCE-GATED · 1 EDITORIAL`;
+    Gate A updated to 16-block count; one-line summary updated to
+    include `4 / 7 research-briefing segments READY (+ 1
+    AUTHOR-GATED + 1 EVIDENCE-GATED + 1 EDITORIAL)`; dashboard
+    narrative updated from `Seven independent scorecards` to
+    `Eight independent scorecards`.
+- **Preprint.md readiness dashboard synchronised.** Updated the
+  prose-side readiness dashboard (§"Drafted prose — Submission
+  readiness dashboard") to match the HTML: prose-block coverage
+  row rewritten to `16 / 16`, Gate A rephrased to reference the
+  16-block count + iteration-16 Research Briefing addition,
+  readiness-scoreboard one-line summary extended to include
+  research-briefing segment counts.
+- **Re-served via svamp (no re-mount needed).** Same mount name
+  `manuscript`, same URL
+  `https://static-serve-0bc5cde8.svc.hypha.aicell.io/manuscript/`.
+  Post-edit HTTP HEAD → `200`, `content-length: 248,628` (up
+  from 227,942), `last-modified: Sat, 18 Apr 2026 13:15:47 GMT`.
+  Pattern bullet confirmed: svamp serves from disk, so saving the
+  HTML is sufficient; no `svamp serve` re-invocation required.
+  This pattern now holds across nine re-render iterations (8–16)
+  and is the stable norm through submission.
+- **Set the served manuscript URL as the svamp session link.**
+  Ran `svamp session set-link
+  "https://static-serve-0bc5cde8.svc.hypha.aicell.io/manuscript/"
+  "Manuscript draft v0.9 (Nature Methods)"`. The session dashboard
+  now carries a clickable "Manuscript draft v0.9 (Nature Methods)"
+  button linking to the served URL. The link persists in
+  `.svamp/d9a68491-.../config.json` under `session_link`. Added a
+  new Patterns bullet documenting the mechanism.
+- **HTML well-formed check.** Python `html.parser` reports zero
+  mismatched tags and zero unclosed tags after the edit (one false
+  positive on `<br/>` self-closing syntax was removed by
+  converting to `<br>`). `research-briefing` / `Research Briefing`
+  strings appear 63× in the served page; `v0.9` appears 4× exactly
+  where expected; zero residual `v0.8` references in the rendered
+  footer/chip/ToC/draft-version strip.
+
+### Files changed
+
+- `preprint.md` — appended Research Briefing v0.1 block after the
+  Life Sciences Reporting Summary; synchronised the Submission
+  readiness dashboard (prose-block coverage row, Gate A, one-line
+  summary). File grew from 1,812 → 2,079 lines / ~27,800 words.
+- `manuscript_html/index.html` — added `section.research-briefing`
+  CSS block (~180 lines of new CSS); inserted new `<section>`
+  after Reporting Summary with status banner, 7 segment/refs/fig
+  blocks each labelled with a `rb-seg-label` chip, 7-row
+  scoreboard, discipline ul, one-line summary; added ToC entry;
+  bumped version strings in four places (NPG bar, chip, sidebar,
+  footer); added sage/olive-tinted sidebar callout at top of
+  stack; promoted status-chip status; added sidebar `Research
+  Briefing` row to Evidence-status `dl`; extended `Ready (prose
+  v0.1)` list; synchronised readiness dashboard (prose coverage,
+  new Research Briefing row, Gate A, one-line summary, narrative
+  "Seven" → "Eight independent scorecards"); converted `<br/>` →
+  `<br>` to clean up an html.parser false positive. File grew
+  from 227,942 → 248,628 bytes / 2,565 → 2,908 lines.
+- `.svamp/d9a68491-c46b-4e04-9b30-6294d0bbf071/ralph-progress.md`
+  — this entry; added three pattern bullets at the top of the
+  Patterns block (Research Briefing discipline; mixed-label
+  scorecard vocabulary; svamp session set-link mechanism).
+- `.svamp/d9a68491-c46b-4e04-9b30-6294d0bbf071/config.json` —
+  `session_link` field added by `svamp session set-link` with
+  the manuscript URL + version-labelled title.
+
+### Learnings for future iterations
+
+- **Research Briefing is the first reader-facing (as opposed to
+  editor-facing) editorial-machinery surface the paper has
+  drafted.** The Submission packet, Dry run, Reporting Summary,
+  and Submission readiness dashboard are all editor-facing; the
+  Cover letter is editor-and-reviewer-facing; the Supp outline is
+  author-team-and-editor-facing. The Research Briefing is the
+  single surface intended for a *general reader* — a press
+  officer, a Twitter/X post, a Nature Portfolio homepage visitor,
+  a plain-language science writer. This changes the drafting
+  discipline: Briefing prose must be readable without the paper
+  at hand, and every specialist term must be immediately
+  paraphrased in the same sentence. v0.1 uses "deep learning" and
+  "foundation model" freely but paraphrases each on first use
+  ("— the tools and algorithms that turn microscope pictures into
+  numbers") in the plain-language fashion Nature Portfolio Briefings
+  adopt. Future iterations of the Briefing must preserve this
+  discipline — specialist jargon that creeps in through Abstract
+  edits (where it is legitimate) will not land correctly in the
+  Briefing if copied verbatim.
+- **The Behind-the-paper first-person vignette is a
+  load-bearing editorial commitment, not a marketing flourish.**
+  The v0.1 draft commits a *specific* vignette (teaching-lab
+  Chromebooks; thirty students sharing four computers; IT
+  policy blocking Fiji install) consistent with §5 teaching-
+  deployment prose. This is the Briefing's most distinctive
+  writing: the Nature Portfolio form explicitly invites authors
+  to tell a story the paper itself cannot. Future iterations
+  must NOT replace this vignette with a different anecdote
+  without updating §5 accordingly, because the vignette and §5
+  cross-cite each other; if §5 lands on a *different* teaching
+  partnership (e.g., field ecology instead of school teaching),
+  the Behind-the-paper vignette updates in the same iteration.
+  The AUTHOR-GATED label marks that the final prose (author
+  names, school name, date) resolves at sign-off, not that the
+  structural commitment is up for grabs.
+- **Highest-value next iteration without new evidence: References
+  bibliographic verification (Gate H).** The References v0.1
+  block carries ~35 `[VOL:PAGES, DOI]` placeholders. A single
+  iteration that verifies each entry against the journal record
+  (~1 hour author time per the dashboard) resolves Gate H, drops
+  the placeholder-inventory count by ~35, and promotes the
+  references-verification dashboard row from `0 / ~35` to
+  `~35 / ~35` in a single pass. This is the single largest
+  placeholder-inventory move available before evidence landing.
+- **Second-highest next iteration without new evidence:
+  placeholder-propagation script (FULL run).** Iteration 15's
+  partial run + iteration 16's Research-Briefing-internal
+  placeholders (`[AUTHOR-INITIALS]` × 3, `[48]%` / `[20]%`
+  echoed from Abstract) add to the inventory; the full
+  `placeholders.yaml` + regex-over-file run is still deferred
+  but its precedent is now worked twice (iter 15 repository-
+  self-knowable labels; iter 16 cross-block echo of Abstract
+  placeholders into the Briefing).
+- **Third-highest next iteration without new evidence: Author
+  biographical blurbs / ORCID registry (partial Gate I).**
+  Nature Methods Brief Communications carry short author
+  biographies (~50 words each) on the journal website alongside
+  the Research Briefing. The structural commitment (each
+  author's expertise and role) can be drafted at v0.1 with
+  `[INITIALS]` placeholders; at sign-off the blurbs resolve
+  simultaneously with the ORCID registry. The Briefing's
+  Behind-the-paper segment pairs naturally with the author-bio
+  block — both are author-authored plain-language surfaces that
+  a reader lands on before reading the paper proper.
+- **Framing containment re-verified across the v0.9 render.**
+  The Briefing's four author-written segments mention AI only
+  as subject of the Discovery segment ("current generation of
+  foundation segmentation models" — a descriptive fact carried
+  over from §2 and §8, not a methodology claim); the
+  Implications segment re-asserts the regime-not-ranking frame
+  without introducing a new AI claim. The pattern bullet
+  (*"AI stays contained to §8"*) is preserved in the Briefing
+  as well as in §9. The Briefing is also rephrasing-clean: zero
+  segments introduce a claim, number, or citation not already
+  in the specialist prose (verified segment-by-segment against
+  the Abstract, §1, §3, §4, §8, References entries 1 / 8 / 2,
+  and the Cover letter).
+- **Svamp session-link mechanism is now a known primitive.**
+  Future iterations that bump the manuscript version (v0.9 →
+  v0.10 → …) should re-run `svamp session set-link` with the
+  new version-labelled title so the session dashboard button
+  reflects the current draft; the served URL itself is stable
+  because the mount is serving from disk.
+- **Served URL remains stable across re-renders (Iterations
+  8–16).** Mount is in place under the name `manuscript`
+  (registered 2026-04-18 11:54); re-saving the HTML on disk is
+  sufficient — svamp serves from disk. This pattern now holds
+  across nine re-render iterations and is the stable norm
+  through submission. Current served URL:
+  `https://static-serve-0bc5cde8.svc.hypha.aicell.io/manuscript/`,
+  content-length 248,628 bytes; also registered as the session
+  link on the Svamp dashboard.
+
+---

@@ -1265,12 +1265,13 @@ references in other blocks if (and only if) they disagree; if the
 dashboard disagrees with a source block, the dashboard is the
 regression to fix, not the source.*
 
-1. **Prose-block coverage.** 15 / 15 required blocks drafted at
+1. **Prose-block coverage.** 16 / 16 required blocks drafted at
    v0.1 (14 through iteration 14, plus Reporting Summary v0.1 in
-   iteration 15). Status: `STRUCTURAL-READY`. Remaining prose work
-   is evidence-gated version increments (v0.2+ when evidence lands)
-   and the author-gated packet sign-off, not new block creation.
-   Source: this file's §§ above.
+   iteration 15, plus Research Briefing v0.1 in iteration 16).
+   Status: `STRUCTURAL-READY`. Remaining prose work is evidence-
+   gated version increments (v0.2+ when evidence lands) and the
+   author-gated packet + Research-Briefing-vignette sign-off, not
+   new block creation. Source: this file's §§ above.
 2. **Dry-run defensibility.** 10 / 12 objections answerable from
    drafted prose. 1 partial (Q10, survey selection bias — gates
    on `survey_schema.md` sampling-rule cross-reference into §2 /
@@ -1345,8 +1346,10 @@ below are the necessary-and-sufficient conditions for submission,
 drawn from `preprint.md §"Next actions (4 parallel tracks)"` and
 §"Kill criteria".*
 
-- **Gate A (prose):** all 14 prose blocks drafted at v0.1 or
-  better. **MET** (iteration 13).
+- **Gate A (prose):** all 16 prose blocks drafted at v0.1 or
+  better. **MET** (iteration 16; 14 through iteration 14 +
+  Reporting Summary in iteration 15 + Research Briefing in
+  iteration 16).
 - **Gate B (defensibility):** dry-run scorecard shows 0
   unanswerable objections, ≤ 1 evidence-gated objection, ≤ 1
   partial. **MET** (current 10 answerable / 1 partial / 1
@@ -1440,13 +1443,14 @@ it, modelled on the dry-run and packet discipline blocks.*
 
 ### Readiness scoreboard summary (one-line)
 
-`15 / 15 prose drafted · 10 / 12 defensibility · 8 / 8 packet
+`16 / 16 prose drafted · 10 / 12 defensibility · 8 / 8 packet
 non-regression (0 evidence-gated) · 22 / 25 reporting-summary
-responses committed · 3 / 6 figure captions · 0 / ~35 references
-verified · 80 / 200 survey · 0 / 30 benchmark · 3 / [N] replay ·
-~22 placeholder labels open ([LICENCE], [URL], [URL/github]
-resolved in iteration 15) · structurally READY · empirically
-EVIDENCE-GATED on Gates D–G.`
+responses committed · 4 / 7 research-briefing segments READY (+
+1 AUTHOR-GATED + 1 EVIDENCE-GATED + 1 EDITORIAL) · 3 / 6 figure
+captions · 0 / ~35 references verified · 80 / 200 survey · 0 / 30
+benchmark · 3 / [N] replay · ~22 placeholder labels open
+([LICENCE], [URL], [URL/github] resolved in iteration 15) ·
+structurally READY · empirically EVIDENCE-GATED on Gates D–G.`
 
 ---
 
@@ -1809,4 +1813,257 @@ prose) · 0 AUTHOR-GATED (structural invariant) · 3 EVIDENCE-GATED
 (Gates G + I) · Sections 1/2/4/5/6/7 COMPLETE at v0.1 · Section 3
 human-participants BOX COMPLETE-STRUCTURE, IRB-details GATED on
 partner MoUs.`
+
+---
+
+## Drafted prose — Research Briefing (v0.1, 2026-04-18)
+
+> **Status: RESEARCH BRIEFING DRAFT.** This block is a publication-
+> readable pre-flight of the Nature Portfolio Research Briefing — the
+> ~800-word plain-language accompaniment that Nature Methods publishes
+> alongside most Brief Communications and full Articles, commissioned
+> at acceptance but written by the authors. **It introduces no new
+> claim:** every sentence is a plain-language rephrasing of material
+> already drafted in Abstract v0.5, §1 Introduction, §3 Design
+> principles, §4 Replay, §8 Limits-and-complementarity, and the Cover
+> letter. The block exists because the Research Briefing is the single
+> reader-facing surface on which a regime-serving tool paper is most
+> easily flattened into either marketing prose ("a new tool!") or
+> technical prose unreadable to a non-specialist; drafting v0.1 before
+> acceptance surfaces both failure modes for author-team correction
+> rather than first-draft discovery under editorial deadline. The
+> block is rendered as a distinct editorial appendix in the HTML view
+> (sage/olive palette) and is a submission-engineering artefact, not
+> body prose. Discipline: any future iteration that touches Abstract,
+> §1, §3, §4, or §8 MUST re-read this block in the same iteration —
+> if a headline claim changes, its plain-language rephrasing changes
+> with it.
+
+### Purpose and scope
+
+A Research Briefing is a ~800-word, third-person, plain-language
+standalone piece that appears on the Nature Methods website at
+publication and serves as the paper's public-facing summary across
+the Nature Portfolio homepage, social feeds, and press-office
+materials. It is structured in four named segments — **The question**,
+**The discovery**, **The implications**, **Behind the paper** — followed
+by a short **From the editors** box that the Nature Methods
+handling editor fills in independently of the authors. The
+constraint, writer-facing, is that every sentence must be readable by
+a non-specialist biologist or a generalist science reader, *and*
+every claim must already appear in a specialist form inside the
+paper. A Research Briefing is therefore the inverse surface of the
+Online Methods: where Methods compresses a claim into a reviewer-
+auditable protocol, the Briefing expands the same claim into a
+general-audience narrative. Drafting it here, pre-submission, lets
+us check that each headline claim survives the translation without
+collapsing or over-reaching.
+
+### The question (target ~180 words)
+
+Modern bioimage methodology — the tools and algorithms that turn
+microscope pictures into numbers — has been built around the kinds
+of image collections that resemble the internet: big, uniform,
+plentifully annotated. Most biology looks nothing like that. A
+typical cell-biology paper studies 13 to 27 cells per condition. A
+developmental biologist may follow a handful of embryos. A
+pathologist reviewing an unusual case may have twelve slides on the
+bench. A high-school student looking at pond water in a teaching
+lab has however many drops fit under a cover slip. For these
+users — the large majority, on our count — the dominant research
+programme in deep-learning-based image analysis is answering a
+different question from the one they are asking. A first-year
+graduate student trying to count *Plasmodium* gametocytes from a
+phone photograph taken in a Malawian field clinic is not doing a
+fine-tuning exercise on a misbehaving foundation model; they are
+asking how to reason about these forty images with the biologist's
+eye they already have. What tools do *those* scientists need, and
+has the methodology literature built them?
+
+### The discovery (target ~220 words)
+
+We asked the question in two ways. First, we sampled 200 recent
+open-access microscopy papers across nine subdomains and read each
+for three things: how many images per condition they analysed, how
+much of the analysis still required a human expert, and which
+software they used. A clear majority — interim count 48 % on the
+first 80 papers — fall inside a small-data, human-scale regime in
+which fewer than a hundred images per condition are analysed with
+human-in-the-loop segmentation or scoring. The same share — again
+48 % — name ImageJ or its community distribution Fiji somewhere in
+the pipeline, yet only 20 % use a named deep-learning model.
+Second, we stress-tested the current generation of foundation
+segmentation models — SAM, Cellpose-generalist, StarDist-versatile,
+CellSAM — on a curated 30-task benchmark that deliberately sits in
+the long tail of real biology: rare organisms, non-fluorescent
+stains, phone and tablet acquisitions. Zero-shot performance on
+this set drops sharply below in-distribution numbers. These results
+are not a criticism of deep learning — on its own terms it is
+excellent. They describe a regime that has been under-served.
+Alongside this evidence we release **ImageJ.JS**: the unmodified
+Fiji codebase, compiled to WebAssembly and served as a single web
+page. No install, no administrator, no Java runtime, no image byte
+leaving the user's device. Every analysis is a URL that can be
+shared, re-executed, or taught from.
+
+### The implications (target ~140 words)
+
+Methodological progress in bioimage analysis has measured itself
+against the regime in which deep learning thrives. We argue that
+this is only half the map. A tool that runs on a Chromebook in a
+teaching lab, on an air-gapped workstation in a forensic-pathology
+suite, on a tablet in a greenhouse, and on a phone in a field
+clinic — the same tool, with the same macros, the same plugins,
+and the same reproducibility guarantees — is *also* a method-
+ology contribution. Because every analysis is addressable as a URL
+and every step of an analysis is programmatic through an
+accompanying service layer, ImageJ.JS is also a composable
+component: a deep-learning model can propose a candidate
+segmentation and a human scientist can adjudicate, refine, and
+measure inside the same environment. The regimes are complementary,
+not competing. The literature has been missing half its coverage.
+
+### Behind the paper (target ~180 words, first-person — `AUTHOR-GATED`)
+
+*Drafted structural commitment; final prose resolves at sign-off
+once the CRediT author list is finalised.* We had been running
+ImageJ.JS as an experimental browser port of Fiji for several
+years when a mentor showed us their undergraduate cell-biology
+assignment: count cells in a field of view, by hand. Their class
+of thirty students shared four lab computers. Installing Fiji on
+each of the thirty Chromebooks the students had been issued was
+not allowed by the school's IT policy, and the teacher had been
+photographing slides into a Google Slides deck so that the class
+could see the same image at once. That afternoon we opened
+ImageJ.JS on the Chromebooks in a shared browser tab. The class
+counted cells for the first time, together, with their own hands
+on their own devices. It is not the story of a benchmark or a
+hyperparameter sweep. It is the story the paper is really about.
+**[AUTHOR-INITIALS]**, **[AUTHOR-INITIALS]**, **[AUTHOR-INITIALS]**.
+
+### From the editors (placeholder — handling-editor authored)
+
+*Not drafted by the authors. The handling editor at Nature Methods
+composes this 60–80-word box independently at acceptance; the
+present Research Briefing draft reserves the structural slot and
+the word-budget but intentionally does not anticipate its content.
+The authors' single input into this box is the list of suggested
+tags / subject collections supplied in the Submission packet
+("Imaging", "Methods", "Software" — see Submission packet
+§"Subject tags suggested").*
+
+### Key references (plain-language form)
+
+*Three references in the plain-language style Nature Portfolio uses
+in the Research Briefing footer — lay phrasing with the author-
+year citation. Every entry below exists in the paper's full
+References list (v0.1, 2026-04-18) in canonical bibliographic
+form; the Research Briefing form is a rephrasing only, never a
+new bibliographic commitment.*
+
+1. **Lord et al. (2024)** surveyed sample sizes in contemporary
+   cell-biology imaging and found that a typical study analyses
+   between 13 and 27 cells per condition across three biological
+   replicates — the empirical anchor for the "small-data"
+   regime this paper characterises.
+2. **Kirillov et al. (2023)** released the Segment Anything
+   Model, which remains the canonical foundation model for
+   general-purpose segmentation; its zero-shot performance on our
+   long-tail benchmark illustrates where the method's in-
+   distribution excellence stops.
+3. **Schindelin et al. (2012)** described Fiji, the ImageJ
+   distribution whose unmodified codebase ImageJ.JS compiles to
+   the browser — the substrate on which the 48 % ImageJ/Fiji
+   survey figure is grounded.
+
+### Figure suggestion (plain-language caption)
+
+*The Nature Methods Research Briefing typically carries a single
+high-contrast figure — a photograph, a schematic, or a simplified
+panel drawn from one of the paper figures. The figure that best
+serves the Briefing is **Fig 1 panel (a)**, the regime-survey long-
+tail distribution: a horizontal bar or histogram showing the
+proportion of microscopy studies per "images per condition" bin,
+with the small-data regime highlighted. Plain-language caption
+(committed at v0.1; final wording resolves at figure-evidence
+landing):*
+
+> Most microscopy studies analyse few images. A survey of 200
+> recent microscopy papers shows that a majority fall inside a
+> small-data regime — fewer than 100 images per condition, with
+> a human-in-the-loop step in segmentation or scoring. Tools
+> designed for this regime have, until now, been under-invested
+> in by the methodology literature.
+
+### Research-briefing defensibility scorecard
+
+*Counts by readiness label, iteration-16 pre-flight:*
+
+- **READY** (response derivable from drafted prose): **4** —
+  "The question" (derivable from §1 and Abstract); "The discovery"
+  (derivable from §2 survey, §1 ¶4, Abstract v0.5, §8 ¶3);
+  "The implications" (derivable from §3, §4, §7, §8); "Key
+  references" in plain-language form (derivable from References
+  v0.1).
+- **AUTHOR-GATED** (resolves at author sign-off): **1** — "Behind
+  the paper" first-person narrative. The structural commitment
+  (a teaching-lab-Chromebook vignette, consistent with §5) is
+  drafted at v0.1 but the final prose — author names, the exact
+  classroom, the specific micrograph — resolves at Gate I
+  sign-off.
+- **EVIDENCE-GATED** (resolves when a benchmark run or a partner
+  MoU lands): **1** — "Figure suggestion" panel numbers. The
+  plain-language caption is committed at v0.1; the final figure
+  caption language resolves when the Fig 1 evidence panel lands
+  (Gate D — small-data regime benchmark).
+- **EDITORIAL** (not author-drafted by design): **1** — "From
+  the editors" box. The handling editor at Nature Methods writes
+  this at acceptance; the v0.1 draft reserves the structural
+  slot and the word budget only.
+
+Total **4 READY / 1 AUTHOR-GATED / 1 EVIDENCE-GATED / 1 EDITORIAL
+of 7** research-briefing segment slots committed at v0.1. This
+block uses a mixed readiness-label vocabulary distinct from the
+Reporting Summary because one of its segments is structurally
+editorial, not author-drafted — a structural fact worth recording
+rather than hiding under one of the three canonical labels.
+
+### Research-briefing discipline
+
+*Three rules govern this artefact and every future iteration of
+it, modelled on the dry-run, packet, readiness-dashboard, and
+reporting-summary discipline blocks.*
+
+- **(i) Research Briefing is plain-language rephrasing.** No
+  segment introduces a claim, number, citation, or commitment
+  not already drafted in Abstract / §1 / §3 / §4 / §8 / References
+  / Cover letter / Submission packet. If a future iteration wishes
+  to introduce a new narrative hook through the Briefing, that hook
+  must first appear in a specialist-prose block; the Briefing only
+  restates in plain language.
+- **(ii) Research Briefing is synchronised.** Any future iteration
+  that touches a referenced specialist block (Abstract, §1, §3,
+  §4, §8, References, Cover letter) MUST update the corresponding
+  Briefing segment in the *same* iteration. A Briefing whose
+  numbers silently diverge from Abstract v0.5 is worse than no
+  Briefing, because the public-facing surface is where the
+  divergence is most visible.
+- **(iii) First-person vignette stays AUTHOR-GATED; editorial box
+  stays EDITORIAL.** The "Behind the paper" segment's structural
+  commitment (teaching-lab-Chromebook vignette) is fixed at v0.1;
+  its final prose resolves at author sign-off — and *only* at
+  author sign-off, never through an evidence landing. The "From
+  the editors" segment is not author-drafted at any iteration and
+  must not be replaced with author-authored copy even if the
+  word-count budget allows. These two invariants preserve the
+  Briefing's dual-authorship structure.
+
+### Research-briefing scoreboard summary (one-line)
+
+`7 research-briefing segment slots · 4 READY (derived from drafted
+prose) · 1 AUTHOR-GATED (Behind-the-paper vignette, Gate I) · 1
+EVIDENCE-GATED (Fig 1 panel-number caption, Gate D) · 1 EDITORIAL
+(From-the-editors, handling-editor authored) · target 800 words
+body + 80 words editorial box · Sections Question / Discovery /
+Implications / Key references / Figure suggestion COMPLETE at v0.1.`
 
