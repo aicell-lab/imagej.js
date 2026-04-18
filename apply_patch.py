@@ -122,6 +122,11 @@ def apply_patches():
     print("\n--- Patching GenericDialog.java ---")
     patch_generic_dialog_java()
 
+    # Install SizedLabel and rewrite every `new Label(...)` across the tree
+    # to work around CheerpJ's inflated java.awt.Label preferred height.
+    print("\n--- Installing SizedLabel + rewriting Label call sites ---")
+    patch_label_sizing_global()
+
     # Patch MessageDialog.java to suppress dialogs
     print("\n--- Patching MessageDialog.java ---")
     patch_message_dialog_java()
@@ -305,6 +310,143 @@ def patch_generic_dialog_java():
         f.write(content)
 
     print("✓ GenericDialog.java patched successfully")
+    return True
+
+def patch_label_sizing_global():
+    """Work around CheerpJ's inflated java.awt.Label preferred height.
+
+    CheerpJ's AWT backend returns a Label preferredSize.height ~2-3x larger
+    than desktop Java (e.g., 39px for a 12pt font, vs the usual ~18px).
+    AWT-based dialogs and tool windows in ImageJ rely on that preferred
+    height for layout (GridBagLayout with weighty=0, FlowLayout, etc.), so
+    every Label-heavy screen ends up with huge vertical gaps and content
+    that overflows its window.
+
+    Root fix: ship a public SizedLabel class (ij.gui.SizedLabel) that
+    extends java.awt.Label and clamps getPreferredSize().height to
+    round(fontSize*1.7)+2 — close to desktop Java's ~18px for 12pt and a
+    no-op on desktop (super already returns a smaller height). Then
+    rewrite every `new Label(...)` call site in ImageJ's source tree to
+    instantiate SizedLabel instead. Because SizedLabel IS-A Label,
+    every existing field/parameter typed as `Label` still works.
+
+    Files touched: any .java under ij/ that contains `new Label(`. Imports
+    for `ij.gui.SizedLabel` are added in files outside package ij.gui
+    (ij.gui files see SizedLabel by the same-package rule).
+    """
+    import os
+    import re
+
+    root = "ImageJ-build/ij"
+    if not os.path.isdir(root):
+        print(f"Warning: {root} not found, skipping")
+        return False
+
+    # 1) Drop SizedLabel.java next to MultiLineLabel in ij/gui.
+    trimmed_path = os.path.join(root, "gui", "SizedLabel.java")
+    trimmed_src = '''package ij.gui;
+import java.awt.*;
+
+/**
+ * A {@link java.awt.Label} subclass whose preferred and minimum sizes
+ * clamp the height to a reasonable multiple of the font size. This works
+ * around AWT backends such as CheerpJ that return an inflated preferred
+ * height for Label (e.g. ~39px for a 12pt font vs. the desktop ~18px),
+ * which otherwise causes dialogs to render with huge vertical gaps and
+ * content that overflows the window.
+ *
+ * <p>Drop-in replacement for {@code new java.awt.Label(...)}. On desktop
+ * Java the clamp is a no-op: the super class already reports a smaller
+ * preferred height.
+ */
+public class SizedLabel extends Label {
+
+\tpublic SizedLabel() { super(); }
+\tpublic SizedLabel(String text) { super(text); }
+\tpublic SizedLabel(String text, int alignment) { super(text, alignment); }
+
+\tpublic Dimension getPreferredSize() {
+\t\tDimension d = super.getPreferredSize();
+\t\tif (d != null) {
+\t\t\tFont f = getFont();
+\t\t\tif (f != null) {
+\t\t\t\tint cap = Math.round(f.getSize2D() * 1.7f) + 2;
+\t\t\t\tif (d.height > cap) d.height = cap;
+\t\t\t}
+\t\t}
+\t\treturn d;
+\t}
+
+\tpublic Dimension getMinimumSize() {
+\t\treturn getPreferredSize();
+\t}
+
+}
+'''
+    with open(trimmed_path, 'w') as f:
+        f.write(trimmed_src)
+    print(f"  ✓ Wrote {trimmed_path}")
+
+    # 2) Walk every .java under ij/, rewrite `new Label(` -> `new SizedLabel(`
+    #    and add `import ij.gui.SizedLabel;` where needed.
+    new_label_re = re.compile(r"\bnew\s+Label\s*\(")
+    files_patched = 0
+    sites_rewritten = 0
+    imports_added = 0
+
+    for dirpath, _dirnames, filenames in os.walk(root):
+        for name in filenames:
+            if not name.endswith(".java"):
+                continue
+            path = os.path.join(dirpath, name)
+            # Skip SizedLabel itself.
+            if os.path.basename(path) == "SizedLabel.java":
+                continue
+
+            with open(path, 'r') as f:
+                source = f.read()
+
+            if 'new Label(' not in source:
+                continue
+
+            # Rewrite constructor calls. Other uses of the word Label (static
+            # constants Label.LEFT, type declarations, field names) are
+            # untouched because the regex requires `new ` immediately before.
+            new_source, n = new_label_re.subn('new SizedLabel(', source)
+            if n == 0:
+                continue
+
+            # Add an import if the file is outside package ij.gui and
+            # doesn't already import SizedLabel.
+            package_match = re.search(r"^package\s+([\w.]+)\s*;", new_source, re.MULTILINE)
+            pkg = package_match.group(1) if package_match else ""
+            if pkg != "ij.gui" and "ij.gui.SizedLabel" not in new_source:
+                # Insert the import after the last existing import line.
+                lines = new_source.split('\n')
+                last_import = -1
+                for i, line in enumerate(lines):
+                    if line.startswith('import '):
+                        last_import = i
+                if last_import >= 0:
+                    lines.insert(last_import + 1, 'import ij.gui.SizedLabel;')
+                else:
+                    # Fallback: after package line.
+                    for i, line in enumerate(lines):
+                        if line.startswith('package '):
+                            lines.insert(i + 1, 'import ij.gui.SizedLabel;')
+                            break
+                new_source = '\n'.join(lines)
+                imports_added += 1
+
+            with open(path, 'w') as f:
+                f.write(new_source)
+            files_patched += 1
+            sites_rewritten += n
+            rel = os.path.relpath(path, "ImageJ-build")
+            print(f"    {rel}: {n} call site(s)")
+
+    print(f"  ✓ Rewrote {sites_rewritten} `new Label(` call sites across "
+          f"{files_patched} files ({imports_added} imports added)")
     return True
 
 def patch_message_dialog_java():
