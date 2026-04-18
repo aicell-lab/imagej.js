@@ -25,6 +25,30 @@
   {3,4,5} rigorously delivered → eLife Tools → bioRxiv-only fallback.
 - **Progress-file rule**: APPEND never replace. This `## Patterns` block at the top is the one
   place that may be edited in place when a reusable pattern is added.
+- **Figures are committed as slots-with-claims before captions are drafted.** Iteration 8's
+  Figure-slots-and-captions block (2026-04-18) introduces a discipline for figures that
+  mirrors the References no-un-sourced-claim rule: for every figure referenced in the spine,
+  record (i) a one-sentence claim the figure must make, (ii) the named evidence source that
+  will furnish the data, (iii) panel structure if it is commitable without new evidence,
+  and (iv) a full draft caption only when the figure is NOT evidence-gated. Fig 1 (long-tail
+  distribution), Fig 2 (needs→features), Fig 3 (replay matrix) qualify for full captions at
+  v0.1 because their structure is determined by already-landed evidence; Fig 4 (teaching),
+  Fig 5 (clinical), Fig 6 (collaboration) + Supp Vid 1 carry caption placeholders only, so
+  the writer is not tempted to invent partner names, enrolments, or case panels ahead of the
+  real partnership. The block also records the Brief-Comm condensation path (collapse Figs
+  3–6 into one multi-panel "field evidence" figure) so the venue-reconciliation decision is
+  mechanical, not editorial.
+- **Manuscript HTML rendering is served out-of-tree.** Iteration 8 generated
+  `manuscript_html/index.html` — a Nature Methods-styled, self-contained HTML rendering of
+  the drafted prose assembled into paper order (Abstract → §§1–10 → References → Cover
+  letter) with inline SVG-free panel schematics for Fig 1, Fig 2, Fig 3 and reserved
+  evidence-gated placeholders for Fig 4, Fig 5, Fig 6. The file is the *view*; `preprint.md`
+  remains the canonical source. Future renderings should regenerate from `preprint.md` and
+  MUST NOT be edited by hand in the HTML file — edit the working doc, re-render. Served via
+  `svamp serve manuscript ./manuscript_html --public` so the author team and the editor (on
+  request) can read the current-state view without a markdown-aware client. The served URL
+  is recorded in the iteration-8 progress entry; re-running `svamp serve` replaces the mount
+  in place, so the URL is stable across re-renders.
 - **Drafted-prose convention**: append as `## Drafted prose — §N [section] (v0.1, YYYY-MM-DD)`
   at the bottom of `preprint.md`. Do not touch the scaffolding sections above (Core framing,
   Pillars, Spine, Evidence status, Risks, Venue). Placeholders `[X]`/`[N]` for pending numbers;
@@ -703,3 +727,126 @@
   scaffolding is what a new contributor (human or agent) uses to
   understand the paper's framing rationale.
 ---
+
+---
+
+## 2026-04-18 — Iteration 8: figure-slots-and-captions v0.1 + Nature Methods-styled HTML render + served via svamp
+
+### What was implemented
+
+- **Figure commitment (v0.1).** Appended `preprint.md §"Drafted prose — Figure slots and
+  captions (v0.1, 2026-04-18)"` — the first systematic figure block. Six figures + one
+  supplementary video are now committed:
+  - **Fig 1** (The long tail of biology) — full caption drafted; 3 panels (images-per-
+    condition histogram; tool-usage stacked bar; 30-task long-tail IoU scatter). Evidence
+    source: `survey_production_v2.csv` + `longtail_tasks.md` + eval harness.
+  - **Fig 2** (Needs to features) — full caption drafted; 5-row mapping schematic linking
+    §§1–2 needs to §3 design commitments to shipped mechanisms with `file:line` anchors.
+  - **Fig 3** (Replay matrix) — full caption drafted; N × 3 matrix (ACQUIRE / EXECUTE /
+    MATCH) + two zoomed failure-class panels (bundle inconsistency; Fiji version drift).
+  - **Fig 4 / Fig 5 / Fig 6 + Supp Vid 1** — slot-with-claim only, caption deferred until
+    partner evidence lands. Each has a one-sentence claim, a named evidence source, and a
+    panel structure sketch so the figure number is reserved and the downstream data
+    collection is scoped.
+  - **Venue-path reconciliation** — the block records how the 6-figure full-Article layout
+    condenses to a 3-figure Brief Comm layout (collapse Figs 3–6 into a single multi-panel
+    field-evidence figure + promote Supp Vid 1 and per-pillar detail panels to
+    supplementary). Preserved as a spine annotation so the condensation is mechanical at
+    revision time.
+- **Nature Methods–styled HTML rendering.** Wrote `manuscript_html/index.html` — a single
+  self-contained ~86 KB HTML file (Source Serif 4 + Source Sans 3 via Google Fonts; no
+  JS; no external JS or CSS; works offline after first font cache). Layout mirrors the
+  journal: NPG top bar, journal masthead ("nature methods"), article type tag, 38-px
+  serif title, grid-based main + sidebar layout with sticky ToC. Includes:
+  - Abstract (v0.5) in the bordered NM abstract box;
+  - §§1, 3, 8, 9, 10 full drafted-prose text;
+  - §2 with a gated-evidence notice summarising interim 80-row figures;
+  - §4 with the gated-evidence notice describing the Week-1 pilot's two surfaced failure
+    classes + Fig 3 schematic replay-matrix table;
+  - §§5, 6, 7 with gated-evidence notices + reserved placeholder figure boxes;
+  - Fig 1 + Fig 2 + Fig 3 as in-document panel schematics (pure CSS / HTML — no SVG or
+    image assets, so the render is diff-able against the prose and the placeholders are
+    obvious at a glance);
+  - References grouped A–E as in the working doc, with anchor IDs matching the
+    in-prose citations (`#ref-lord2024`, `#ref-stringer2025`, etc.);
+  - Cover letter v0.1 as an appendix section with its own typographic treatment;
+  - Sidebar with a full ToC, article-info block, and an evidence-status block that
+    shows at a glance which sections are v0.1 prose-ready vs evidence-gated;
+  - Placeholder values (`[48]%`, `[X]`, `[N]`, `[DAU]`, `[URL]`, etc.) uniformly rendered
+    with a highlighted yellow background so a reader instantly sees what is not yet
+    resolved. This visual surfacing of placeholders is the UI-level counterpart of the
+    placeholder-propagation discipline from the working doc.
+- **Served via svamp.** Ran `svamp serve manuscript /Users/weio/workspace/imagej.js/manuscript_html --public`.
+  Mount registered; HTTP 200 confirmed; Content-Length 86,673 bytes. Public URL:
+  `https://static-serve-0bc5cde8.svc.hypha.aicell.io/manuscript/` — viewable without a
+  Hypha login, for the author team and (on request) the editor.
+- Added two patterns at top of Patterns block:
+  (a) figures-are-committed-as-slots-with-claims-before-captions-are-drafted;
+  (b) manuscript HTML rendering is served out-of-tree (edit `preprint.md`, re-render).
+
+### Files changed
+
+- `preprint.md` — appended Figure slots and captions (v0.1) block after References.
+  File is now ~470 lines / ~12,600 words. No existing prose or scaffolding modified.
+- `manuscript_html/index.html` — new file, 1,100+ lines. Self-contained, no build step.
+- `.svamp/d9a68491-c46b-4e04-9b30-6294d0bbf071/ralph-progress.md` — this entry;
+  added two pattern bullets at the top.
+
+### Learnings for future iterations
+
+- **The HTML render is a diff-able surface for the prose.** When a placeholder resolves
+  (say `[48]%` → `47 %` after rows 81–200 land), the rendered HTML highlights every
+  occurrence of the value, because they share the `.placeholder-value` class. A future
+  iteration should add a small regex-over-files script that verifies: (i) every
+  `[placeholder]` in the HTML appears in `preprint.md`; (ii) every `[placeholder]`
+  in `preprint.md` is rendered consistently in the HTML. Drift between the two
+  surfaces is exactly the class of bug the placeholder-propagation discipline protects
+  against across prose blocks — the HTML render adds a third surface that must be
+  kept in step.
+- **The HTML is generated, not authored.** Do not edit `manuscript_html/index.html`
+  by hand. If a prose change is needed, edit `preprint.md` and regenerate. This
+  discipline is identical to the References / cross-reference map rule from the
+  working doc, lifted up one abstraction layer. Future renders should ideally be
+  scripted from the working doc rather than hand-written — a small pandoc-flavoured
+  markdown→HTML pipeline with a Nature Methods template would be the right tool.
+  v0.1 is hand-rendered because the prose is small enough to audit by eye and a
+  hand-render guarantees the NM visual style more faithfully than a generic converter.
+- **Highest-value next iteration without new evidence: placeholder-reconciliation
+  script.** The Iteration-6/7 suggestions documented this as third-highest priority;
+  with the HTML render as a third surface, it now moves to first-highest. Script
+  should: (a) list every `[placeholder]` in `preprint.md`; (b) list every occurrence
+  in `manuscript_html/index.html`; (c) compare the sets and flag any present in one
+  but not the other; (d) for each placeholder, enumerate the prose-blocks that
+  reference it. Running this before every evidence-landing pass catches drift at
+  the point where it is cheapest to fix (before the value propagates).
+- **Second-highest: supplementary-material outline.** Brief Comm word limit forces
+  choices. The current body sum (§§1 + 3 + 8 + 9 + 10 prose + figure captions) is
+  much longer than ~1500 words. A single iteration should produce a table mapping
+  each drafted-prose paragraph to either (main-body, kept), (main-body, compressed),
+  or (supplementary, with in-body pointer) — deferred until after the venue-reconciliation
+  figure block lands (done this iteration), because the figure allocation and the
+  prose allocation are coupled decisions.
+- **Do NOT edit `manuscript_html/` by hand.** If a future iteration does a prose
+  edit in `preprint.md`, the HTML must be regenerated from scratch. Keeping two
+  edit surfaces manually synchronised is exactly the drift failure mode that
+  the working-doc + cross-reference-map discipline exists to prevent.
+- **The served URL is stable across re-renders.** `svamp serve manuscript` with
+  the same name replaces the mount in place. Update the HTML file, reload the
+  browser — no URL change. This is important: if the URL appears in any
+  drafted-prose block (e.g., a future iteration puts it in the "Availability"
+  preview the editor can click), the working doc must not hard-code a different
+  URL than the `svamp serve` output.
+- **Do NOT commit the `manuscript_html/` directory to the repo** unless the
+  user explicitly asks. It is a view of a working draft, not a publication
+  artefact, and having two copies (html render in repo + served render via
+  svamp) re-introduces the synchronisation failure mode. The served copy is
+  the view; `preprint.md` is the source. If a co-author needs to preview,
+  share the svamp URL.
+- **Framing containment holds across the HTML render too.** Spot-checked: the
+  HTML's Abstract, §1, §3 sections contain no substantive AI discussion; AI
+  discussion is contained to §8 and is referenced in §9 (as prerequisite-for-
+  agents) and in the Cover letter (regime stance). Consistent with the
+  Iteration-6 containment pattern. When re-rendering in future, this property
+  must be re-verified at the HTML level — the render is not a second author
+  and will not re-introduce retired framings unless someone edits the
+  working doc to do so.

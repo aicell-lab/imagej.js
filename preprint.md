@@ -417,3 +417,90 @@ The final implication is that regime measurement itself is a methodology contrib
 | File System Access API (WICG 2024) | §3 |
 
 *Per the placeholder-propagation discipline: when any of the above references is finalised (DOI verified, year-of-record confirmed, or the in-preparation companion is preprinted), update both the entry in this section and the in-prose citation form in the corresponding drafted-prose block in one pass. Do not let a reference upgrade here while the prose still reads "in preparation" — that is exactly the cross-document drift the consistency pass protects against.*
+
+---
+
+## Drafted prose — Figure slots and captions (v0.1, 2026-04-18)
+
+*First publication-readable figure commitment. Six figures are referenced across the drafted-prose blocks; three map directly to non-evidence-gated structure (Fig 1 distribution, Fig 2 needs-to-features, Fig 3 replay matrix) and are drafted as full captions here with placeholders for the numerical values. Three map to evidence-gated content (Fig 4 teaching, Fig 5 clinical, Fig 6 collaboration + Supp Vid 1) and are committed here to one-sentence claims plus evidence sources so that the figure slots are reserved in the spine and so that the downstream data collection is unambiguously scoped. Per the venue-strategy scaffolding above: the current figure count (6 main + 1 supplementary video) is the full-Article target; Brief Communication condenses to 3 main figures by collapsing Fig 4 + Fig 5 + Fig 6 into a single multi-panel "field deployments" figure. Both paths are preserved in this draft.*
+
+### Fig 1 — The long tail of biology
+
+*One-sentence claim.* The regime most of biology occupies is small-data and under-served by in-distribution foundation-model benchmarks.
+
+*Evidence source.* `survey_production_v2.csv` (200 rows at submission; 80 rows at interim read) + `longtail_tasks.md` (30 tasks) + foundation-model evaluation harness (`longtail_tasks.md` §"Evaluation").
+
+*Panels.*
+- **(a)** Histogram: images-per-condition across the 200 sampled papers, log-x axis, with vertical lines at the formally defined small-data threshold (< 100 images per condition) and at the in-distribution-benchmark threshold (> 10⁴). The fraction of the distribution that falls below the small-data line annotated directly on the panel as [48]%.
+- **(b)** Stacked bar: tool-use in the same 200 papers, with ImageJ/Fiji any-mention ([48]%), deep-learning named-tool ([20]%), both ([overlap]%), neither ([residual]%) colour-coded. Legend footnotes the 11 % `not-determinable` residual as the workflow-inference ceiling.
+- **(c)** Scatter: per-task IoU on the 30-task long-tail benchmark, four DL methods (SAM, Cellpose-generalist, StarDist-versatile, CellSAM) on the x-axis as method-columns, each task a point, y-axis IoU. Mean IoU [X] and success-at-IoU≥0.7 count [Y]/30 annotated per method. Human-expert-with-ImageJ.JS success [Z]/30 overlaid as a reference line.
+
+*Caption (draft).*
+> **The long tail of biology is large, small, and outside the training distribution of current foundation models.** (**a**) Distribution of images-per-condition across a stratified random sample of 200 recent open-access microscopy papers (2020–2025, nine subdomains, seven journals). [48]% of papers fall below the formally defined small-data threshold (< 100 images per condition, dashed line); the large-data regime typical of foundation-model benchmarks (> 10⁴, dotted line) is inhabited by fewer than [L]% of papers. (**b**) Tool usage in the same 200 papers: ImageJ or Fiji is named somewhere in the analysis pipeline of [48]% of papers (blue); a named deep-learning model is used in [20]% (orange); [overlap]% use both (purple); the remaining [residual]% use neither (grey). The 11 % workflow-not-determinable residual is reported separately as the inference ceiling of the classification schema. (**c**) Per-task segmentation IoU on a curated 30-task long-tail benchmark (`longtail_tasks.md`): rare organisms, non-fluorescent stains, phone- and tablet-acquired imagery, and non-standard modalities. Zero-shot SAM, Cellpose-generalist, StarDist-versatile, and CellSAM achieve a mean IoU of [X] and succeed (IoU ≥ 0.7) on [Y] of 30 tasks; an expert biologist using classical macros in ImageJ.JS succeeds on [Z] of 30 tasks (dashed reference line). *N* = 200 papers (panels a–b) and 30 tasks (panel c); methods in §2 and §8.
+
+### Fig 2 — Needs to features
+
+*One-sentence claim.* Every design decision in ImageJ.JS maps to an empirical property of small-data, human-centred practice established in §§1–2 and is implemented by a named, re-executable mechanism in the shipped codebase.
+
+*Evidence source.* `preprint.md §3 Design principles (v0.1)` + `index.html:447–450` (URL-param parsing) + `hypha-imagej-service.js` (RPC service methods `runMacro:48`, `takeScreenshot:143`, `executeJavaScript:379`, `getRoisAsGeoJson:657`; MCP conversion `convertToMcpUrl:880`; service registration `:1567–1578`) + `collab/` (driver/observer) + `use_cases.md` (scenario catalogue).
+
+*Panels.* Single schematic, three vertical columns, five horizontal rows.
+- **Column 1 ("Need"):** one-line empirical citation from §§1–2 (e.g., "48 % of papers name ImageJ/Fiji"; "teaching labs use Chromebooks"; "replay must survive two-decade Fiji drift"; "pathology data must not leave device"; "collaborative review is synchronous").
+- **Column 2 ("Design commitment"):** the §3 design principle in ≤ 8 words (Continuity; Zero install as correctness; URL-addressable state; Privacy by default; Collaboration as tool property).
+- **Column 3 ("Shipped mechanism"):** the named code identifier + file:line anchor (e.g., `CheerpJ 4 unmodified JVM`; `index.html:447 URL-param parser`; `hypha-imagej-service.js:48 runMacro`; `File System Access API`; `collab/ driver/observer`).
+
+Arrows left → right; no arrows between rows (each principle is independent). Colour-code by the pillar the row serves (1–5).
+
+*Caption (draft).*
+> **ImageJ.JS design principles as a needs-to-features mapping.** Each row traces a small-data, human-centred practice property established in §§1–2 (left) to a single design commitment (centre) to a named mechanism in the shipped codebase (right). Mechanism anchors use the form `file:line` against the archived `v1.0-paper` git tag (§10). The mapping is deliberately falsifiable at the row level: a reviewer can confirm each mechanism against the repository and each need against the survey. Colours indicate which narrative pillar (§§4–7) the row primarily serves.
+
+### Fig 3 — Replay matrix
+
+*One-sentence claim.* Deterministic replay of [N] published Fiji analyses across [Y1–Y2] succeeds on the majority of cases and, on the failing minority, surfaces two previously unreported classes of published-record failure (internally inconsistent reference bundles; cross-version numeric drift in core Fiji primitives).
+
+*Evidence source.* `replay/<candidate>/MATCH_REPORT.md` for each of the [N] replayed candidates; `replay_candidates.md`; `replay_week1_report.md` (Week-1 three-candidate pilot); the ACQUIRE / EXECUTE / MATCH axis decomposition recommended at the end of §"Empirical evidence status".
+
+*Panels.*
+- **(a)** Matrix: [N] rows (one per replay candidate, ordered by publication year), 3 columns (ACQUIRE / EXECUTE / MATCH). Each cell green (success), amber (partial), or red (fail); cell annotation is a one-word diagnostic (e.g., `bundled`, `macro-interactive`, `Find-Edges-drift`). Row labels are short titles (e.g., *TrackMate HeLa 2017*; *Drosophila NMJ 2016*; *MRI Wound Healing 2020*; …).
+- **(b)** Two zoom panels — one per surfaced failure class:
+  - *Bundle inconsistency* (Drosophila NMJ 2016): side-by-side of the published `results.txt` ground-truth object list against the bundled input-image segmentation, with the mismatch highlighted.
+  - *Fiji-version drift* (MRI Wound Healing 2020): Find-Edges output under the pinned `v1.0-paper` CheerpJ JVM vs the 2017-Fiji baseline vs the current-desktop-Fiji 2026 build; numeric diff annotated.
+
+*Caption (draft).*
+> **Deterministic replay of [N] published Fiji analyses, [Y1–Y2].** (**a**) Per-candidate outcome on three axes — ACQUIRE (can the input data be retrieved from the original source or mirror?), EXECUTE (does the published macro run end-to-end against the retrieved input in the pinned ImageJ.JS runtime?), and MATCH (do the numerical outputs match the published reference?) — for [N] candidates spanning [Y1–Y2]. Cell colour indicates per-axis outcome; cell annotation names the diagnostic. (**b, left**) Bundle inconsistency in *Drosophila* NMJ Morphometrics (figshare, 2016): the archived `results.txt` reference lists [21] objects of specific sizes against an archived input stack whose single non-empty slice contains [1] object of [131] px — a data-bundling error invisible without systematic replay. (**b, right**) Cross-version numeric drift in the MRI Wound Healing Tool (2020): the Find-Edges + auto-threshold branch produces a numeric mismatch between a 2017 Fiji build and a 2026 desktop Fiji build, while a Variance-based branch still matches exactly. The pinned CheerpJ-compiled JVM served by ImageJ.JS (`v1.0-paper` git tag; §10) avoids both failure modes by construction. Full per-candidate reports in `replay/<candidate>/MATCH_REPORT.md`.
+
+### Fig 4 — Teaching deployments (pillar 3; evidence-gated)
+
+*One-sentence claim.* Small-data bioimage intuition is taught through interactive exploration of classical algorithms, at zero-install cost, on hardware the partner institutions actually deploy — ChromeOS and shared-lab laptops that desktop Fiji cannot serve.
+
+*Evidence source.* [X] named partner courses (one paragraph per course in §5); enrolment numbers from course registrars; pre/post concept-check instruments designed with partners; anonymised instructor quotes collected under the partner-institution IRB protocols described in §5. No evidence drafted yet; figure slot reserved.
+
+*Panels (planned).* (a) Enrolment table across [X] courses. (b) Pre/post concept-check delta per course, boxplot or paired dots. (c) Instructor quotation panel (3–5 quotes, anonymised or attributed per partner preference).
+
+*Caption placeholder.* Draft at evidence-landing time; caption must cite course IDs, enrolment counts, and IRB approval numbers verbatim. No prose drafted at v0.1.
+
+### Fig 5 — Clinical pathology deployment (pillar 4; evidence-gated)
+
+*One-sentence claim.* Client-side ImageJ.JS analysis of clinical pathology data is feasible under the data-governance constraints of a named partner institution, with a complete audit trail of analyst actions and no image egress.
+
+*Evidence source.* 1–3 named clinical/pathology partners (see §6); case-level audit log (one row per analyst action, Hypha-authenticated identity, timestamp, parameter values); institutional data-governance review outcome. No evidence drafted yet; figure slot reserved.
+
+*Panels (planned).* (a) Case panel — side-by-side of a pathology slide in ImageJ.JS vs a redacted ground-truth annotation. (b) Audit-trail excerpt — a representative session log. (c) Data-governance box — per-partner confirmation that no image content left the device during analysis.
+
+*Caption placeholder.* Draft at evidence-landing time; caption must be agreed with partner institutions prior to submission and cite the IRB/ethics protocol number.
+
+### Fig 6 — Real-time collaborative analysis vignettes (pillar 5; evidence-gated)
+
+*One-sentence claim.* Two or more biologists on different devices, in different institutions, analyse the same image synchronously via a driver/observer protocol (§7) in which no image byte leaves the originator's device and every participant action is attributed to a Hypha-authenticated identity.
+
+*Evidence source.* 2–3 recorded live-collaboration demonstrations: cross-institution PI review; teaching-lab observer cohort; pathology-consultation consult. Each demonstration archived as session event log + rendered video (Supplementary Video 1). See `collaboration_design.md` (architecture) and `collaboration_sprint.md` (v1 scope constraints).
+
+*Panels (planned).* (a) Multi-device schematic — driver (image host) + n observers (renderer + control-request) — anchored on the Hypha driver/observer protocol. (b) Cross-institution PI-review vignette: three-panel screenshot sequence with timestamps and device labels. (c) Teaching-lab observer-cohort vignette: one instructor driver + ≥5 student observers, one annotated threshold choice, per-student follow-up questions. (d) Pathology-consultation vignette: primary reader + remote second reader, annotated discrepancy region, audit-trail excerpt.
+
+*Supplementary Video 1 (planned).* Screen recording of the cross-institution PI-review session end-to-end (~3 minutes), with event log overlay, driver-tab indicator, and per-observer attribution colour-coded.
+
+*Caption placeholder.* Draft at evidence-landing time; vignettes must be filmed with live partners on live sessions, not simulated. v1 scope constraints (Chrome-only driver; no session persistence across driver tab-close; observer-notes not fork-session) must be named explicitly in the caption — they are v1 limitations and reviewers will ask.
+
+### Venue-path figure reconciliation
+
+Brief Communication allows 3 main figures + 1 supplementary. The full-Article path above uses 6. The collapse path (Brief Comm): keep Fig 1, keep Fig 2, merge Fig 3 + Fig 4 + Fig 5 + Fig 6 into a single "field evidence" multi-panel Fig 3 with one panel per pillar (replay, teaching, clinical, collaboration), and promote Supplementary Video 1 + the per-pillar detail panels to supplementary. Preserve this reconciliation in the figure-order spine so that the condensation pass is mechanical rather than editorial.
