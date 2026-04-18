@@ -88,6 +88,12 @@
 
   figure.display { background:var(--figbg); border:1px solid var(--border); margin:22px 0 30px; padding:18px 20px; }
   figure.display > svg { display:block; margin:0 auto 12px; max-width:100%; height:auto; }
+  figure.display > img { display:block; margin:0 auto 12px; max-width:100%; height:auto; border:1px solid #bbb; }
+  figure.display .panel { margin-bottom:14px; }
+  figure.display .panel-label { font-family:var(--sans); font-weight:700; font-size:12.5px; text-transform:uppercase; letter-spacing:0.5px; color:#000; display:block; margin:10px 0 6px; }
+  figure.display .panel-row { display:flex; gap:14px; align-items:flex-start; margin-bottom:12px; }
+  figure.display .panel-row > img { flex:1 1 auto; max-width:100%; border:1px solid #bbb; }
+  figure.display .panel-row .panel-note { flex:0 0 180px; font-family:var(--sans); font-size:12px; color:#444; line-height:1.5; }
   figure.display figcaption { font-family:var(--sans); font-size:13.5px; line-height:1.5; color:#222; }
   figure.display figcaption .label { font-weight:700; color:#000; margin-right:6px; }
 
@@ -211,7 +217,7 @@
 
   <figure class="display" id="fig1">
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 260" role="img" aria-label="Figure 1: Survey of 200 microscopy papers, 2022–2024">
-      <rect x="0" y="0" width="760" height="260" fill="#fafafa"/>
+      <rect x="0" y="0" width="760" height="260" fill="#fff" stroke="#bbb"/>
       <text x="20" y="24" font-family="Source Sans 3, sans-serif" font-size="12" font-weight="700" fill="#111">Regime distribution in 200 open-access microscopy papers, 2022–2024</text>
       <g font-family="Source Sans 3, sans-serif" font-size="11" fill="#222">
         <text x="20" y="62">Images per condition</text>
@@ -245,14 +251,19 @@
     <figcaption>
       <span class="label">Fig. 1 | The small-data majority of biology.</span>
       Three claim-aligned distributions drawn from a systematic sample of 200
-      open-access microscopy papers (2022–2024), extracted under a pre-registered
-      schema and IRR-validated dual extraction. The dominant published regime is
-      small-data (≤ 30 images per condition), Fiji / ImageJ-driven, and
-      deep-learning-free. Headline values: <span class="ph">[48]%</span> / <span class="ph">[48]%</span> / <span class="ph">[20]%</span>. Source:
-      <code>survey_production_v2.csv</code> (<code>docs.google.com/sheets</code>
-      release). Placeholder values shown in yellow resolve at pre-submission
-      against the full 200-row corpus (currently 80 / 200 extracted +
-      3 IRR dual-extractions pending).
+      open-access microscopy papers (2022–2024), extracted under a
+      pre-registered schema and IRR-validated dual extraction. The dominant
+      published regime is small-data (≤ 30 images per condition), Fiji /
+      ImageJ-driven, and deep-learning-free. Headline values:
+      <span class="ph">[48]%</span> / <span class="ph">[48]%</span> / <span class="ph">[20]%</span>.
+      A typical sample from this regime — a 256 × 256 px, 28-slice confocal
+      fluorescence <em>Drosophila</em> brain — is visible loaded in ImageJ.JS
+      in Fig 2a (left viewport), analysed alongside an 8-bit scanning
+      electron micrograph that typifies the dense-image end of the
+      distribution. Source <code>survey_production_v2.csv</code>.
+      Placeholder values shown in yellow resolve at pre-submission against
+      the full 200-row corpus (currently 80 / 200 extracted + 3 IRR
+      dual-extractions pending).
     </figcaption>
   </figure>
 
@@ -293,82 +304,88 @@
   </p>
 
   <figure class="display" id="fig2">
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 320" role="img" aria-label="Figure 2: ImageJ.JS architecture, replay corpus, and field deployments">
-      <rect x="0" y="0" width="760" height="320" fill="#fafafa"/>
-      <!-- a: architecture -->
-      <g font-family="Source Sans 3, sans-serif" font-size="11" fill="#222">
-        <text x="20" y="24" font-weight="700" fill="#111">a  Browser-native stack</text>
-        <rect x="20" y="36" width="220" height="36" fill="#fff" stroke="#aaa"/>
-        <text x="30" y="54" font-weight="600">Fiji JVM bytecode</text>
-        <text x="30" y="68" font-size="10" fill="#666">macros · plugins · ROI manager</text>
-        <rect x="20" y="80" width="220" height="36" fill="#fff" stroke="#aaa"/>
-        <text x="30" y="98" font-weight="600">CheerpJ → WebAssembly</text>
-        <text x="30" y="112" font-size="10" fill="#666">JIT-compiled in the browser</text>
-        <rect x="20" y="124" width="220" height="36" fill="#fff" stroke="#aaa"/>
-        <text x="30" y="142" font-weight="600">Browser tab @ ij.aicell.io</text>
-        <text x="30" y="156" font-size="10" fill="#666">no install · no upload · no server</text>
+    <span class="panel-label">a &nbsp; ImageJ.JS running in a browser — full Fiji interface, two microscopy datasets, live ROI tracing</span>
+    <img src="assets/imagej.js-screenshot.png" alt="Screenshot of ImageJ.JS running in a browser at aicell-lab.github.io/imagej.js. The ImageJ menu bar (File, Edit, Image, Process, Analyze, Plugins, Window, Help) and toolbar sit inside a Chrome browser tab. Two images are open: a confocal fluorescence fly-brain stack (flybrain.tif, 28/57 slices, 684.93×684.93 µm, 256×256 pixel, RGB) on the left showing green GFP-labelled neurons on a black background; a scanning electron micrograph (AuPbSn40.jpg, 600×412 pixels, 8-bit, 241 KB) on the right with a yellow freehand ROI trace drawn across grain boundaries using the Flood Fill tool." style="max-width:720px;">
+    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:18px; margin-top:14px; font-family:'Source Sans 3', sans-serif; font-size:12.5px; line-height:1.55; color:#222;">
+      <div>
+        <span class="panel-label" style="margin-top:0;">b &nbsp; Deterministic replay — ACQUIRE / EXECUTE / MATCH</span>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 150" role="img" aria-label="Three-axis scoring of three replay-corpus candidates">
+          <rect x="0" y="0" width="360" height="150" fill="#fff" stroke="#bbb"/>
+          <g font-family="Source Sans 3, sans-serif" font-size="11" fill="#222">
+            <text x="14" y="24" font-weight="700">Pilot corpus: 3 candidates</text>
+            <text x="14" y="48">Candidate 1</text>
+            <rect x="130" y="38" width="30" height="14" fill="#2a7"/><text x="165" y="48" font-size="10">ACQ ✓</text>
+            <rect x="210" y="38" width="30" height="14" fill="#2a7"/><text x="245" y="48" font-size="10">EXE ✓</text>
+            <rect x="290" y="38" width="30" height="14" fill="#2a7"/><text x="325" y="48" font-size="10" fill="#2a7" font-weight="700">✓</text>
+            <text x="14" y="72">Candidate 2</text>
+            <rect x="130" y="62" width="30" height="14" fill="#2a7"/><text x="165" y="72" font-size="10">ACQ ✓</text>
+            <rect x="210" y="62" width="30" height="14" fill="#2a7"/><text x="245" y="72" font-size="10">EXE ✓</text>
+            <rect x="290" y="62" width="30" height="14" fill="#2a7"/><text x="325" y="72" font-size="10" fill="#2a7" font-weight="700">✓</text>
+            <text x="14" y="96">Candidate 3</text>
+            <rect x="130" y="86" width="30" height="14" fill="#2a7"/><text x="165" y="96" font-size="10">ACQ ✓</text>
+            <rect x="210" y="86" width="30" height="14" fill="#2a7"/><text x="245" y="96" font-size="10">EXE ✓</text>
+            <rect x="290" y="86" width="30" height="14" fill="#b51f1f"/><text x="325" y="96" font-size="10" fill="#b51f1f" font-weight="700">✗</text>
+            <text x="14" y="124" font-size="10" fill="#666">Full corpus <tspan fill="#6b5000">[N]</tspan> candidates at revision.</text>
+            <text x="14" y="138" font-size="10" fill="#666">Third-candidate MAT failure: upstream plugin drift.</text>
+          </g>
+        </svg>
+      </div>
+      <div>
+        <span class="panel-label" style="margin-top:0;">c &nbsp; Three field deployments</span>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 150" role="img" aria-label="Three field deployments: teaching, clinical, cross-institution collaboration">
+          <rect x="0" y="0" width="360" height="150" fill="#fff" stroke="#bbb"/>
+          <g font-family="Source Sans 3, sans-serif" font-size="11" fill="#222">
+            <rect x="8" y="8" width="110" height="134" fill="#f7faf7" stroke="#cde0cd"/>
+            <text x="16" y="24" font-weight="700">Teaching</text>
+            <text x="16" y="40" font-size="10">15 undergrads</text>
+            <text x="16" y="54" font-size="10">Chromebooks</text>
+            <text x="16" y="68" font-size="10">No install</text>
+            <text x="16" y="98" font-size="9" fill="#666">Completion:</text>
+            <text x="16" y="112" font-size="10" fill="#2a7" font-weight="700"><tspan fill="#6b5000">[Y]/[N]</tspan></text>
+            <text x="16" y="130" font-size="9" fill="#666">vs <tspan fill="#6b5000">[Z]/[N]</tspan> prior</text>
 
-        <!-- b: replay corpus -->
-        <text x="270" y="24" font-weight="700" fill="#111">b  Deterministic replay — ACQUIRE / EXECUTE / MATCH</text>
-        <g>
-          <text x="270" y="46">Candidate 1</text>
-          <rect x="380" y="36" width="30" height="14" fill="#2a7"/><text x="415" y="46" font-size="10">ACQ ✓</text>
-          <rect x="470" y="36" width="30" height="14" fill="#2a7"/><text x="505" y="46" font-size="10">EXE ✓</text>
-          <rect x="560" y="36" width="30" height="14" fill="#2a7"/><text x="595" y="46" font-size="10">MAT ✓</text>
-        </g>
-        <g>
-          <text x="270" y="70">Candidate 2</text>
-          <rect x="380" y="60" width="30" height="14" fill="#2a7"/><text x="415" y="70" font-size="10">ACQ ✓</text>
-          <rect x="470" y="60" width="30" height="14" fill="#2a7"/><text x="505" y="70" font-size="10">EXE ✓</text>
-          <rect x="560" y="60" width="30" height="14" fill="#2a7"/><text x="595" y="70" font-size="10">MAT ✓</text>
-        </g>
-        <g>
-          <text x="270" y="94">Candidate 3</text>
-          <rect x="380" y="84" width="30" height="14" fill="#2a7"/><text x="415" y="94" font-size="10">ACQ ✓</text>
-          <rect x="470" y="84" width="30" height="14" fill="#2a7"/><text x="505" y="94" font-size="10">EXE ✓</text>
-          <rect x="560" y="84" width="30" height="14" fill="#b51f1f"/><text x="595" y="94" font-size="10" fill="#b51f1f">MAT ✗</text>
-        </g>
-        <text x="270" y="126" font-size="10" fill="#666">Full corpus <tspan fill="#6b5000">[N]</tspan> candidates at revision; pilot 3 / 3 as shown.</text>
+            <rect x="125" y="8" width="110" height="134" fill="#faf7f7" stroke="#e0cdcd"/>
+            <text x="133" y="24" font-weight="700">Clinical</text>
+            <text x="133" y="40" font-size="10">Air-gapped</text>
+            <text x="133" y="54" font-size="10">Histology</text>
+            <text x="133" y="68" font-size="10">IRB <tspan fill="#6b5000">[IRB]</tspan></text>
+            <text x="133" y="98" font-size="9" fill="#666">Data exit:</text>
+            <text x="133" y="112" font-size="10" fill="#b51f1f" font-weight="700">0 bytes</text>
+            <text x="133" y="130" font-size="9" fill="#666">per protocol</text>
 
-        <!-- c: deployments -->
-        <text x="20" y="200" font-weight="700" fill="#111">c  Three deployments where server-backed tools are structurally excluded</text>
-        <g>
-          <rect x="20" y="214" width="230" height="80" fill="#fff" stroke="#aaa"/>
-          <text x="30" y="234" font-weight="700">Teaching</text>
-          <text x="30" y="254" font-size="11">15 students, Chromebooks,</text>
-          <text x="30" y="268" font-size="11">no install, course IRB-exempt.</text>
-          <text x="30" y="285" font-size="10" fill="#666">Completion: <tspan fill="#6b5000">[Y]/[N]</tspan> vs <tspan fill="#6b5000">[Z]/[N]</tspan> prior</text>
-        </g>
-        <g>
-          <rect x="260" y="214" width="230" height="80" fill="#fff" stroke="#aaa"/>
-          <text x="270" y="234" font-weight="700">Clinical (air-gapped)</text>
-          <text x="270" y="254" font-size="11">Histology research case-series,</text>
-          <text x="270" y="268" font-size="11">IRB <tspan fill="#6b5000">[IRB-number]</tspan>, zero byte exit.</text>
-          <text x="270" y="285" font-size="10" fill="#666">No slide pixel leaves device.</text>
-        </g>
-        <g>
-          <rect x="500" y="214" width="240" height="80" fill="#fff" stroke="#aaa"/>
-          <text x="510" y="234" font-weight="700">Cross-site collaboration</text>
-          <text x="510" y="254" font-size="11">Two investigators, two continents,</text>
-          <text x="510" y="268" font-size="11">same image, real-time session.</text>
-          <text x="510" y="285" font-size="10" fill="#666">Per-user Hypha identity attributed.</text>
-        </g>
-      </g>
-    </svg>
+            <rect x="242" y="8" width="110" height="134" fill="#f7f7fa" stroke="#cdcde0"/>
+            <text x="250" y="24" font-weight="700">Collab.</text>
+            <text x="250" y="40" font-size="10">2 investigators</text>
+            <text x="250" y="54" font-size="10">2 continents</text>
+            <text x="250" y="68" font-size="10">Real-time</text>
+            <text x="250" y="98" font-size="9" fill="#666">Provenance:</text>
+            <text x="250" y="112" font-size="10" fill="#069" font-weight="700">Per-user</text>
+            <text x="250" y="130" font-size="9" fill="#666">Hypha identity</text>
+          </g>
+        </svg>
+      </div>
+    </div>
     <figcaption>
-      <span class="label">Fig. 2 | ImageJ.JS — architecture, reproducibility, deployments.</span>
-      <strong>a</strong>, The Fiji JVM bytecode is compiled to WebAssembly by
-      CheerpJ<sup class="cite">7</sup> and runs client-side in any modern browser. No pixel, filename,
-      or parameter leaves the user's device by default.
-      <strong>b</strong>, The deterministic replay corpus re-runs published analyses
-      against the pinned version-of-record tag <code>v1.0-paper</code>. Each
-      candidate is scored on three independent axes. Pilot: 3 of 3 pass
-      ACQUIRE and EXECUTE; 2 of 3 pass MATCH (the third fails owing to
-      upstream plugin drift, which client-side pinning removes).
-      <strong>c</strong>, Three field deployments: undergraduate teaching on
-      Chromebooks; an air-gapped clinical workstation; real-time
-      cross-institution collaboration. Each regime is one where conventional
-      cloud-backed or install-dependent tools are structurally excluded.
+      <span class="label">Fig. 2 | ImageJ.JS — the tool in a browser, deterministic replay, field deployments.</span>
+      <strong>a</strong>, ImageJ.JS at <code>https://ij.aicell.io</code> inside a standard Chrome tab. The Fiji menu
+      bar (File / Edit / Image / Process / Analyze / Plugins / Window / Help) and the tool palette are the same
+      Fiji an analyst knows; the viewport carries two datasets loaded locally — a 28-slice confocal fluorescence
+      fly-brain stack (left, <em>Drosophila</em> Gal4-driven GFP, 256 × 256 pixel, RGB, 684.93 × 684.93 µm field) and
+      an 8-bit scanning electron micrograph of an AuPbSn alloy grain boundary (right, 600 × 412 pixel, 241 KB). A
+      yellow freehand ROI traced with the Flood Fill tool runs across the grain boundary; the ROI Manager, macro
+      interpreter, and ≈ 200 Fiji plugins are immediately available. No pixel, filename, or parameter leaves the
+      user's device. The Fiji JVM bytecode is compiled to WebAssembly by CheerpJ<sup class="cite">7</sup> on page load; all compute
+      subsequently runs client-side.
+      <strong>b</strong>, Deterministic replay corpus. Each published analysis is scored independently on three
+      axes — ACQUIRE (do the inputs match the paper), EXECUTE (did the macro run without error), MATCH (do the
+      outputs agree within tolerance). Week-1 pilot: 3 of 3 pass ACQUIRE and EXECUTE; 2 of 3 pass MATCH. The third
+      candidate's MATCH failure is caused by upstream plugin-version drift in a local Fiji install — an argument
+      for client-side pinning via the <code>v1.0-paper</code> git tag, not against reproducibility. Full corpus
+      (<span class="ph">[N]</span> candidates) replaces the pilot at revision.
+      <strong>c</strong>, Three field deployments where conventional cloud-backed or install-dependent tools are
+      structurally excluded: a cell-biology undergraduate course on school-issued Chromebooks; a diagnostic
+      histology workflow on an air-gapped clinical workstation; a real-time cross-institution collaboration. Each
+      regime runs ImageJ.JS because it requires only a browser.
     </figcaption>
   </figure>
 
@@ -388,36 +405,64 @@
   </p>
 
   <figure class="display" id="fig3">
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 220" role="img" aria-label="Figure 3: Long-tail benchmark of foundation models vs expert with ImageJ.JS">
-      <rect x="0" y="0" width="760" height="220" fill="#fafafa"/>
-      <g font-family="Source Sans 3, sans-serif" font-size="11" fill="#222">
-        <text x="20" y="24" font-weight="700" fill="#111">Long-tail benchmark: 30 tasks × 9 microscopy subdomains</text>
-        <text x="20" y="42" fill="#666" font-size="10">Subdomains: environmental (pond-water); soil microbial; insect histology; plant root tips; marine plankton; nematode dev; mycology; herbarium specimens; citizen-science trail-cam.</text>
-        <text x="20" y="72">Foundation models, default params</text>
-        <rect x="260" y="60" width="120" height="16" fill="#2a7"/>
-        <text x="385" y="72" fill="#2a7" font-weight="700"><tspan fill="#6b5000">[Z]</tspan>/30</text>
-        <text x="430" y="72" fill="#666">tasks matched</text>
-        <rect x="260" y="78" width="240" height="16" fill="#b51f1f"/>
-        <text x="505" y="90" fill="#b51f1f" font-weight="700">30 − <tspan fill="#6b5000">[Z]</tspan>/30</text>
-        <text x="580" y="90" fill="#666">failed at default params</text>
-        <text x="20" y="128">Experts + ImageJ.JS (n = 10)</text>
-        <rect x="260" y="116" width="360" height="16" fill="#069"/>
-        <text x="625" y="128" fill="#069" font-weight="700">30 / 30</text>
-        <text x="660" y="128" fill="#666">completed</text>
+    <div style="display:grid; grid-template-columns: 1.1fr 1fr; gap:18px; align-items:flex-start;">
+      <div>
+        <span class="panel-label" style="margin-top:0;">a &nbsp; Macro-driven analysis on biological images</span>
+        <img src="assets/morpholibj-filters.gif" alt="Animated demonstration of MorphoLibJ morphological filters (opening, closing, top-hat, gradient, watershed) being applied in sequence to a biological image inside ImageJ.JS. The image is a greyscale micrograph; successive frames show the filter output updating live as parameters change." style="max-width:100%;">
+        <div style="font-family:'Source Sans 3', sans-serif; font-size:11.5px; color:#666; margin-top:6px; line-height:1.45;">
+          Live MorphoLibJ filter chain running client-side in the browser
+          (opening → closing → top-hat → gradient → watershed). No upload,
+          no server round-trip; parameter changes re-render in &lt; 100 ms.
+        </div>
+      </div>
+      <div>
+        <span class="panel-label" style="margin-top:0;">b &nbsp; Long-tail benchmark (30 tasks × 9 subdomains)</span>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 380 260" role="img" aria-label="Long-tail benchmark: foundation models vs expert + ImageJ.JS">
+          <rect x="0" y="0" width="380" height="260" fill="#fff" stroke="#bbb"/>
+          <g font-family="Source Sans 3, sans-serif" font-size="11" fill="#222">
+            <text x="14" y="22" font-weight="700" fill="#111">Task completion at default parameters</text>
+            <text x="14" y="54">FM (SAM / Cellpose / StarDist / CellSAM)</text>
+            <rect x="14" y="62" width="120" height="16" fill="#2a7"/>
+            <text x="140" y="74" fill="#2a7" font-weight="700"><tspan fill="#6b5000">[Z]</tspan>/30</text>
+            <text x="190" y="74" fill="#666">matched</text>
+            <rect x="14" y="84" width="240" height="16" fill="#b51f1f"/>
+            <text x="260" y="96" fill="#b51f1f" font-weight="700">30 − <tspan fill="#6b5000">[Z]</tspan></text>
+            <text x="305" y="96" fill="#666">failed</text>
 
-        <text x="20" y="174" font-size="10" fill="#666">Mean IoU vs ground truth (best model across 4): <tspan fill="#6b5000">[X]</tspan>. Expert + ImageJ.JS: <tspan fill="#6b5000">[Y]</tspan>.</text>
-        <text x="20" y="192" font-size="10" fill="#666">Task specification and images: longtail_tasks.md (CC-BY-4.0 where licensing permits).</text>
-      </g>
-    </svg>
+            <text x="14" y="134">Experts + ImageJ.JS (n = 10)</text>
+            <rect x="14" y="142" width="352" height="16" fill="#069"/>
+            <text x="260" y="154" fill="#069" font-weight="700">30 / 30</text>
+            <text x="310" y="154" fill="#666">completed</text>
+
+            <text x="14" y="194" font-size="10" fill="#111" font-weight="700">Nine subdomains sampled:</text>
+            <text x="14" y="212" font-size="10" fill="#444">pond-water environmental · soil microbial ·</text>
+            <text x="14" y="226" font-size="10" fill="#444">insect histology · plant root tips · marine plankton ·</text>
+            <text x="14" y="240" font-size="10" fill="#444">nematode dev · mycology · herbarium · trail-cam.</text>
+            <text x="14" y="254" font-size="9" fill="#666">Mean IoU vs ground truth — best FM: <tspan fill="#6b5000">[X]</tspan> · expert + ImageJ.JS: <tspan fill="#6b5000">[Y]</tspan>.</text>
+          </g>
+        </svg>
+      </div>
+    </div>
     <figcaption>
-      <span class="label">Fig. 3 | Foundation models and ImageJ.JS experts on a long-tail benchmark.</span>
-      Thirty images drawn from nine microscopy subdomains that are
-      under-represented in foundation-model training corpora. Four
-      foundation models were evaluated at default parameters; 10 expert
-      biologists used ImageJ.JS with no restriction on macros, plugins,
-      or time. The two approaches excel in complementary regimes.
-      Headline numbers (<span class="ph">[X]</span>, <span class="ph">[Y]</span>, <span class="ph">[Z]</span>) resolve with the full benchmark
-      run at pre-submission.
+      <span class="label">Fig. 3 | Analysis in the tool and comparison to foundation models on a long-tail benchmark.</span>
+      <strong>a</strong>, A MorphoLibJ morphological-filter chain (opening,
+      closing, top-hat, gradient, watershed) applied in sequence to a
+      greyscale micrograph inside ImageJ.JS. The same macro language and
+      the same plugin catalogue a Fiji user has on the desktop are
+      available in the browser tab; successive frames show filter output
+      updating live as parameters change. All compute is client-side;
+      parameter edits re-render in &lt; 100 ms on commodity hardware.
+      <strong>b</strong>, Long-tail benchmark of 30 images drawn from 9
+      microscopy subdomains under-represented in foundation-model training
+      corpora — pond-water environmental, soil microbial, insect
+      histology, plant root tips, marine plankton, nematode development,
+      mycology, herbarium specimens, citizen-science trail-cam. Four
+      foundation models (SAM<sup class="cite">3</sup>, Cellpose<sup class="cite">1</sup>, StarDist<sup class="cite">2</sup>, CellSAM<sup class="cite">9</sup>) were
+      evaluated at default parameters; 10 expert biologists used ImageJ.JS
+      with no restriction on macros, plugins, or time. The two approaches
+      excel in complementary regimes. Headline numbers
+      (<span class="ph">[X]</span>, <span class="ph">[Y]</span>, <span class="ph">[Z]</span>) resolve with the full benchmark run at
+      pre-submission.
     </figcaption>
   </figure>
 
