@@ -156,11 +156,16 @@ public class ParallelClassLoader extends URLClassLoader {
     }
 
     /**
-     * Feature flag: PFR auto-patch. Phase A (serial mirror) is safe to enable
-     * — identical output to unpatched. Phase B (parallel dispatch) needs per-filter
-     * regression testing before enabling. Default: ON (Phase A is safe).
+     * Feature flag: PFR auto-patch. Disabled by default after observing real
+     * plugin breakage (Action Bar UnsatisfiedLinkError, ThunderSTORM
+     * ClassCastException) from aggressive structural class edits. Only
+     * Thread and Executors invocation-site rewrites run by default; those
+     * preserve class layout + stack shape and have been stable across all
+     * tested plugins.
      */
-    public static boolean pfrAutoPatch = true;
+    public static boolean pfrAutoPatch = false;
+    public static boolean aggressiveSerializableInjection = false;
+    public static boolean aggressiveTransientMask = false;
 
     /** Run the bytecode through ASM to rewrite Thread.* and concurrency-API invocations. */
     private byte[] rewrite(String className, byte[] classBytes) {
@@ -173,8 +178,13 @@ public class ParallelClassLoader extends URLClassLoader {
             classBytes = patchPFRMethodBody(className, classBytes);
         }
 
-        // --- Phase B: inject Serializable into PlugInFilter subclasses
-        classBytes = injectSerializableIntoPlugInFilter(className, classBytes);
+        // --- Phase B: inject Serializable into PlugInFilter subclasses (opt-in).
+        // These structural edits caused real plugin breakage (Action Bar
+        // UnsatisfiedLinkError: Unsafe.throwException; ThunderSTORM
+        // ClassCastException). Kept available behind a flag for debugging.
+        if (aggressiveSerializableInjection) {
+            classBytes = injectSerializableIntoPlugInFilter(className, classBytes);
+        }
 
         ClassReader cr = new ClassReader(classBytes);
         ClassWriter cw = new ClassWriter(cr, 0);
