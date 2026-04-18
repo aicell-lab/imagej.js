@@ -2,6 +2,6 @@
   "title": "ImageJ.JS Nature Methods pitch",
   "session_link": {
     "url": "https://static-serve-0bc5cde8.svc.hypha.aicell.io/manuscript/",
-    "label": "Manuscript draft v0.29 (Nature Methods) — tools/recheck_references.py bibliographic re-checker landed (iter 36) + 2 refs resolved: Royer 2024 Omega, Alber et al. 2026 CellVoyager; third application of engineering-infrastructure iteration kind; placeholder-value span count 187 → 185 (second bibliographic-resolution drop); 10 / 15 refs RESOLVED (Gate H, iters 32 + 36); all four validator checks PASS at v0.29"
+    "label": "Manuscript draft v0.30 (Nature Methods) — §9 Discussion biologist-voice rewrite"
   }
 }
