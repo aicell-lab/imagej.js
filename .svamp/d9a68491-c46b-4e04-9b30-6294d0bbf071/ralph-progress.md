@@ -2971,3 +2971,158 @@
   avoided when possible.
 
 ---
+
+## 2026-04-18 — Iteration 19: §4 Replay structural-commitment prose promotion (HTML render v0.12)
+
+### What was implemented
+
+- **Drafted §4 Replay v0.1 (four paragraphs, ~560 words)** in
+  `preprint.md §"Drafted prose — §4 Shareable human reasoning — deterministic replay (v0.1, 2026-04-18)"`.
+  Replaces the evidence-gated notice that stood in this slot through iterations 8–18.
+  Paragraphs: (i) the three-axis decomposition is load-bearing — ACQUIRE/EXECUTE/MATCH
+  separates data-bundling from runtime from algorithm failures that a single-verdict
+  Pass/Fail replay would conflate; (ii) four-fold structural commitment of the corpus
+  (shared per-candidate schema, stratification rationale, per-axis cell-annotated
+  reporting rather than summary pass rate, immutable CheerpJ pin at `v1.0-paper`);
+  (iii) the two Week-1 findings (Drosophila NMJ 2016 bundle inconsistency; MRI Wound
+  Healing 2020 cross-version Find-Edges drift) preserved verbatim as arguments *for*
+  the paper rather than apologised for; (iv) two v1 scope constraints named in-prose
+  — macros-with-retrievable-inputs only (papers whose imagery was never public or
+  behind data-transfer agreements are excluded and left for a successor-paper replay
+  corpus), and [N] deliberately modest at 15 candidates Brief-Comm / [N ≤ 40] full
+  Article because §4's argument is *regime coverage* not *ergodicity*, parallel to
+  the 30-task benchmark's regime claim.
+
+- **HTML §4 rewritten.** The multi-paragraph `<div class="gated">` Week-1 findings
+  notice replaced with a compact one-sentence status banner (still `<div class="gated">`,
+  yellow/amber border-left) linking back to Fig 3, followed by the full v0.1 prose as
+  four `<p>` body-text paragraphs. Placeholder tokens (`[N]`, `[Y1–Y2]`, `[N ≤ 40]`)
+  rendered as `<span class="placeholder-value">...</span>` per the existing convention.
+  Mechanism names (`run_replay.py`, `MATCH_REPORT.md`, `v1.0-paper`, `testThresholdFindEdges`,
+  `Find-Edges`) rendered as `<code>...</code>`. Cross-references to Fig 3 and
+  Release-engineering rendered as `<a href="#fig3">...</a>` / `<a href="#release-eng">...</a>`.
+  Figure 3 (the pilot matrix with three rows) unchanged.
+
+- **Version bumps v0.11 → v0.12** in four places (NPG bar top, draft chip, sidebar
+  Draft version dd, footer). Status chip updated to `Evidence status · 21 prose
+  blocks v0.1 (+ §4 Replay structural-commitment prose, iter 19); … body-prose
+  coverage §§1–10 complete (§§2/4/5/6/7 evidence-gated at numerical resolution); …`.
+  Sidebar Ready (prose v0.1) list extended with `§4` (bold). Sidebar Evidence-gated
+  row reframed: now names §4 alongside §2 and §§5–7 as structural-prose-landed,
+  specifics resolve at Gates D–G.
+
+- **Readiness dashboard synchronised in-pass.** Banner augmented with "§4 Replay
+  promoted from evidence-gated notice to structural-commitment prose iteration 19".
+  Prose-block coverage row's measurement augmented with `§4 promoted iter 19` chip;
+  gating-path column extended with the promotion rationale ("the replay section is
+  now prose Gate F resolves numerically into, not prose Gate F drafts from scratch").
+  Gate A condition and source column both extended with iteration 19 + the §4
+  structural-commitment promotion. Dashboard narrative "Eight independent scorecards"
+  kept unchanged — no new scorecard added; body prose is not a scorecard.
+
+- **HTML well-formed check passes.** Custom-validator pass (html.parser-based, with
+  proper SVG/HTML void-element handling) reports zero tag issues. Final file 360,972
+  bytes (up from 354,158 bytes in iteration 18 — +6,814 bytes for §4 prose).
+
+- **Served URL confirmed stable (Iteration 8–19 pattern).** Mount `manuscript`
+  continues to serve from disk. HTTP HEAD against
+  `https://static-serve-0bc5cde8.svc.hypha.aicell.io/manuscript/` → `200`,
+  `content-length: 360972` exactly matching `wc -c` on disk.
+
+- **Re-registered svamp session link** with v0.12 label:
+  `svamp session set-link "https://static-serve-0bc5cde8.svc.hypha.aicell.io/manuscript/" "Manuscript draft v0.12 (Nature Methods) — §4 Replay structural-commitment prose"`.
+  Dashboard button now reflects the iteration-19 label.
+
+### Files changed
+
+- `preprint.md` — appended one "Drafted prose" block (§4 Replay v0.1, four paragraphs)
+  after the §7 Collaboration v0.1 block from iteration 18. No existing content modified.
+- `manuscript_html/index.html` — replaced §4 evidence-gated Week-1-findings notice
+  with compact one-sentence status banner + v0.1 prose paragraphs (4 new body-text
+  paragraphs); bumped version strings v0.11 → v0.12 in four places; extended status
+  chip with iteration-19 narrative; extended Ready (prose v0.1) list; reframed
+  Evidence-gated row; synchronised readiness dashboard (prose coverage row, Gate A,
+  banner, narrative). File grew 354,158 → 360,972 bytes / 3,899 → 3,892 lines (net
+  -7 lines: multi-`<li>` findings notice collapsed to one-line banner + four paragraphs).
+- `.svamp/d9a68491-c46b-4e04-9b30-6294d0bbf071/config.json` — `session_link` updated by
+  `svamp session set-link` with v0.12 label.
+- `.svamp/d9a68491-c46b-4e04-9b30-6294d0bbf071/ralph-progress.md` — this entry.
+
+### Learnings for future iterations
+
+- **§4 promotion completes the evidence-gated-pillar prose symmetry.** Before
+  iteration 18, all four evidence-gated pillar sections (§§4/5/6/7) carried multi-
+  paragraph `<div class="gated">` notices that stood in for body prose. Iteration 18
+  promoted §§5/6/7 to structural-commitment prose; iteration 19 promotes the
+  remaining §4. All four evidence-gated pillar sections now share the same shape:
+  one-sentence status banner + structural-commitment body prose + figure schematic
+  preview. The symmetry is now complete; a reviewer reading §§4–7 sees the same
+  structural idiom everywhere. Future iterations must preserve this — any new
+  evidence-gated section added to the paper (unlikely but possible if partner
+  scope expands) must land as structural-commitment prose from the start, not as
+  a gated-notice placeholder.
+- **The §4 promotion is a lockstep twin of the iteration-18 §§5/6/7 promotion
+  but with a distinct placeholder inventory.** §§5/6/7 share their placeholder
+  set with Fig 4/5/6 captions and resolve at Gate G partner landings. §4 shares
+  its placeholder set with Fig 3's matrix (now three pilot rows, later [N] full
+  rows) and resolves at Gate F replay-corpus scale-up. Both promotions follow
+  the iteration-18 discipline: structural claim fixed at draft time, v1 scope
+  constraints named verbatim in-prose, placeholders shared with the figure
+  caption. The pattern is repeatable and now has two worked instances.
+- **The "preserved worked failure classes" idiom is a load-bearing prose move.**
+  §4 ¶3 preserves the two Week-1 findings verbatim because they are arguments
+  *for* the paper: a paper arguing for pinned-runtime reproducibility that
+  finds *zero* cross-decade drift would be a weaker paper, not a stronger one.
+  Drafted prose that incorporates already-landed evidence as worked examples
+  of the thesis — rather than apologising for them as off-message noise — is
+  the move that converts Week-1's "three replays, two surprises" finding into
+  §4's argument. Future prose promotions that include pilot evidence should
+  adopt this stance.
+- **Placeholder inventory did NOT balloon.** Naïvely, four body-text paragraphs
+  with placeholder tokens could have added 6–10 new placeholders. But every
+  placeholder in §4's prose (`[N]`, `[Y1–Y2]`, `[N ≤ 40]`) is *already* carried
+  by Fig 3's caption or the Abstract, so the inventory count is unchanged. The
+  placeholder-inventory-shared-with-figure-captions rule (iteration 18) holds
+  for §4 as well.
+- **Body-prose promotion is not a scorecard.** Like iteration 18, this iteration
+  does not create a new scorecard or change the numerator of any existing
+  scorecard that reports on count rather than quality. The prose-coverage
+  scorecard still reports `16/16 STRUCTURAL-READY`; what changed is the quality
+  of the §4 entry (gated notice → structural-commitment prose). A reviewer
+  reading v0.12 sees the §4 structural claim committed and can judge
+  "over-claimed?" from the structure alone before Gate F lands.
+- **Five editorial-machinery scorecards (dry-run, packet, reporting summary,
+  readiness dashboard, research briefing) remain valid at v0.12 without
+  re-computation.** No scorecard depends on §4 body-prose contents directly
+  — all five depend on Gate-state labels that have not changed state in
+  iteration 19. Iteration 19 is a body-prose iteration, not a scorecard-
+  affecting iteration. (Same as iteration 18.)
+- **Framing containment re-verified across v0.12 render.** The new §4 prose
+  mentions AI nowhere — SAM / Cellpose / CellSAM / foundation model / agent /
+  LLM do not appear in §4, which is a replay-of-classical-Fiji-macros section
+  and should stay AI-free by construction. Abstract, §1, §3, §4 (new), §10,
+  Online Methods remain AI-free; §2 mentions AI only in the long-tail benchmark
+  paragraph; §§5/6/7 mention Hypha as infrastructure, not AI; §8 remains the
+  AI-containment surface. The "AI stays contained to §8" pattern is preserved.
+- **Highest-value next iteration without new evidence: Bibliographic verification
+  pass (Gate H), deferred from iterations 16–18.** ~35 `[VOL:PAGES, DOI]`
+  placeholders in References v0.1 remain unresolved. A focused one-pass
+  verification against Crossref / DOI.org / journal records resolves Gate H,
+  drops the placeholder-inventory count significantly, and promotes the
+  references-verification dashboard row from `0 / ~35` to `~35 / ~35` in a
+  single pass. The hard rule — no DOI or volume is invented — still holds;
+  any entry whose metadata cannot be verified remains `[DOI]`. This is now
+  the single largest placeholder-inventory move available before evidence
+  landing, and with §§4/5/6/7 all promoted there is no further body-prose
+  promotion available in the iteration-18/19 idiom.
+- **Second-highest next iteration without new evidence: tighten / copy-edit
+  pass across promoted prose (§§2/4/5/6/7).** Five structural-commitment
+  prose blocks have landed across iterations 17, 18, and 19. A single
+  copy-edit pass against the Abstract / §1 / §3 / §8 / §9 / §10 / Cover
+  letter for tone, voice, and citation form — without changing any claim —
+  would raise the prose quality of the v0.12 render to submission-grade
+  without requiring any evidence landing or author sign-off. This is a
+  "polish, don't promote" iteration that should precede Gate H.
+
+---
+

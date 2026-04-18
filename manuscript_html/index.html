@@ -1537,7 +1537,7 @@
 <!-- Article header -->
 <div class="article-meta">
   <span class="tag">Brief Communication</span>
-  <span>Open Access · Published: working draft v0.11</span>
+  <span>Open Access · Published: working draft v0.12</span>
   <span class="published">18 April 2026</span>
 </div>
 
@@ -1556,9 +1556,9 @@
 </p>
 
 <div class="status-strip">
-  <span class="chip draft">Working draft v0.11 · 2026-04-18</span>
+  <span class="chip draft">Working draft v0.12 · 2026-04-18</span>
   <span class="chip preprint">Target venue · Nature Methods Brief Communication</span>
-  <span class="chip status">Evidence status · 20 prose blocks v0.1 (+ §§5/6/7 structural-commitment prose, iter 18); biologist-facing visual pass landed iter 17 (Graphical Abstract, Fig 1-supplement subdomain montage, rich SVG schematics for Fig 4/5/6, new Fig 7 composition); body-prose coverage §§1–10 complete (§§2/5/6/7 evidence-gated at numerical resolution); structurally READY · empirically EVIDENCE-GATED on Gates D–G; defensibility 10/12; packet 4 ready / 4 author-gated / 0 evidence-gated; reporting summary 22 ready / 0 author-gated / 3 evidence-gated; research briefing 4 ready / 1 author-gated / 1 evidence-gated / 1 editorial; [URL]/[URL/github]/[LICENCE] resolved iter 15; 3 / 10 submission gates MET (Gate J partial)</span>
+  <span class="chip status">Evidence status · 21 prose blocks v0.1 (+ §4 Replay structural-commitment prose, iter 19); biologist-facing visual pass landed iter 17 (Graphical Abstract, Fig 1-supplement subdomain montage, rich SVG schematics for Fig 4/5/6, new Fig 7 composition); body-prose coverage §§1–10 complete (§§2/4/5/6/7 evidence-gated at numerical resolution); structurally READY · empirically EVIDENCE-GATED on Gates D–G; defensibility 10/12; packet 4 ready / 4 author-gated / 0 evidence-gated; reporting summary 22 ready / 0 author-gated / 3 evidence-gated; research briefing 4 ready / 1 author-gated / 1 evidence-gated / 1 editorial; [URL]/[URL/github]/[LICENCE] resolved iter 15; 3 / 10 submission gates MET (Gate J partial)</span>
 </div>
 
 <!-- Abstract -->
@@ -2146,14 +2146,17 @@
   <p>To test whether URL-encoded ImageJ.JS analyses re-execute across hardware, browsers, and versions, we replayed published Fiji analyses spanning <span class="placeholder-value">[Y1–Y2]</span> and reported the outcome on three independent axes: ACQUIRE (can the input data be retrieved from the original source or a mirror?), EXECUTE (does the published macro run end-to-end against the retrieved input in the pinned ImageJ.JS runtime?), and MATCH (do the numerical outputs match the published reference?). The three-axis decomposition separates data-bundling from runtime from algorithm concerns — failures that a single-axis verdict would conflate.</p>
 
   <div class="gated">
-    <h4>Evidence status · three-candidate pilot complete; scale-up underway</h4>
-    <p>The Week-1 three-candidate pilot (TrackMate HeLa 2017; Drosophila NMJ 2016; MRI Wound Healing 2020; see <code>replay_week1_report.md</code>) has surfaced <em>two findings of genuine scientific interest</em> that this section retains as worked failure classes:</p>
-    <ul>
-      <li><strong>Internally inconsistent published bundles.</strong> The Drosophila NMJ figshare archive ships a reference <code>results.txt</code> whose ground-truth object list does not correspond to the bundled input image. A <em>perfect</em> replay system looks like a failure when the published ground truth is itself wrong — routine replay auditing exposes such data-bundling errors years after publication.</li>
-      <li><strong>Cross-version numeric drift in core Fiji primitives.</strong> MRI's own self-tests catch a numeric mismatch in <code>Find Edges</code> + auto-threshold between the 2017 Fiji and the 2026 Fiji, while a Variance-based branch matches exactly. This is direct evidence for the paper's argument that reproducibility requires a pinned runtime; ImageJ.JS's CheerpJ-frozen JVM is that mechanism.</li>
-    </ul>
-    <p>Full <span class="placeholder-value">[N]</span>-candidate corpus is under Week-2 scale-up; final numbers resolve to <a href="#fig3">Fig. 3</a>.</p>
+    <h4>Structural commitment · v0.1 prose drafted · full <span class="placeholder-value">[N]</span>-candidate corpus pending (Gate F)</h4>
+    <p>Section promoted from the evidence-gated notice that stood here through iterations 8–18 to structural-commitment prose below. Corpus size <span class="placeholder-value">[N]</span>, publication-year span <span class="placeholder-value">[Y1–Y2]</span>, and per-candidate match rates resolve at replay-corpus scale-up; Week-1 three-candidate pilot (TrackMate HeLa 2017; Drosophila NMJ 2016; MRI Wound Healing 2020; <code>replay_week1_report.md</code>) already landed. Prose-side counterpart to <a href="#fig3">Fig 3</a>'s replay matrix.</p>
   </div>
+
+  <p>A tool for small-data, human-centred biology that cannot re-execute the analyses already published against its substrate fails the regime it claims to serve: working biologists re-run, re-threshold, and re-measure published figures when a reviewer's question lands on a parameter choice years later, and the long tail of ImageJ and Fiji macros archived alongside published papers is exactly the corpus that re-execution under a pinned runtime tests. To measure whether ImageJ.JS meets that test, we replay published Fiji analyses against the <code>v1.0-paper</code>-pinned CheerpJ runtime and report the outcome on the three axes named above. The three-axis decomposition is load-bearing, not cosmetic: a single-verdict Pass/Fail replay conflates data-bundling failures (inputs were never retrievable or were incorrectly archived), runtime-execution failures (the macro references a plugin or permission the pinned runtime cannot satisfy), and algorithm-match failures (the numbers differ for reasons that sit in the operation itself), and the repairs that each failure class implies are categorically different. Reporting the axes separately is what lets <a href="#fig3">Fig 3</a>'s matrix surface <em>which</em> class each replayed candidate exhibits, so reviewers can judge the corpus's coverage rather than its summary.</p>
+
+  <p>The structural commitment of the replay section, reported here ahead of the full <span class="placeholder-value">[N]</span>-candidate corpus evidence landing (Gate F; <code>replay_candidates.md</code> 15-candidate shortlist), is four-fold. First, every candidate ships a replay record at a shared schema (<code>replay/&lt;candidate&gt;/macro.*</code> — the published macro verbatim; <code>INPUTS.json</code> — upstream URL, SHA-256 over the acquired bytes, retrieval date; <code>run_replay.py</code> — the run harness against the pinned CheerpJ runtime; <code>outputs/</code> — the replay's numerical outputs; <code>MATCH_REPORT.md</code> — the three-axis verdict with per-axis diagnostic), so a reviewer who wants to audit any claim against any candidate can do so without tool-chain setup beyond <code>git clone</code> and a browser. Second, the corpus is stratified across publication year <span class="placeholder-value">[Y1–Y2]</span>, plugin surface (core Fiji; named plugins — TrackMate, MRI Wound Healing, MorphoLibJ, BoneJ), and workflow kind (headless, interactive, self-testing), with the stratification rationale archived in <code>replay_candidates.md §"Selection rationale"</code>; the <span class="placeholder-value">[N]</span>-candidate sample is not ergodic across all published Fiji usage, and the Methods caveat (§Limitations) names the bound explicitly. Third, per-axis outcomes are reported in cell-annotated form — green/amber/red per axis, one-word diagnostic per cell — rather than as a summary pass rate, so the corpus-level claim of §4 is the distribution of per-axis diagnostics across <span class="placeholder-value">[N]</span> candidates (<a href="#fig3">Fig 3a</a>), not the top-line percentage. Fourth, the pinned runtime under which MATCH is reported is immutable: the CheerpJ-compiled Fiji JVM and the bundled plugin set are served as signed artefacts under the <code>v1.0-paper</code> git tag (<a href="#release-eng">Release engineering</a>; <a href="#sec-10">§10 Availability</a>), so MATCH mismatches reported in §4 are mismatches between the published record and the tool-as-pinned, not mismatches against a moving target.</p>
+
+  <p>Two findings from the Week-1 three-candidate pilot (TrackMate HeLa 2017; <em>Drosophila</em> NMJ 2016; MRI Wound Healing 2020; <code>replay_week1_report.md</code>) are preserved into the production protocol verbatim rather than apologised for, because they are arguments <em>for</em> the paper. The <em>Drosophila</em> NMJ Morphometrics 2016 figshare deposit ships a reference <code>results.txt</code> whose ground-truth object list (21 objects of specified sizes) does not correspond to the bundled input stack (one 131-px object on a single slice); the bundle is internally inconsistent, invisible without pixel-level inspection, and a perfect replay system correctly reports MATCH = fail because the published reference is itself in error — routine cross-decade replay auditing surfaces data-bundling failures years after publication, and the pinned-runtime replay is the instrument that makes them visible. The MRI Wound Healing 2020 macro hard-codes 2017-Fiji <code>Find-Edges</code> + auto-threshold values in its <code>testThresholdFindEdges</code> self-test; the 2026 Fiji <code>Find-Edges</code> implementation has drifted numerically, so the 2020-authored self-test now fails on a 2026 desktop Fiji while the macro's variance-based branch matches bit-exactly. This is direct evidence that reproducibility at cross-decade timescales requires pinning a primitive implementation, not just pinning a tool version; ImageJ.JS's CheerpJ-frozen JVM is the mechanism that provides that pin, and reviewers can verify the pin against the <code>v1.0-paper</code> tag. Both findings are reported as worked failure classes in <a href="#fig3">Fig 3b</a> at the full-corpus landing; at interim, the Week-1 matrix is the figure.</p>
+
+  <p>Two scope constraints bound the section's commitments and are named here rather than left to §Limitations. v1 replay targets macros and their retrievable inputs — papers whose imagery was never public, whose scripts use interactive dialogs the macro form cannot capture, or whose input provenance is locked behind a data-transfer agreement are out of scope at v1, recorded in <code>replay_candidates.md §"Excluded"</code> by reason, and left for a successor-paper replay corpus that partners with archival institutions. And <span class="placeholder-value">[N]</span> is deliberately modest — 15 candidates at the Brief-Communication path, extensible to <span class="placeholder-value">[N ≤ 40]</span> at the full-Article path — because §4's argument is <em>regime coverage</em>, not <em>ergodicity</em>: the corpus must demonstrate that cross-decade replay of published Fiji analyses is a tractable, scriptable, per-candidate-auditable instrument in the ImageJ.JS-plus-pinned-runtime substrate, and that claim is warranted by 15 stratified candidates in the same way the 30-task benchmark's regime claim is warranted without claiming to exhaust DL performance. These constraints are the v1 feature list the paper claims reproducibility against; a larger corpus is a v1.1 deliverable, not a submission-blocking gap.</p>
 
   <!-- Figure 3 -->
   <figure class="figure" id="fig3">
@@ -3097,10 +3100,10 @@
   <p class="readiness-meta">Draft v0.1 · 2026-04-18 · at-a-glance consolidation of every completeness measurement already tracked across <code>preprint.md</code>. Rephrases existing scorecards — introduces no new claim, count, or commitment. This is a submission-engineering artefact, not body prose.</p>
 
   <div class="readiness-banner">
-    <strong>READINESS DASHBOARD</strong> · structurally <span class="status-met">READY</span> · empirically <span class="status-evgated">EVIDENCE-GATED</span> on Gates D–G (regime survey · long-tail benchmark · replay scale-up · partner landings) · §§5/6/7 promoted from evidence-gated notices to structural-commitment prose iteration 18 · last recomputed 2026-04-18
+    <strong>READINESS DASHBOARD</strong> · structurally <span class="status-met">READY</span> · empirically <span class="status-evgated">EVIDENCE-GATED</span> on Gates D–G (regime survey · long-tail benchmark · replay scale-up · partner landings) · §§5/6/7 promoted from evidence-gated notices to structural-commitment prose iteration 18 · §4 Replay promoted from evidence-gated notice to structural-commitment prose iteration 19 · last recomputed 2026-04-18
   </div>
 
-  <p>Eight independent scorecards are maintained across the paper — prose-block coverage, dry-run defensibility, submission-packet completeness, figure slots, references verification, the three empirical corpora, the Life Sciences Reporting Summary completeness (iteration 15), and the Research Briefing segment readiness (iteration 16) — plus a live placeholder inventory. An editor or co-author auditing submission readiness would otherwise have to read eleven separate surfaces. This dashboard reports all of them on one screen. Each row's source block is named in the third column; if the dashboard and a source block disagree, the dashboard is the regression to fix, not the source.</p>
+  <p>Eight independent scorecards are maintained across the paper — prose-block coverage (now including §4 Replay structural-commitment prose, iteration 19), dry-run defensibility, submission-packet completeness, figure slots, references verification, the three empirical corpora, the Life Sciences Reporting Summary completeness (iteration 15), and the Research Briefing segment readiness (iteration 16) — plus a live placeholder inventory. An editor or co-author auditing submission readiness would otherwise have to read eleven separate surfaces. This dashboard reports all of them on one screen. Each row's source block is named in the third column; if the dashboard and a source block disagree, the dashboard is the regression to fix, not the source.</p>
 
   <h3>Readiness scoreboard</h3>
 
@@ -3118,8 +3121,8 @@
     <tbody>
       <tr>
         <td>Prose-block coverage</td>
-        <td><span class="status-numeric">16 / 16</span> <span class="status-structural">STRUCTURAL-READY</span> · <span class="status-met">§§5/6/7 promoted iter 18</span></td>
-        <td>Version increments as evidence lands; no new block creation required (Research Briefing added iteration 16; §§5/6/7 promoted from evidence-gated notice to structural-commitment prose iteration 18, so that the field-deployment sections are now prose Gate G resolves numerically, not prose Gate G drafts from scratch).</td>
+        <td><span class="status-numeric">16 / 16</span> <span class="status-structural">STRUCTURAL-READY</span> · <span class="status-met">§§5/6/7 promoted iter 18</span> · <span class="status-met">§4 promoted iter 19</span></td>
+        <td>Version increments as evidence lands; no new block creation required (Research Briefing added iteration 16; §§5/6/7 promoted from evidence-gated notice to structural-commitment prose iteration 18; §4 Replay promoted from evidence-gated notice to structural-commitment prose iteration 19, so the replay section is now prose Gate F resolves numerically into, not prose Gate F drafts from scratch).</td>
         <td>§§1–10, Methods, Release-eng, Cover letter, References, Figure slots, Supp outline, Dry run, Submission packet, Reporting Summary, Research Briefing.</td>
       </tr>
       <tr>
@@ -3194,7 +3197,7 @@
       <tr><th>Gate</th><th>Condition</th><th>Status</th><th>Source / resolution</th></tr>
     </thead>
     <tbody>
-      <tr><td>A</td><td>Prose coverage: all 16 required blocks drafted at v0.1 or better; §§5/6/7 field-deployment prose at structural-commitment not just evidence-gated notice.</td><td><span class="status-met">MET</span></td><td>Iteration 16 (+ Research Briefing); iteration 18 (+ §§5/6/7 structural-commitment prose promoted from evidence-gated notices); every prose block carries a <code>## Drafted prose</code> heading.</td></tr>
+      <tr><td>A</td><td>Prose coverage: all 16 required blocks drafted at v0.1 or better; §§4, 5, 6, 7 evidence-gated-pillar prose at structural-commitment not just evidence-gated notice.</td><td><span class="status-met">MET</span></td><td>Iteration 16 (+ Research Briefing); iteration 18 (+ §§5/6/7 structural-commitment prose promoted from evidence-gated notices); iteration 19 (+ §4 Replay structural-commitment prose promoted from evidence-gated notice); every prose block carries a <code>## Drafted prose</code> heading.</td></tr>
       <tr><td>B</td><td>Dry-run defensibility: 0 unanswerable, ≤ 1 evidence-gated, ≤ 1 partial objection.</td><td><span class="status-met">MET</span></td><td>Current 10 answerable · 1 partial (Q10) · 1 evidence-gated (Q3) · 0 unanswerable.</td></tr>
       <tr><td>C</td><td>Packet: 0 evidence-gated fields.</td><td><span class="status-met">MET</span></td><td>Current 4 ready · 4 author-gated · 0 evidence-gated.</td></tr>
       <tr><td>D</td><td>Regime survey: 200 / 200 rows extracted · 3 IRR dual-extractions κ ≥ 0.7 / ICC ≥ 0.8 · kill-criteria sanity check on full 200.</td><td><span class="status-pending">PENDING</span></td><td>§&quot;Empirical evidence status&quot; · §&quot;Kill criteria&quot;.</td></tr>
@@ -3821,7 +3824,7 @@
       <dt>Article type</dt>
       <dd>Brief Communication (working draft)</dd>
       <dt>Draft version</dt>
-      <dd>v0.11 · 2026-04-18 (promotes §§5/6/7 from evidence-gated notices to structural-commitment prose: teaching/clinical/collaboration prose drafted ahead of Gate G partner + sprint landings; figures unchanged from v0.10)</dd>
+      <dd>v0.12 · 2026-04-18 (promotes §4 Replay from the evidence-gated notice to structural-commitment prose: three-axis instrument, four-fold corpus commitment, two Week-1 findings preserved verbatim as worked failure classes, two v1 scope constraints named in-prose; corpus-size [N], [Y1–Y2] span, per-candidate match rates resolve at Gate F replay-corpus scale-up; figures unchanged from v0.11)</dd>
       <dt>Target venue</dt>
       <dd>Nature Methods (Brief Communication primary; full Article if pillars 1+2+{3,4,5} rigorously delivered)</dd>
       <dt>Correspondence</dt>
@@ -3833,7 +3836,7 @@
     <h3>Evidence status</h3>
     <dl>
       <dt>Ready (prose v0.1)</dt>
-      <dd>Abstract · §1 · §2 · §3 · <strong>§5</strong> · <strong>§6</strong> · <strong>§7</strong> · §8 · §9 · §10 · Online Methods · Cover letter · References · Figure slots · Supp. outline · Release engineering · Reviewer-response dry run · Submission packet · Readiness dashboard · Reporting Summary · Research Briefing</dd>
+      <dd>Abstract · §1 · §2 · §3 · <strong>§4</strong> · <strong>§5</strong> · <strong>§6</strong> · <strong>§7</strong> · §8 · §9 · §10 · Online Methods · Cover letter · References · Figure slots · Supp. outline · Release engineering · Reviewer-response dry run · Submission packet · Readiness dashboard · Reporting Summary · Research Briefing</dd>
       <dt>Figures (biologist pass iter 17)</dt>
       <dd>Graphical Abstract + Fig 1 + Fig 1-suppl (subdomains) + Fig 2 + Fig 3 + Fig 4 + Fig 5 + Fig 6 + <strong>Fig 7 composition</strong> · all in-HTML SVG</dd>
       <dt>Readiness posture</dt>
@@ -3849,7 +3852,7 @@
       <dt>Interim figures (80 of 200)</dt>
       <dd>[48]% small-data · [48]% ImageJ/Fiji any-mention · [20]% named DL</dd>
       <dt>Evidence-gated (numerical / naming only — structural claims drafted)</dt>
-      <dd>§2 (rows 81–200 + IRR); §4 (replay scale-up); §§5–7 (partner courses, clinical partner, collab-sprint vignettes) — structural prose landed iter 18, specifics resolve at Gate G</dd>
+      <dd>§2 (rows 81–200 + IRR); <strong>§4</strong> (replay corpus scale-up [N]/[Y1–Y2] — structural prose landed iter 19); §§5–7 (partner courses, clinical partner, collab-sprint vignettes) — structural prose landed iter 18; specifics resolve at Gates D–G</dd>
     </dl>
   </div>
 
@@ -3880,7 +3883,7 @@
 
 <footer class="site-footer">
   <div class="wrap">
-    <div>Rendered from <code>preprint.md</code> · working draft v0.11 · 2026-04-18 (promotes §§5/6/7 from evidence-gated notices to structural-commitment prose: teaching/clinical/collaboration structural claims drafted ahead of Gate G partner + collab-sprint landings; prose-side counterpart to the iteration-17 Fig 4/5/6 schematic previews). Placeholders still in <span style="background:#fff8e1; color:#6b5000; padding:0 4px; border-radius:2px;">[yellow]</span> are evidence gaps resolved at submission per the placeholder-propagation discipline; resolved values render as inline code.</div>
+    <div>Rendered from <code>preprint.md</code> · working draft v0.12 · 2026-04-18 (promotes §4 Replay from the evidence-gated notice to structural-commitment prose: three-axis ACQUIRE/EXECUTE/MATCH instrument, four-fold corpus commitment under the <code>v1.0-paper</code>-pinned CheerpJ runtime, two Week-1 findings preserved verbatim as worked failure classes, two v1 scope constraints named in-prose; prose-side counterpart to Fig 3's replay matrix; lockstep-pattern twin of the iteration-18 §§5/6/7 structural-commitment prose promotions). Placeholders still in <span style="background:#fff8e1; color:#6b5000; padding:0 4px; border-radius:2px;">[yellow]</span> are evidence gaps resolved at submission per the placeholder-propagation discipline; resolved values render as inline code.</div>
     <div style="margin-top:10px;">Served via <code>svamp serve</code> · not a journal publication.</div>
   </div>
 </footer>
