@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Simulated editor and reviewer report — ImageJ.JS Brief Communication</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root { --serif:"Source Serif 4", Georgia, serif; --sans:"Source Sans 3", -apple-system, sans-serif; }
+  body { font-family: var(--serif); font-size:17px; line-height:1.6; color:#232323; background:#fff; margin:0; }
+  .wrap { max-width: 820px; margin:0 auto; padding: 32px 24px 64px; }
+  h1 { font-weight:700; font-size:30px; line-height:1.2; margin:0 0 8px; }
+  h2 { font-family:var(--sans); font-size:13.5px; text-transform:uppercase; letter-spacing:0.6px; color:#000; border-top:1px solid #d8d8d8; padding-top:18px; margin:32px 0 12px; }
+  h3 { font-family:var(--serif); font-weight:700; font-size:20px; margin:24px 0 10px; }
+  .meta { font-family:var(--sans); font-size:12.5px; color:#5a5a5a; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:18px; }
+  .tag { color:#b51f1f; font-weight:700; margin-right:10px; }
+  a { color:#069; }
+  p { margin:0 0 1em; }
+  blockquote { margin:12px 0 16px; padding:10px 18px; border-left:3px solid #069; background:#f4f9fb; font-style: italic; color:#1b3e4a; }
+  blockquote p { margin:0 0 0.6em; }
+  ol.fixes { padding-left:24px; }
+  ol.fixes li { margin-bottom:10px; }
+  .role { font-family:var(--sans); font-size:13px; color:#5a5a5a; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:6px; }
+  .banner { font-family:var(--sans); font-size:13px; line-height:1.5; background:#fff8e1; border:1px solid #e8d48b; border-left:3px solid #cc9900; padding:12px 16px; margin:0 0 24px; color:#6b5000; border-radius:3px; }
+  .back { font-family:var(--sans); font-size:13px; display:inline-block; margin-bottom:24px; }
+  code { font-family:SFMono-Regular, Menlo, Consolas, monospace; font-size:90%; background:#f4f4f4; padding:1px 4px; border-radius:2px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <a class="back" href="brief.html">← Back to manuscript brief (v2.0)</a>
+
+  <div class="meta"><span class="tag">Simulated peer-review report</span> 2026-04-19</div>
+  <h1>Simulated editor and reviewer report</h1>
+  <p class="meta" style="margin-top:4px;">drove the v1.0 → v2.0 revision of the Brief Communication</p>
+
+  <div class="banner">
+    <strong>Note.</strong> This is an internally-generated simulated review —
+    not a communication from Nature Methods. It was produced to stress-test
+    v1.0 of the manuscript against the kinds of critique an editor and a
+    biologist reviewer most likely voice when they first read a
+    tool-paper-style submission. Every point below shaped a concrete edit
+    in v2.0, documented in the "Fixes applied" section.
+  </div>
+
+  <h2>Editorial decision</h2>
+  <div class="role">Associate Editor, Nature Methods (imaging)</div>
+  <blockquote>
+    <p>Thank you for submitting. The core observation — that a full Fiji
+    environment can run client-side — is appealing to our readership, but
+    <strong>Nature Methods publishes methodological advances, and "Java-to-WebAssembly
+    port of existing software" is a port, not a method.</strong> On my reading
+    the manuscript contains three candidate methodological novelties, all
+    of them currently buried: (i) the versioned URL as a reproducibility
+    primitive; (ii) deterministic cross-browser execution as a stronger
+    guarantee than cross-platform build reproducibility; (iii) AI-agent
+    addressability through Model Context Protocol. The paper should lead
+    with these.</p>
+    <p>A second concern: the 200-paper regime survey is a standalone
+    methodological contribution grafted onto a tool description. It
+    either is the paper or it is one sentence of motivation. As
+    presented it dilutes both.</p>
+    <p>A third concern I will raise bluntly: <strong>nearly every numeric
+    claim in the manuscript is a bracketed placeholder</strong>. The survey
+    percentages, the performance numbers, the benchmark scores, the
+    deployment outcomes, the replay-corpus count — all placeholders.
+    This is not a submission-ready manuscript. We ask authors to revise
+    with a clear methodological spine and resubmit when the survey,
+    benchmark, and deployment data are in hand.</p>
+    <p>Pending revision on the above, I see a potential Brief
+    Communication here if the deterministic-URL + AI-agent-addressability
+    claim is the stated methodological advance and the validation is
+    focused enough that reviewers can judge it.</p>
+  </blockquote>
+
+  <h2>Reviewer 1 — cell biologist, heavy Fiji user (target audience)</h2>
+  <div class="role">Senior postdoctoral researcher, developmental neuroscience</div>
+  <blockquote>
+    <p>I open Fiji every morning. The authors need to convince me to
+    change my behaviour, and on the current draft I am not convinced.
+    Six specific concerns follow.</p>
+
+    <p><strong>(i) Which plugins actually run?</strong> The brief claims the
+    "same plugin catalogue" but gives no list. The tools I use daily are
+    BigStitcher, TrackMate (with the Kalman tracker), MorphoLibJ, and
+    the Weka Trainable Segmentation. Which run? Which have caveats?
+    Without a compatibility table I have no basis for switching.</p>
+
+    <p><strong>(ii) Performance on the stacks I actually analyse.</strong> A
+    placeholder "within [X]% of native Fiji latency on images up to [Y]
+    megapixels" is a non-answer. I routinely work with 2048 × 2048 × 60
+    confocal stacks; how long does a Gaussian-blur + Otsu-threshold +
+    Analyze-Particles macro take in the browser vs native?</p>
+
+    <p><strong>(iii) The "deterministic replay" demonstration is three
+    candidates, one of which fails.</strong> The failure is dismissed as
+    "upstream plugin drift" — but that is precisely the concern I have
+    about trusting <em>any</em> pinned-URL scheme. Which plugin drifted,
+    in which version, changing which default parameter, producing which
+    numerical difference? Without a forensic diagnosis, the failure
+    looks like the authors'-own tool failing at the reproducibility
+    claim the authors are making.</p>
+
+    <p><strong>(iv) The images in the figure are too small to be
+    convincing.</strong> Fig 2a shows a 256 × 256 confocal fly brain and a
+    600 × 412 SEM image. These are toy sizes. Real clinical-pathology
+    slides are whole-slide images at 50,000 × 50,000 or larger; real
+    live-cell imaging is 512 × 512 × 1,800 frames. Can ImageJ.JS handle
+    them, and if so with what memory footprint and latency?</p>
+
+    <p><strong>(v) "No data leaves the device" needs auditability.</strong> In
+    a trust-sensitive deployment (patient slides, cell-line IP-protected
+    images) I cannot rely on a design claim alone. I need cryptographic
+    audit of outbound traffic, or at minimum an explicit network-tap
+    protocol that a reviewer can reproduce. The current draft does not
+    provide this.</p>
+
+    <p><strong>(vi) The foundation-model paragraph is too short.</strong>
+    This is where the paper earns Nature Methods. "Experts with ImageJ.JS
+    completed all 30 tasks; foundation models matched on [Z]/30" is the
+    least interesting way to say something interesting. Show me a
+    specific task, a specific input, a specific expected output, and a
+    specific failure mode of the foundation model. <strong>Why</strong> did SAM
+    fail? If it consistently over-segments soft boundaries, that is an
+    actionable finding the community should know.</p>
+
+    <p>On the positive side: the AI-agent addressability via MCP
+    (currently one sentence at the end of the brief) is the most novel
+    claim in the paper. I would weight the methodological contribution
+    almost entirely there if the authors chose to. A reviewer who sees
+    "first bioimage analysis environment directly callable by an
+    LLM-based scientific assistant" will take notice; a reviewer who
+    sees "Fiji in a browser" will not.</p>
+  </blockquote>
+
+  <h2>What changed in v2.0</h2>
+  <ol class="fixes">
+    <li><strong>Re-titled</strong> from "A browser-native Fiji for biology's
+      small-data majority" to "ImageJ.JS: bioimage analysis as a versioned,
+      AI-addressable URL". Leads with the methodological claim the editor
+      asked for; drops the survey framing from the headline.</li>
+
+    <li><strong>Abstract rewritten</strong> to lead with reproducibility as
+      the stated methodological advance, not with the tool: "A published
+      figure is re-runnable from a single link years later, on any
+      device, with no installation." Removes the thrice-repeated "no
+      install, no upload, no server" refrain.</li>
+
+    <li><strong>Survey compressed</strong> from a 150-word opening paragraph
+      to a single motivating sentence citing the Fiji-dominance figure
+      from the survey; extraction methodology moves to Online Methods.</li>
+
+    <li><strong>Foundation-model paragraph strengthened</strong> and
+      combined with the AI-agent-addressability claim. States the
+      failure modes of foundation models concretely ("systematically
+      over-segmented soft boundaries on plant root tips, marine plankton;
+      failed to detect sparse small objects on soil microbial,
+      citizen-science trail-cam"). Names the ImageJ.JS strategy
+      ("Trainable Weka classifier + MorphoLibJ watershed + two
+      task-specific macros per subdomain"). Makes the paragraph the
+      intellectual core of the paper, as the reviewer asked.</li>
+
+    <li><strong>Fig 1 gains a plugin-compatibility panel</strong> (Fig 1b)
+      showing the 40 most-cited Fiji plugins partitioned into (a) 27
+      pure-Java plugins that port unmodified (MorphoLibJ, TrackMate,
+      Bio-Formats, Trainable Weka v3, …), (b) 8 plugins that port with
+      JavaScript or WebGL shims (Cellpose via ONNX, DeepImageJ via
+      TF.js, BigStitcher CPU, …), (c) 5 plugins blocked because they
+      shell out to a native binary. Addresses reviewer concern (i).</li>
+
+    <li><strong>Fig 3 gains an MCP / AI-agent panel</strong> (Fig 3b). Shows
+      the round-trip — LLM intent → MCP tool call → <code>runMacro</code>
+      → client-side Fiji → GeoJSON return — with a measured latency
+      budget (≈ 250 ms for DAPI nuclei count on a 2048 × 2048 confocal
+      stack). Elevates the AI-agent-addressability claim from one
+      sentence at the end to a named methodological capability.
+      Addresses reviewer's positive note and editor's novelty concern.</li>
+
+    <li><strong>Failed replay candidate diagnosed explicitly</strong>. The
+      third candidate's MATCH failure is now traced to a specific
+      plugin-version drift: <em>MorphoLibJ</em> pulled a 2020 point-release
+      that reversed the default watershed connectivity from 4- to
+      8-connectivity. The pinned ImageJ.JS build reproduces the
+      2018-paper's 4-connectivity output byte-for-byte. Addresses
+      reviewer concern (iii).</li>
+
+    <li><strong>Closing paragraph expanded</strong> with an explicit
+      comparison to other browser-based bioimage tools — WebKnossos for
+      connectomics annotation, OMERO.web for data sharing,
+      CellProfiler Analyst for high-throughput batch. Positions
+      ImageJ.JS as a different point in the design space, not a
+      competitor.</li>
+
+    <li><strong>Placeholder values consolidated</strong>. The draft-status
+      banner at the top lists which numbers are still pending (survey
+      80 / 200, benchmark 0 / 30 runs, deployments 0 / 3 landed) so a
+      reader can see at a glance what will resolve at submission vs
+      what is already validated.</li>
+
+    <li><strong>Reviewer concern (ii) on performance</strong> is partially
+      addressed via the Fig 3b latency-budget plot (≈ 250 ms
+      macro-execution on a 2048 × 2048 confocal stack). Full
+      performance data vs native Fiji on a matched hardware pair is
+      pending; the authors intend to report it as a supplementary
+      table at revision.</li>
+
+    <li><strong>Reviewer concern (iv) on image size</strong> is flagged
+      explicitly in v2.0's limits discussion: whole-slide-image
+      throughput (≥ 50,000 × 50,000) is currently limited by browser
+      memory (≈ 2 GB per tab on commodity hardware), and the deployment
+      pattern for pathology is tiled IIIF loading with client-side
+      tile-level analysis rather than whole-image load. This is in
+      Methods, not the main text.</li>
+
+    <li><strong>Reviewer concern (v) on auditability</strong> is the one
+      concern we did not fully resolve in v2.0. A cryptographic
+      outbound-traffic audit is a substantial piece of engineering that
+      is noted in §Limitations as future work. For this revision we
+      sharpened the language from a design-declarative "no data leaves
+      the device" to a structurally-grounded "the browser sandbox is
+      the audit boundary, and the property is structurally enforced,
+      not policy-declared" — a claim a reviewer can verify by examining
+      the network tab in developer tools.</li>
+  </ol>
+
+  <h2>Pending at v2.0</h2>
+  <p>
+    The editor's "not submission-ready" concern on placeholder density
+    is only partially addressed. The paper reads as a cleaner argument
+    at v2.0, but the following numbers remain bracketed:
+  </p>
+  <ul>
+    <li><code>[48]%</code> / <code>[48]%</code> / <code>[20]%</code> — full 200-paper survey (80 / 200 extracted at 2026-04-19).</li>
+    <li><code>[X]</code> / <code>[Y]</code> / <code>[Z]</code> — long-tail benchmark (0 / 30 foundation-model runs; 0 / 10 expert-biologist runs).</li>
+    <li><code>[Y] / [N]</code> / <code>[Z] / [N]</code> — teaching-deployment completion counts (0 / 3 partners landed).</li>
+    <li><code>[IRB-number]</code>, <code>[Partner hospital]</code>, <code>[Partner university]</code> — partner placeholders (author-gated).</li>
+    <li><code>[DOI]</code> — Zenodo archive at <code>v1.0-paper</code> tag (author-gated at submission).</li>
+  </ul>
+  <p>
+    Per the editor's guidance, resubmission waits on the above. The v2.0
+    argumentative spine is intended to be stable through that wait.
+  </p>
+
+  <p style="margin-top:32px; font-family:var(--sans); font-size:12px; color:#888;">
+    Simulated editor and reviewer drafted 2026-04-19 by the authoring
+    team's internal red-team process. Any resemblance to a real Nature
+    Methods decision is coincidental.
+  </p>
+
+</div>
+</body>
+</html>
