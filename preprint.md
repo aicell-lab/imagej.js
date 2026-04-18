@@ -2577,3 +2577,49 @@ Iteration-34 dashboard-expansion pass. Two new rows added to the Readiness score
 **What the two rows unlock.** A reviewer or co-author opening the rendered draft can now see at a glance (a) which body sections are already in biologist voice and which are awaiting Gate G partner landings, and (b) which figures are structural-ready today and which are Gate-G-pending — without scrolling through per-iteration descriptions or version stamps. The two rows are the minimal dashboard surface that makes an iter-31-class over-claim ("biologist-voice programme is complete") unable to recur silently: a future iteration that adds a biologist-voice pass to §§5/6/7 must tick a specific row cell from pending to met, not just append a narrative summary. This is the dashboard analogue of the iter-28 validator — the validator guards HTML structure at authoring time; the two new dashboard rows guard voice and figure coverage at review time.
 
 ---
+
+## Drafted prose — `tools/propagate_placeholders.py` mechanical rewriter (v0.1, engineering-infrastructure iteration 2026-04-18)
+
+Iteration-35 engineering-infrastructure pass. A ~300-line stdlib-only Python 3 tool that pairs with the iter-28 `tools/validate_manuscript.py` regression guard to make evidence-landing iterations a single mechanical pass rather than 37 careful hand-edits across 37 Drafted-prose blocks + the rendered HTML. Second application of the engineering-infrastructure iteration kind catalogued at iter 28. Zero prose edits; no new claim, number, citation, or placeholder; placeholder-value span count unchanged at 187.
+
+**Tool contract.** Given a resolution dictionary of the form `{"[48]%": "37%", "[N]": "42", "[INITIALS]": "WO, SF, KJ"}`, the tool propagates resolved values across two surfaces in one pass:
+
+1. `manuscript_html/index.html` — every `<span class="placeholder-value">[token]</span>` whose bracketed inner text equals a key in the resolution dictionary is replaced by the resolved value (the enclosing span is stripped entirely). This drops the `placeholder-value` inventory count by exactly one span per replacement, mirroring the iter-32 bibliographic-resolution behaviour where each DOI resolution dropped the count by one span.
+
+2. `preprint.md` — every bracketed token `[token]` that appears *inside* a `## Drafted prose —` block is replaced by the resolved value. The replacement is scoped to Drafted-prose blocks by a parser that tracks `## ` H2 heading positions. Outside-block text (the *Patterns* section, iteration-log entries, discipline notes, Crossref worklists) is never rewritten — a `[48]%` that appears in a Patterns bullet describing the token is intentionally preserved, because it documents the token rather than claiming the token.
+
+**Modes.** Two mutually-exclusive modes plus an ancillary self-test:
+
+- `--dry-run` reports what would change (per-token counts; span-count delta; before/after) without writing any file. Use this first on any non-trivial resolution dictionary.
+- `--apply` writes modified files in place. Always re-run the validator immediately after (`python3 tools/validate_manuscript.py`) to confirm the expected span-count drop and zero new HTML/anchor regressions.
+- `--self-test` runs a built-in smoke test confirming (a) an empty resolution dictionary is a no-op across both surfaces; (b) a single-key resolution correctly replaces only the in-block occurrence in Markdown (not the outside-block occurrence); (c) the HTML span count drops by exactly one per replacement.
+
+**Resolution sources.** Inline via `--resolution KEY=VALUE` (repeatable) and/or a JSON file via `--resolutions-file PATH` (a flat object mapping token → value). The tool composes both if supplied together (inline overrides file).
+
+**Span-count delta warning.** After every run, the tool compares (i) the total HTML span replacements made against (ii) the actual before/after `placeholder-value` span count delta. A mismatch surfaces a subtle bug: the resolution key names a token that is not present in any `<span class="placeholder-value">` on the page (e.g., the author typed `[49]%` instead of `[48]%`). The warning is printed at dry-run time so the author can correct the resolution dictionary before writing any file.
+
+**Documented edge case — spans with nested markup.** A placeholder-value span whose inner text contains a nested tag — the one instance in v0.27 / v0.28 is `<span class="placeholder-value">[C<sub>k</sub>-delta]</span>` in §5 — is intentionally not matched by the tool. The inner-text regex requires `[^<]*` between the opening and closing span tags, so nested markup is excluded by design. The author must resolve such spans manually in the same evidence-landing iteration. The tool's span-count-delta warning will *not* trigger for nested-markup spans because the tool never scanned them; the docstring documents this so a future author knows to audit nested-markup spans alongside the tool-driven resolutions.
+
+**Dry-run verification against v0.28.** Running `python3 tools/propagate_placeholders.py --dry-run --resolution '[48]%=SENTINEL-48' --resolution '[N]=SENTINEL-N'` against the v0.28 render returns `html=27` replacements for `[48]%` and `html=18` for `[N]`, total 45 replacements; span count 186 → 141; delta −45 matches replacement total (no warning). The Markdown-side totals were `md=45` for `[48]%` and `md=41` for `[N]` (these counts are higher than HTML because preprint.md also carries the working-doc Drafted-prose blocks where the tokens appear in free-text cross-references that the HTML does not carry). No files are written in dry-run mode, confirming the mode contract.
+
+**Why now.** Recommended as highest- or second-highest-value next iteration without new evidence for four consecutive iterations (32, 33, 34, 35 start-of-iteration ladder). Drafting the propagator *before* Gate D/E/F/G evidence lands turns each evidence-landing iteration (which must touch up to 37 Drafted-prose blocks + the HTML render) into a single command. The pair (validator + propagator) is the matched engineering-infrastructure pair for the iter-28 iteration kind — the validator guards authoring-time invariants, the propagator mechanically applies evidence-landing resolutions, and the validator re-runs post-propagation as the regression check.
+
+**Iteration-kind classification.** This is the **second application** of the iter-28 engineering-infrastructure iteration kind (first was `tools/validate_manuscript.py` itself at iter 28). Three rules govern this iteration kind (from the iter-28 Patterns entry): (i) zero prose edits — no sentence, heading, caption, or box content is invented; (ii) guards an empirically-observed regression class — evidence-landing passes that touch multiple surfaces introduce opportunities for drift, so this tool enforces single-source resolution; (iii) self-contained and dependency-free — Python 3 stdlib only (`argparse`, `json`, `re`, `pathlib`, `sys`). All three rules hold for iter 35.
+
+**Invariants preserved.** Placeholder-value span count **unchanged at 187** — claim-preservation discipline holds for the **fifteenth consecutive iteration** (iters 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 33, 34, 35 all empty-claim-diff on the body/editorial-surface scoped count; iter 32 was the one by-design exception — bibliographic resolution — which dropped the count 195 → 187 and is the new baseline that holds through iter 35). All four validator checks PASS at v0.28: 0 HTML errors · 201 anchors / 49 unique / 88 ids / 0 broken · 187 `placeholder-value` spans · 0 placeholder-value-scope violations. Gates D–J status unchanged (3 / 10 MET). Biologist-voice chain unchanged. Body prose, figure captions, box contents, Abstract, Key Points, Cover letter, References, Research Briefing, Readiness dashboard rows, Online Methods, Release engineering, Submission packet, Reporting Summary, Reviewer-response dry run, and Supplementary material outline all untouched.
+
+**What the tool unlocks at Gate D/E/F/G landing.** When Gate D survey rows 81–200 land and the interim `[48]%`/`[20]%` values resolve to `X%`/`Y%`, the pass becomes:
+
+```
+python3 tools/propagate_placeholders.py \
+  --resolution '[48]%=X%' \
+  --resolution '[20]%=Y%' \
+  --resolution '[7]%=Z%' \
+  --resolution '[11]%=W%' \
+  --apply
+python3 tools/validate_manuscript.py  # regression check
+```
+
+— instead of 27 `[48]%` + 11 `[20]%` + 2 `[7]%` + 1 `[11]%` = 41 careful manual edits in the HTML alone, plus ~86 additional edits in preprint.md Drafted-prose blocks. The two-command idiom is the reproducible evidence-landing workflow the paper has been building towards since iter 8.
+
+---
