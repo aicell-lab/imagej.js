@@ -16,13 +16,13 @@ The majority of biology is small-data and human-driven; ImageJ.JS is the tool bu
 
 ---
 
-## Title
+## Title (locked 2026-04-18)
 
 **"Small data, human hands: ImageJ.JS as a browser-native tool for the parts of biology where humans still matter most"**
 
-Tightened variants to consider before locking finally:
-- *"Small data and human judgement: ImageJ.JS for the majority of biology that deep learning cannot yet serve"*
-- *"The biologist's browser: ImageJ.JS for small-data, human-centred bioimage analysis in the age of AI"*
+*Locked against the Cover-letter v0.1 usage (preprint.md §"Drafted prose — Cover letter", 2026-04-18). Rationale: the title must name the regime (*"small data"*), the human-centred premise (*"human hands"*), and the tool (*"ImageJ.JS"*) within the first 11 words — all three are load-bearing for the paper, and no single omission preserves the argument. The retired variants committed different errors: *"deep learning cannot yet serve"* reads as combative against AI and collides with the §8 "regime, not ranking" stance; *"in the age of AI"* reads as an op-ed move and promotes a framing (AI as temporal backdrop) the paper explicitly declines in §8 and §9. The locked title is the one that already circulated in the Cover letter, so no re-sweep of that document is required.*
+
+*Consistency sweep (2026-04-18) against Abstract v0.5, §1, §3, §8, §9, §10, Cover letter v0.1: none of the seven drafted-prose blocks contains phrasing that implicitly favours a retired variant. "Small data" appears throughout; "biologist's browser" appears nowhere; "age of AI" appears nowhere; "deep learning cannot yet serve" appears nowhere. The tagline-level phrase "small data, human hands" is not yet echoed in the Abstract or §1 opening; echoing it verbatim in the Abstract's first sentence is deliberately NOT done at v0.5 — the Abstract's evidence-density matters more than branding — but the phrase is available as a section-header or callout device at figure-caption time.*
 
 ---
 
@@ -355,3 +355,65 @@ Three design decisions in ImageJ.JS are re-readable as proposals for what such c
 A second implication concerns the boundary between human-centred and agent-driven image analysis addressed in §8. The emerging agentic-bioimage literature is exactly the category of research that stands to benefit most from a well-served human-centred substrate: an agent that composes ImageJ.JS through the Hypha-RPC and MCP interfaces of §10 inherits a verifiable, user-auditable execution environment, a client-side data-governance posture, and a decade-of-Fiji macro corpus as its tool library. A companion paper (Ouyang et al., in preparation) develops this direction. The point for the present Discussion is that first-class tooling for the small-data, human-centred regime is not a retreat from, but a prerequisite for, agentic bioimage analysis that takes its data-governance and reproducibility responsibilities seriously. Here, too, "regime, not ranking" is the right frame; §9 simply notes that the two regimes share a substrate whose maintenance we are arguing for.
 
 The final implication is that regime measurement itself is a methodology contribution. The 200-paper survey (§2), the 30-task long-tail benchmark (§2, §8), and the [N]-analysis replay corpus (§4) were undertaken to warrant the design choices of this tool; each is re-usable beyond it. A subsequent tool-paper author claiming to serve the small-data regime can reproduce and extend these instruments, falsify or refine the [48]% / [48]% / [20]% figures, and present their own regime-fit and regime-correctness evidence on the same axes. We would regard widespread adoption of this evaluative vocabulary — regime fit, regime correctness, composition across regimes — as the most consequential outcome of this paper. The tool is finite; the regime it serves is large; and the methodology community is, we believe, ready to read a tool paper whose contribution is not an algorithm but a commitment.
+
+---
+
+## Drafted prose — References (v0.1, 2026-04-18)
+
+*First consolidated reference list covering every citation that appears in the seven drafted-prose blocks (Abstract v0.5, §1 Introduction, §3 Design principles, §8 Limits-and-complementarity, §9 Discussion implications, §10 Availability, Cover letter). Entries are grouped by function for author-team review: (A) empirical anchors for the small-data regime; (B) classical/foundational ImageJ and Fiji; (C) deep-learning methods invoked in §8; (D) agentic-bioimage landscape invoked in §8/§9; (E) runtime substrate and web-platform primitives cited as design-mechanism warrants in §3. Within each group, entries are alphabetical by first author. Author initials, journal volume/issue/page, and DOI fields are left as [DOI] / [VOL:PAGES] placeholders where the present author team has not yet re-verified the metadata against the journal record; no metadata has been invented. Entries marked "self" are written and owned by the present authors. Companion paper (Ouyang et al., in preparation) is listed without venue. This section will grow as §§2, 4, 5, 6, 7 land their prose; at present it spans only the drafted prose's citations, per the no-un-sourced-claim discipline.*
+
+### (A) Empirical anchors for the small-data regime
+
+- **Lord et al. 2024.** Lord SJ, Velle KB, Mullins RD, Fritz-Laylin LK. *SuperPlots: Communicating reproducibility and variability in cell biology.* Journal of Cell Biology [YEAR/VOLUME CONFIRMED, VOL:PAGES, DOI]. Cited in Abstract v0.5, §1 (opening anchor), §8 (boundary discussion), Cover letter. Source of the 13–27 cells per condition × 3 biological replicates anchor.
+- **Ma et al. 2024.** Ma J, He Y, Li F, Han L, You C, Wang B. *Segment anything in medical images.* Nature Communications [YEAR/VOL:PAGES, DOI]. Cited in §1, §8. Empirical warrant for foundation-model underperformance on out-of-distribution biomedical imagery.
+- **Archit et al. 2024.** Archit A, Freckmann L, Nair S, et al. *Segment anything for microscopy.* Nature Methods [YEAR/VOL:PAGES, DOI]. Cited in §1, §8. Independent empirical corroboration of the long-tail failure pattern.
+
+### (B) Classical / foundational ImageJ and Fiji
+
+- **Schneider et al. 2012.** Schneider CA, Rasband WS, Eliceiri KW. *NIH Image to ImageJ: 25 years of image analysis.* Nature Methods 9:671–675. Cited in §1. The ImageJ substrate reference.
+- **Schindelin et al. 2012.** Schindelin J, Arganda-Carreras I, Frise E, et al. *Fiji: an open-source platform for biological-image analysis.* Nature Methods 9:676–682. Cited in §1. The Fiji substrate reference.
+- **MRI Wound Healing (2020).** BIOP-EPFL and CNRS MRI. Wound Healing Tool macro and self-test bundle. figshare / dev.mri.cnrs.fr [DOI]. Cited in §3 (Find-Edges drift example) and §4 (replay report). Not a journal citation; listed in §10 Availability as a replayed-corpus entry.
+
+### (C) Deep-learning methods invoked in §8
+
+- **Kirillov et al. 2023.** Kirillov A, Mintun E, Ravi N, et al. *Segment Anything.* ICCV 2023 [DOI/arXiv:2304.02643]. Cited in §1, §8 (SAM benchmark entry).
+- **Stringer & Pachitariu 2025.** Stringer C, Pachitariu M. *Cellpose3: generalizable and improved cellular segmentation.* Nature Methods [VOL:PAGES, DOI]. Cited in §1, §8 (Cellpose-generalist benchmark entry). Verify that "2025" refers to the version of record cited in the benchmark; if the cited code version is a 2024 Cellpose 2/2.x release, update the year here and in the prose together.
+- **Schmidt et al. 2018.** Schmidt U, Weigert M, Broaddus C, Myers G. *Cell Detection with Star-convex Polygons.* MICCAI 2018 [DOI/arXiv:1806.03535]. Cited in §1, §8 (StarDist-versatile benchmark entry).
+- **Israel et al. 2025.** Israel U, Marks M, Dilip R, et al. *A foundation model for cell segmentation.* Nature Methods [VOL:PAGES, DOI]. Cited in §1, §8 (CellSAM benchmark entry; also cited as the source of the self-reported limitation on morphologically distant cell lines).
+- **Gómez-de-Mariscal et al. 2021.** Gómez-de-Mariscal E, García-López-de-Haro C, Ouyang W, et al. *DeepImageJ: A user-friendly environment to run deep learning models in ImageJ.* Nature Methods 18:1192–1195 [DOI]. Cited in §8. Note: the second-surname form "de-Mariscal" is the preferred rendering used by the author on the v-of-record; keep as-is.
+
+### (D) Agentic-bioimage landscape invoked in §8/§9
+
+- **Royer et al. 2024.** Royer LA, et al. *Omega — LLM-driven image analysis for napari.* Nature Methods [VOL:PAGES, DOI]. Cited in §8. First entry of the agentic-bioimage landscape paragraph.
+- **napari-mcp (2025).** Contributors (name on first release). *napari-mcp: Model Context Protocol server for napari.* GitHub repository + release tag [URL, commit hash]. Cited in §8. Not a journal article; list as a software/release reference at submission time.
+- **BioImage-Agent (2026).** Authors [TO VERIFY]. *BioImage-Agent: specialised agent tooling for bioimage visualisation.* arXiv [arXiv-id, DOI]. Cited in §8. arXiv-only at present; upgrade to venue reference if and when the paper is formally published before submission.
+- **Chen et al. 2026.** Chen [INITIALS], et al. *CellVoyager: autonomous-agent methodology for single-cell RNA-seq analysis.* Nature Methods [VOL:PAGES, DOI]. Cited in §8. Verify that the work is described as targeting scRNA-seq rather than bioimage analysis before the final draft; the present prose treats it as a parallel-regime agentic methodology, not as a direct competitor.
+- **Ouyang et al., in preparation.** Ouyang W, et al. *[Companion paper on agent-facing use of ImageJ.JS / bioimage-analysis agents].* In preparation, 2026. Self. Cited in §8, §9, Cover letter. Listed without venue; update at submission of the present paper if the companion has been submitted or preprinted by then.
+
+### (E) Runtime substrate and web-platform primitives
+
+- **Leaning Technologies 2025.** Leaning Technologies Ltd. *CheerpJ 4: A WebAssembly JVM for legacy Java applications.* Product release / technical documentation [URL, archived snapshot]. Cited in §3. Software reference, not a peer-reviewed article; list as a dated software release with archive URL at submission time. The pinned CheerpJ version used for the paper's reproducibility claims is recorded in the `v1.0-paper` git tag (see §10).
+- **WICG 2024.** Web Incubator Community Group. *File System Access API.* W3C editor's draft [URL, date-accessed]. Cited in §3. Web-platform standard; list the editor's draft URL and the accessed date at submission.
+
+### Cross-reference map (for the author team)
+
+| Citation | Appears in |
+|---|---|
+| Lord et al. 2024 | Abstract, §1, §8, Cover letter |
+| Schneider 2012 / Schindelin 2012 | §1 |
+| Kirillov 2023 | §1, §8 |
+| Stringer & Pachitariu 2025 | §1, §8 |
+| Schmidt 2018 | §1, §8 |
+| Israel 2025 | §1, §8 |
+| Gómez-de-Mariscal 2021 | §8 |
+| Ma 2024 / Archit 2024 | §1, §8 |
+| Royer 2024 | §8 |
+| napari-mcp 2025 | §8 |
+| BioImage-Agent 2026 | §8 |
+| Chen 2026 | §8 |
+| Ouyang et al., in preparation | §8, §9, Cover letter |
+| MRI Wound Healing 2020 | §3, §4, §10 |
+| CheerpJ (Leaning Tech 2025) | §3, §10 |
+| File System Access API (WICG 2024) | §3 |
+
+*Per the placeholder-propagation discipline: when any of the above references is finalised (DOI verified, year-of-record confirmed, or the in-preparation companion is preprinted), update both the entry in this section and the in-prose citation form in the corresponding drafted-prose block in one pass. Do not let a reference upgrade here while the prose still reads "in preparation" — that is exactly the cross-document drift the consistency pass protects against.*

@@ -78,6 +78,34 @@
   not rehearsed against it. AI stays contained to §8 — §9 mentions agentic
   bioimage only to note that the human-centred substrate is a prerequisite
   for agentic work that takes data-governance seriously; no new AI claim.
+- **Title-lock discipline (2026-04-18).** The title is now locked in place at
+  `preprint.md §"Title (locked 2026-04-18)"`. Two rules follow: (i) a retired
+  title variant must not be re-introduced by a future prose pass even when it
+  reads better in isolation — the lock is cross-document scaffolding; (ii) any
+  re-lock requires a full sweep of Abstract / §1 / §3 / §8 / §9 / §10 / Cover
+  letter for phrases that would implicitly favour the new variant, BEFORE the
+  lock is changed. The lock block itself records the rationale so that future
+  iterations (or reviewers) can see *why* the retired variants were retired,
+  not just *that* they were. Do not delete that rationale block during
+  submission-pass condensation — it is one of the few places in the working
+  doc where editorial reasoning is preserved.
+- **No invented bibliographic metadata.** The References v0.1 block
+  (2026-04-18) enforces a hard rule: if a journal volume, page range, or DOI
+  has not been verified against the journal record, it is written as
+  `[VOL:PAGES, DOI]` or `[DOI]`, not guessed. Inventing DOIs or volume numbers
+  — even confidently — is the single highest-risk source of bibliographic
+  corruption in a late submission pass; reviewers and copy editors will
+  catch invented metadata and it reads as sloppy. Any future References
+  edit (by a new iteration or a human co-author) must preserve this rule:
+  if you cannot verify, leave the placeholder.
+- **Reference cross-reference map is load-bearing.** The References v0.1
+  block ends with a table mapping each citation to every drafted-prose block
+  it appears in. This is not documentation — it is the instrument that
+  prevents the canonical failure mode of multi-section prose: a citation
+  gets renamed in one section ("Stringer 2025" → "Cellpose3") while three
+  other sections keep the old form. When a reference is finalised, update
+  both the References entry AND every row of the map AND the in-prose
+  citation in each referenced block, in one pass. Do not let the map drift.
 
 ---
 
@@ -540,4 +568,138 @@
   must be preserved in any future edit pass. If a future iteration is
   tempted to "balance" §1 or §3 with an AI paragraph, the answer is no:
   containment is load-bearing.
+---
+
+## 2026-04-18 — Iteration 7: title lock + consistency sweep + References v0.1
+
+### What was implemented
+
+- **Title locked** at `preprint.md §"Title (locked 2026-04-18)"`. Candidate 1
+  ("Small data, human hands: ImageJ.JS as a browser-native tool for the parts
+  of biology where humans still matter most") retained — the variant the
+  Cover letter v0.1 already uses. The two retired variants are removed from
+  the working doc, with rationale recorded in the same block: variant 2
+  ("deep learning cannot yet serve") was combative and collided with §8's
+  "regime, not ranking" stance; variant 3 ("in the age of AI") promoted a
+  framing §8 and §9 explicitly decline. The lock is cross-document
+  scaffolding — once locked, re-lock requires a re-sweep of all drafted
+  prose, not an edit in place.
+- **Consistency sweep** across Abstract v0.5, §1, §3, §8, §9, §10, Cover
+  letter. Searched for phrasing that would implicitly favour a retired
+  variant ("biologist's browser", "age of AI", "deep learning cannot yet
+  serve"). Zero occurrences in any drafted-prose block. The tagline
+  "small data, human hands" is not yet echoed verbatim in the Abstract
+  or §1 opening — deliberately — and is available as a section-header or
+  figure-caption device at future drafting passes. Finding recorded in
+  the Title-lock block so that a future edit pass can re-check in one place.
+- **References v0.1 drafted** at `preprint.md §"Drafted prose — References
+  (v0.1, 2026-04-18)"`. Consolidates every citation used across the seven
+  drafted-prose blocks, grouped by function for author-team review:
+  (A) empirical anchors — Lord 2024, Ma 2024, Archit 2024;
+  (B) classical ImageJ/Fiji — Schneider 2012, Schindelin 2012, MRI 2020;
+  (C) deep-learning methods — Kirillov 2023 (SAM), Stringer & Pachitariu
+  2025 (Cellpose), Schmidt 2018 (StarDist), Israel 2025 (CellSAM),
+  Gómez-de-Mariscal 2021 (deepImageJ);
+  (D) agentic-bioimage — Royer 2024 (Omega), napari-mcp (2025),
+  BioImage-Agent (2026), Chen 2026 (CellVoyager), Ouyang et al. (in
+  preparation, companion);
+  (E) runtime substrate — CheerpJ 4 (Leaning Technologies 2025),
+  File System Access API (WICG 2024).
+- References entries deliberately use `[DOI]` / `[VOL:PAGES]` placeholders
+  wherever the present author team has not re-verified metadata against
+  the journal record. No volume, page range, or DOI has been invented.
+- References block ends with a **cross-reference map** — a table listing
+  every citation and every drafted-prose block it appears in. This is the
+  instrument that prevents the canonical "citation renamed in one section,
+  stale in three others" failure. Any future reference upgrade must update
+  all three surfaces (entry, map row, every in-prose citation) in a single
+  pass.
+- Three new patterns appended at the top of the Patterns block:
+  (a) title-lock discipline (cross-document scaffolding, re-lock requires
+  re-sweep, retain rationale through submission-pass condensation),
+  (b) no-invented-bibliographic-metadata rule,
+  (c) reference cross-reference map is load-bearing.
+
+### Files changed
+
+- `preprint.md` — edited §Title (candidate-2 and candidate-3 removed,
+  rationale + sweep-results block added); appended References v0.1
+  drafted-prose block at the bottom. File is now 419 lines / ~10,600 words.
+  No other drafted-prose content modified.
+- `.svamp/d9a68491-c46b-4e04-9b30-6294d0bbf071/ralph-progress.md` —
+  appended this entry; added three pattern bullets at the top of the
+  Patterns block.
+
+### Learnings for future iterations
+
+- **The seven drafted-prose blocks are now citation-consistent at v0.1.**
+  Every citation in the drafts resolves to an entry in References v0.1;
+  every References entry maps to a specific drafted-prose block via the
+  cross-reference table. This is the single strongest consistency
+  guarantee the working doc has had at any point. Future prose additions
+  (when §§2, 4, 5, 6, 7 evidence lands) must update References and the
+  map in the same iteration that adds the prose — not as a follow-up
+  pass. A follow-up pass is where drift begins.
+- **Highest-value next iteration without new evidence: Figure-slot
+  commitment (v0.1).** Six figures are referenced across the drafts
+  (Fig 1: long-tail distribution; Fig 2: needs → features;
+  Fig 3: replay matrix; Fig 4: teaching enrolments; Fig 5: clinical panel;
+  Fig 6: collaboration vignette + Supp Vid 1), but no figure captions
+  are drafted. Nature Methods reviewers read figures before text. A
+  v0.1 pass should NOT draft finalised captions (most are
+  evidence-gated) but SHOULD (i) commit each figure to a specific
+  evidence source in the existing corpora, (ii) state the claim each
+  figure makes in one sentence, (iii) for Fig 1 and Fig 2 (which are
+  NOT evidence-gated at the structure level) draft a full caption
+  with placeholders for the numerical values, and (iv) record the
+  Brief Communication vs full Article trade-off (Brief Comm allows
+  3 main figures; the current spine implies 6 main + supplementary
+  movie, which implies the full Article path). This is the natural
+  next prose draft in the sequence §1 → §3 → §8 → Cover → §10 → §9 →
+  References → Figures, and it does not require new evidence.
+- **Second-highest: supplementary-material outline.** Brief Comm word
+  limit (~1500 main-text words) + 3-figure limit will force choices.
+  The current body draft (sum of §1 + §3 + §8 + §9 + §10 prose) is
+  much longer than 1500 words. A single iteration mapping which
+  paragraphs move to Supplementary Methods, which collapse to one
+  sentence + supplementary pointer, and which stay in the main body,
+  should precede any final condensation pass. Do this AFTER Figure-slot
+  commitment, so the figure captions can be cross-referenced against
+  the mapping decision.
+- **Third-highest: placeholder-propagation script.** Seven drafted
+  blocks + the new References cross-reference map share a placeholder
+  set: [48]%, [48]%, [20]%, [X], [Y], [Z], [N], [Y1–Y2], [DAU], [YYYY],
+  [URL], [URL/github], [LICENCE], [DOI], [VOL:PAGES]. When evidence
+  lands, a small regex-over-file tool that (a) lists every bracketed
+  placeholder and the sections that reference it, (b) flags any
+  inconsistency, (c) supports a single-pass resolve-everywhere operation
+  is the right engineering primitive. Running it manually each
+  iteration risks exactly the kind of drift the cross-reference map
+  protects against. Plan this as a dedicated engineering iteration
+  before the first evidence-landing iteration.
+- **DO NOT add entries to the References section that are not yet cited
+  in drafted prose.** The temptation to add "expected" references
+  (napari, CellProfiler, OMERO, OME-Zarr) is strong; the discipline
+  that kept v0.1 clean is that References is a *consequence* of drafted
+  prose, not a *preparation* for it. When §§2, 4, 5, 6, 7 land and
+  cite new sources, those sources enter References at the same
+  iteration. Pre-populating References with plausible but uncited
+  entries re-introduces the exact class of drift the map prevents.
+- **DO NOT invent DOIs, volumes, or page ranges to fill placeholders.**
+  Easier said in a Pattern bullet; harder to resist when a prose
+  sentence reads better with a DOI-shaped string. If unsure, leave
+  `[DOI]`. A single invented DOI found by a copy editor or referee
+  discredits the entire bibliography. The pattern bullet is there;
+  re-reading it before any References edit pass is the safeguard.
+- **Working doc is now 419 lines / ~10,600 words.** Still well under
+  any realistic file size concern, but the ratio of scaffolding to
+  drafted prose is starting to tip toward scaffolding. This is fine
+  for now — scaffolding is how the paper's argument stays coherent —
+  but a future pass should consider moving retired framing sections
+  (e.g., the §8 Discussion placeholder paragraph at `preprint.md:245`,
+  which is now superseded by the §8 v0.1 drafted prose) to a
+  `preprint_archive.md` file so that the working doc reflects only
+  load-bearing material. Do this AFTER submission, not before — the
+  scaffolding is what a new contributor (human or agent) uses to
+  understand the paper's framing rationale.
 ---
