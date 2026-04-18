@@ -2695,3 +2695,47 @@ A second implication concerns the boundary between human-centred and agent-drive
 The final implication is that regime measurement itself is a methodology contribution, and arguably the most reusable one this paper offers. The 200-paper survey (§2), the 30-task long-tail benchmark (§§2, 8), and the [N]-analysis replay corpus (§4) were built to warrant the design choices of *this* tool — but each instrument is re-usable past it. A subsequent author who claims to serve the small-data regime can reproduce and extend these instruments, falsify or refine the [48]% / [48]% / [20]% figures against a fresh sample of the literature, and present their own regime-fit and regime-correctness evidence on the same three axes. We would regard widespread adoption of this evaluative vocabulary — regime fit, regime correctness, composition across regimes — as the most consequential outcome of the paper. The tool is finite; the regime it serves is large; the readership the methodology community is failing to reach is biologists in their own labs, classrooms, and clinics. That readership is, we believe, ready to read a tool paper whose contribution is not an algorithm but a commitment.
 
 ---
+
+## Drafted prose — Per-gate landing timeline row (v0.1, dashboard-expansion iter 38 2026-04-18)
+
+A new row was added to the Readiness scoreboard table in `manuscript_html/index.html` that renders per-gate landing history at a glance. This is the fourth application of the tenth iteration kind (*dashboard-expansion iteration*, iter-34 origin) and a sibling of the iter-34 biologist-voice per-§ checklist row and iter-34 figure-coverage row.
+
+### What the row reports
+
+The row has three content cells:
+
+1. **Status column** — a sequence of chips, one per gate, with iteration timestamps where the gate has moved:
+    - **Gate A** (prose coverage): 11 surface additions across iters 16–37 — iter 16 initial 17 / 17 blocks, iter 18 §§5/6/7 structural-commitment promotions, iter 19 §4 structural, iter 20 Box 1, iter 21 Box 2, iter 22 Key Points, iter 26 Figure slots v0.2, iter 27 §2 back-append, iter 31 §4 back-append, iter 33 Box 1/2 · Fig schematics, iter 37 §9 v0.2 back-append.
+    - **Gate B** (dry-run defensibility): 10 / 12 answerable, stable since iter 8 baseline.
+    - **Gate C** (submission packet non-regression): 4 / 4 ready + 4 author-gated + 0 evidence-gated, stable since iter 8.
+    - **Gate D** (regime survey 200 rows + 3 IRR): 80 / 200 rows + 0 / 3 IRR, no per-iteration progress (awaits rows 81–200 extraction + IRR κ ≥ 0.7 / ICC ≥ 0.8).
+    - **Gate E** (long-tail benchmark): 30 / 30 tasks specified + 0 / 30 foundation-model runs + 0 / 30 human+ImageJ.JS runs, no per-iteration progress.
+    - **Gate F** (replay corpus ≥ 15): 3 / [N] Week-1 pilot candidates, no per-iteration progress.
+    - **Gate G** (partner landings ≥ 1 teaching / clinical / collaboration): 0 / 3 partners signed, no per-iteration progress.
+    - **Gate H** (references bibliographic verification): 0 → 8 → 10 / 15 refs Crossref-verified across iters 32 + 36 (two bibliographic-resolution passes; iter 36 driven by `tools/recheck_references.py`).
+    - **Gate I** (author sign-off): no per-iteration progress (awaits author-team CRediT + competing-interests + acknowledgements + funding-ID + suggested-reviewer sign-off at `v1.0-paper` tag).
+    - **Gate J** (placeholder resolution): 3 repository-self-knowable labels resolved iter 15, then 195 → 187 `placeholder-value` spans iter 32 (bibliographic resolution drop), then 187 → 185 iter 36 (second bibliographic resolution drop) — net −10 spans across 3 iterations.
+
+2. **Description column** — a one-paragraph narrative: three gates (A, H, J) move per-iteration; two (B, C) are stable at their iter-8 baseline; five (D, E, F, G, I) are evidence- or author-gated and await a single landing pass each. On Gate G landing, a thirteenth biologist-voice pass re-voices §§5/6/7 with concrete partner vignettes (the per-§ checklist row's 3 / 8 pending chips tick to 8 / 8 met in the same iteration).
+
+3. **Source column** — per-iteration `ralph-progress.md` entries iters 15, 16, 18–22, 26, 27, 31–37; References-verification scoreboard row; Placeholder inventory scoreboard row; Go/no-go submission gates table (`h3` gains `id="go-no-go"` in the iter-38 pass so the hyperlink resolves; total defined ids 89 → 90).
+
+### Why this iteration kind
+
+The iter-34 per-§ biologist-voice row showed *what* was biologist-voiced but not *when*; the iter-34 per-figure coverage row showed which figures were structural-ready but not when they landed. Neither row surfaces the iteration ↔ gate mapping a reviewer would use to ask "how often has the paper moved any given gate?" The iter-38 per-gate landing timeline row closes both gaps by making three patterns legible at a glance:
+
+- Gate A prose-coverage has moved 11 times across 22 iterations — a cadence of ~1 structural addition every 2 iterations — reflecting a paper in a mature iteration regime where structural additions are modest, targeted, and compatible with the claim-preservation discipline.
+- Gate H and Gate J move together (each bibliographic resolution drops one `placeholder-value` span). The pattern forecasts the submission-time Gate-H closure: when the remaining 5 author-/evidence-gated references resolve (at submission time for URL / preprint / product references; at partner signoff for the figshare reference), Gate H is 15 / 15 and the `placeholder-value` span count drops by a further 5 to 180. Since `ref-ouyangcompanion` already has no `placeholder-value` span, it is not counted in the 5-remaining.
+- Gates D, E, F, G, I are stable at their pre-iter-38 values and will only move when external evidence or author-team action lands. A reviewer who expects iteration-driven progress on these five gates should see from the timeline that iteration work has reached its legitimate ceiling and the remaining progress is evidence- or author-gated.
+
+### Invariants preserved
+
+- **Three dashboard-expansion rules hold**: (i) zero prose edits — no body prose, figure caption, box content, Key Points, Abstract, Cover letter, or Research Briefing is touched; (ii) rephrasing only — every chip sources from an existing scoreboard row, per-iteration progress entry, or Go/no-go gates table; (iii) closes a visibility gap identified by a prior iteration.
+- **Claim-preservation discipline**: 185 `placeholder-value` spans (unchanged from v0.30). Seventeenth consecutive empty-claim-diff iteration (iters 19–37 all empty-claim-diff on body / editorial-surface scoped count except iter 32 and iter 36 which were by-design bibliographic-resolution drops; iter 38 preserves the 185-span baseline).
+- **Validator PASS** at v0.31 via `python3 tools/validate_manuscript.py`: 0 HTML errors · 224 anchors / 50 unique / 90 ids / 0 broken (+1 id from `go-no-go`) · 185 `placeholder-value` spans · 0 scope violations.
+
+### What this row unlocks
+
+A future *chain-of-voice audit iteration* — flagged as a potential iteration kind in the iter-37 learnings — can cross-reference the per-§ biologist-voice row, the per-figure coverage row, and the per-gate landing timeline row to test every chain-of-voice summary claim in the article-meta dd / footer div / readiness banner against actual rendered-surface state. The three rows together define the dashboard coverage set the validator guards at HTML structure level.
+
+---
