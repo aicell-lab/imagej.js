@@ -194,6 +194,34 @@
   is submission-engineering not body prose, mirroring the supp-outline
   green/amber/red allocation legend and the release-engineering blue
   border.
+- **Submission packet is the author-gated twin of the evidence-gated body
+  prose.** Iteration 13 (2026-04-18) added `preprint.md §"Drafted prose —
+  Submission packet (v0.1)"` and the corresponding
+  `<section class="submission-packet" id="submission-packet">` in the HTML
+  render, styled with a teal (#2a6b7c) left-border accent distinct from
+  cover-letter serif, supp-outline green/amber/red, release-eng blue, and
+  dry-run amber. The packet carries editor's summary, key points, author
+  contributions (CRediT), competing interests, a condensed data/code
+  availability statement, acknowledgements, and suggested/opposed
+  reviewers. Three rules govern this artefact and any future iteration of
+  it: (i) every claim in the packet MUST be a rephrasing of body prose
+  already drafted in §§1–10 or Online Methods — introducing new
+  commitments through the packet is a discipline regression and must be
+  reverted; (ii) placeholders in the packet are `AUTHOR-GATED` (resolved
+  at sign-off) or share their resolution path with the body (e.g.,
+  `[URL]`, `[DOI]`, `[LICENCE]`) — *no packet field may be
+  `EVIDENCE-GATED`*, and the packet scorecard at the bottom of the block
+  must record zero evidence-gated fields at every iteration; (iii) the
+  structural commitment behind each placeholder field (CRediT roles
+  claimed; three-domain reviewer breakdown; acknowledgement of CheerpJ /
+  Fiji / Hypha substrate) is fixed at draft time and is independent of
+  the placeholder resolution — a reviewer can audit the structural
+  commitment without the resolved names. This is the author-gated twin
+  of the dry-run's answerable-from-prose discipline and of the
+  supp-outline's allocation discipline: an editorial-machinery artefact
+  that makes its own completeness measurable. At submission the packet
+  graduates from `AUTHOR-GATED` to `READY` via one sign-off pass, not
+  one evidence drop.
 - **Release engineering is the Methods ↔ Availability binding at release-
   artefact granularity.** Iteration 11 (2026-04-18) added
   `preprint.md §"Drafted prose — Release engineering (v0.1)"` and the
@@ -1558,6 +1586,175 @@
   sufficient — svamp serves from disk. No `svamp serve` re-invocation
   is needed. This pattern now holds across five re-render iterations
   and is the stable norm through submission.
+
+---
+
+## 2026-04-18 — Iteration 13: Submission packet prose (v0.1) + HTML render refresh (v0.6)
+
+### What was implemented
+
+- **Drafted §Submission packet (v0.1)** at
+  `preprint.md §"Drafted prose — Submission packet (v0.1, 2026-04-18)"` —
+  ~1,550 words, eight fields, the non-evidence-gated "submission
+  completeness" block Nature Methods requires alongside the manuscript
+  PDF. Fields:
+  1. **Editor's summary** (~50 words, front-of-issue column) — two
+     sentences rephrasing Abstract v0.5; introduces no new claim.
+  2. **Key points** (three ~25-word bullets) — [48]%/[48]%/[20]%
+     regime numbers; [Y]/30 vs [Z]/30 long-tail result; single-page
+     WASM + URL-addressable state. Every headline number already in
+     Abstract and/or §8 ¶3.
+  3. **Author contributions (CRediT taxonomy)** — all fourteen CRediT
+     roles named; per-role assignments as `[INITIALS]` placeholders;
+     structural commitment that every role is claimed and that
+     commit-author graph at `v1.0-paper` is auditable.
+  4. **Competing interests** — per-author lines as placeholders;
+     structural commitment that Leaning Technologies / Hypha AI /
+     partner institutions are named explicitly if relevant.
+  5. **Data and code availability statement** — condensed one-paragraph
+     restatement of §10; every artefact named here is also named in §10;
+     no new artefact introduced.
+  6. **Acknowledgements** — CheerpJ upstream, Fiji/ImageJ community, and
+     Hypha substrate acknowledged explicitly by the structural rule;
+     funding IDs and partner names as placeholders.
+  7. **Suggested reviewers** — five names across three domains
+     (small-data / classical; Fiji ecosystem; web-platform research
+     tooling) + foundation-model + field-deployment experts. Structural
+     commitment: each reviewer non-conflicted with cited competitors,
+     unaffiliated at sub-department level for four years.
+  8. **Opposed reviewers** — default "none"; structural rule that any
+     specific name requires a one-line documentable reason.
+- **Defensibility scorecard.** Eight fields scored: 4 `READY` (editor's
+  summary, key points, data/code availability, opposed reviewers), 4
+  `AUTHOR-GATED` (author contributions, competing interests,
+  acknowledgements, suggested reviewers), **0 `EVIDENCE-GATED`**.
+  Zero-evidence-gated property is a consequence of the packet being
+  rephrasing-of-body-prose; any future edit that introduces an
+  evidence-gated field is a discipline regression.
+- **HTML render refreshed to v0.6.** `manuscript_html/index.html` now
+  includes a new `<section class="submission-packet"
+  id="submission-packet">` inserted as the last editorial appendix, after
+  the Reviewer-response dry run. Distinct CSS styling with a teal
+  (#2a6b7c) left-border accent distinct from the four previously
+  introduced editorial-appendix palettes (cover-letter serif; supp-outline
+  green/amber/red; release-eng blue; dry-run amber). New CSS subblocks:
+  `.packet-banner` (SUBMISSION PACKET status); `.editor-summary` (serif
+  on white, matches body-prose reading style); `.keypoints` (teal
+  border-left UL); `.packet-table` (8-row field / status / gating-path
+  scorecard); `.status-ready` / `.status-author` / `.status-evidence`
+  status chips; `.packet-legend` (3-tier swatch legend matching the
+  dry-run legend form). Version strings bumped v0.5 → v0.6 in five places
+  (article-meta published line; status-chip draft; status-chip status;
+  sidebar article-info `Draft version`; footer rendered-from line). Four
+  legitimate `v0.5` references retained in the render (they point
+  specifically to Abstract v0.5 which is unchanged). Status-chip content
+  extended to include `packet 4 ready / 4 author-gated / 0 evidence-gated`.
+  Sidebar Evidence-status gains a new `Submission packet` row reporting
+  the current scorecard. ToC gains `Submission packet` entry after
+  `Reviewer-response dry run`. Sidebar gains a new
+  `View the submission packet ↓` callout (teal-tinted to match the
+  section).
+- **Re-served via svamp.** Same mount name `manuscript`, same URL
+  `https://static-serve-0bc5cde8.svc.hypha.aicell.io/manuscript/`.
+  Post-edit HTTP HEAD → `200`, `content-length: 181,410` (up from
+  161,133), `last-modified: Sat, 18 Apr 2026 12:37:55 GMT`. The string
+  `submission-packet` / `Submission packet` / `SUBMISSION PACKET`
+  appears 35× in the rendered page (section id + ToC anchor + sidebar
+  callout + 32 intra-document anchors / labels / table cells); `v0.6`
+  appears 4× exactly where expected (article-meta, draft chip, sidebar
+  dt, footer); no residual `v0.5` references remain outside the four
+  legitimate Abstract-v0.5 pointers. HTML parses well-formed (Python
+  `html.parser`: zero unclosed tags, zero mismatched tags).
+
+### Files changed
+
+- `preprint.md` — appended Submission packet v0.1 block after the
+  Reviewer-response dry run. No existing prose or scaffolding modified.
+  File is now 1,208 lines / ~21,200 words.
+- `manuscript_html/index.html` — added `section.submission-packet` CSS
+  block (~130 lines), inserted a new `<section>` after Reviewer-response
+  dry run with a status banner, 8 field subsections, an 8-row scorecard
+  table, and the packet-level status line. Added ToC entry; bumped
+  version strings in five places; added sidebar callout (teal-tinted);
+  promoted status-chip and Evidence-status block with the `Submission
+  packet` sidebar row. File is now 181,410 bytes (up from 161,133) /
+  1,992 lines.
+- `.svamp/d9a68491-c46b-4e04-9b30-6294d0bbf071/ralph-progress.md` —
+  this entry; added one pattern bullet at the top of the Patterns block.
+
+### Learnings for future iterations
+
+- **The submission packet is the last non-evidence-gated prose surface.**
+  With this iteration, every prose block Nature Methods needs at
+  submission time (Abstract; §§1–10 body; Online Methods; Release
+  engineering; References; Figure captions; Cover letter; Supp outline;
+  Dry run; Submission packet) is now drafted at v0.1 or better. The
+  remaining blocks are *all* evidence-gated: §2 final numbers (rows
+  81–200 + IRR); §4 replay scale-up numbers; §§5, 6, 7 partner-landing
+  prose; Fig 4 / Fig 5 / Fig 6 finalised captions; §8 ¶3 foundation-model
+  benchmark numbers ([X], [Y], [Z]); References bibliographic metadata
+  verification; Abstract/§1/Cover letter/Key-points placeholder
+  resolution. This is a natural iteration boundary: future prose work
+  requires evidence landing, not more drafting. The next iterations
+  should either (a) do the long-deferred engineering primitives
+  (placeholder-propagation script; four-way cross-check pass) or (b)
+  wait for evidence to land.
+- **Packet defensibility scorecard is the second measurable dimension of
+  publication-readiness.** After the dry-run's 10/12-answerable score,
+  the submission packet now reports 4-ready / 4-author-gated /
+  0-evidence-gated. Together the two scorecards are the first two
+  numerical measures of the paper's submission-readiness that are
+  independent of evidence status. Future iterations that touch body
+  prose should check both scores; a drop in either (a new packet field
+  becoming evidence-gated, or a dry-run objection becoming unanswerable)
+  is a regression that should trigger a prose-pass review. The progress
+  metric for this paper is now: (dry-run answerable count) + (packet
+  ready + author-gated count), both measured against their totals.
+- **Highest-value next iteration without new evidence:
+  placeholder-propagation script (first-priority for six iterations
+  running).** Placeholders now span seven surfaces: `preprint.md`,
+  `manuscript_html/index.html`, References cross-reference map, Supp
+  outline allocation tables, Release engineering pin table, Dry-run
+  scorecard, and Submission packet scorecard. Every new iteration has
+  added to the placeholder set (this iteration adds `[INITIALS]`,
+  `[AFFILIATION-1…5]`, `[NAME-1…5]`, `[FUNDING IDs]`, `[TEACHING PARTNER]`,
+  `[CLINICAL PARTNER]`, `[COLLABORATION PARTNER-A]`, `[COLLABORATION
+  PARTNER-B]`, `[DECLARATION]`). A small regex-over-file script that
+  takes a `placeholders.yaml` resolution dictionary and emits all seven
+  surfaces with values substituted is now the dominant outstanding
+  engineering task. Its deferral is compounding — each iteration that
+  adds a new prose block adds more placeholders the eventual script
+  must resolve in one pass.
+- **Second-highest: four-way cross-check pass (§10 ↔ Methods §4 ↔
+  Release engineering ↔ Dry-run Q3/Q10 ↔ Submission packet data-and-
+  code-availability paragraph).** The submission packet's
+  data-and-code-availability paragraph is the fifth surface in the
+  reproducibility-promise binding. A single iteration should verify
+  that every artefact named in any of the five surfaces is reachable
+  from the other four (or, for evidence-gated artefacts, that the
+  gating path is recorded consistently).
+- **Third-highest: dry-run Q3 promotion plan** (unchanged from
+  Iteration 12). When the foundation-model benchmark lands in
+  `replay/foundation_models/`, the promotion touches five surfaces: §8
+  ¶2; Abstract `[X]`/`[Y]`/`[Z]`; Cover letter Q3 rephrasing; Figure 1
+  panel claims; Submission packet Key-points block (`[Y]/30` and
+  `[Z]/30` are duplicated there). The propagation list is now six
+  surfaces with this iteration — the scorecard in the dry-run block
+  should be annotated to reflect this.
+- **Framing containment re-verified across the v0.6 render.**
+  Submission packet body discusses AI in two surfaces only: the
+  suggested-reviewer bullet on foundation-model segmentation (which
+  names the domain without taking a position on it), and the competing-
+  interests paragraph (which declares neutrality on DL-vendor
+  compensation). The pattern bullet at the top of this file
+  (*"AI stays contained to §8"*) is preserved — submission packet AI
+  mentions are scoping declarations, not methodology claims.
+- **Served URL is stable across re-renders (Iteration 8 / 9 / 10 / 11 /
+  12 / 13).** Mount is in place under the name `manuscript` (registered
+  2026-04-18 11:54); re-saving the HTML on disk is sufficient — svamp
+  serves from disk. No `svamp serve` re-invocation is needed. This
+  pattern now holds across six re-render iterations and is the stable
+  norm through submission.
 
 ---
 

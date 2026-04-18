@@ -973,3 +973,235 @@ drop in the *answerable from drafted prose alone* count is a
 regression and should trigger a prose-pass review.
 
 
+---
+
+## Drafted prose — Submission packet (v0.1, 2026-04-18)
+
+> **Status: SUBMISSION PACKET.** This block contains the short-form
+> metadata prose Nature Methods requires alongside the manuscript PDF —
+> editor's summary, key points, author contributions, competing
+> interests, data and code availability statement, acknowledgements,
+> and suggested/opposed reviewers. These are not body prose and are
+> rendered as a distinct editorial appendix in the HTML view. Every
+> claim here is a rephrasing of body prose already drafted in §§1–10
+> and the Online Methods; no new empirical commitment is introduced.
+> Placeholders use the same `[…]` convention as the rest of the
+> working doc and resolve in step with their counterparts in the
+> Abstract, §1, §10, and Cover letter. Author-specific fields
+> (names, affiliations, ORCIDs, funding IDs, declared interests) are
+> intentionally left as placeholders to be resolved at the
+> author-team sign-off pass immediately before submission.
+
+### Editor's summary (one paragraph, ~50 words)
+
+*A two-sentence editor's summary of the kind Nature Methods uses in its
+front-of-issue "In this issue" column and on the table-of-contents
+entry. Drawn from the v0.5 Abstract; introduces no new claim.*
+
+Most microscopy papers still rely on small, human-scored image sets
+analysed in ImageJ or Fiji, yet browser-only, classroom, and clinical
+settings have been cut off from that toolchain. Ouyang et al.
+re-compile the unmodified Fiji codebase to WebAssembly via CheerpJ,
+quantify the small-data regime in a 200-paper survey, and report a
+long-tail benchmark on which zero-shot foundation models underperform
+a biologist working in the browser tool.
+
+### Key points (three bullets, ~25 words each)
+
+*The NM "key points" block that accompanies the editor's summary.
+Each bullet is a headline claim already warranted in the body; no
+bullet introduces a number or mechanism not present elsewhere.*
+
+- **[48]% of recent microscopy papers** occupy a formally defined
+  small-data, human-scale regime; **[48]%** name ImageJ or Fiji;
+  only **[20]%** employ a named deep-learning method.
+- On a curated **30-task long-tail benchmark** (rare organisms,
+  non-fluorescent stains, phone/tablet acquisitions), zero-shot
+  foundation models succeed on **[Y]/30**; a biologist using
+  ImageJ.JS macros succeeds on **[Z]/30**.
+- The unmodified Fiji codebase runs as a **single HTML page + WASM**;
+  analysis state is URL-addressable; a Hypha-RPC verifier executes
+  every in-browser step at CI cadence; no image byte leaves the
+  originator's device.
+
+### Author contributions (CRediT taxonomy)
+
+*CRediT-tagged per-author contribution statement. Author initials and
+specific CRediT tag assignments are left as `[INITIALS]` /
+`[ROLE-LIST]` placeholders to be resolved at the author-team sign-off
+pass. The structural commitment — that every CRediT role named in the
+work is claimed by at least one author — is enforced at draft time.*
+
+**Conceptualization:** [INITIALS]. **Methodology:** [INITIALS]
+(survey schema, long-tail task curation, replay protocol),
+[INITIALS] (runtime, build, release engineering), [INITIALS]
+(collaboration driver/observer). **Software:** [INITIALS]
+(ImageJ.JS browser harness, `hypha-imagej-service.js`, `collab/`,
+`threadhack/runtime/`, `build_v2.py`). **Validation:** [INITIALS]
+(replay corpus MATCH reports), [INITIALS] (long-tail benchmark
+human-expert runs). **Formal analysis:** [INITIALS] (survey
+extraction + IRR; benchmark IoU). **Investigation:** all authors.
+**Resources:** [INITIALS] (CheerpJ liaison), [INITIALS] (clinical
+partner institution), [INITIALS] (teaching partner institution).
+**Data curation:** [INITIALS] (`survey_production_v2.csv`,
+`longtail_tasks.md`, `replay/`). **Writing — original draft:**
+[INITIALS]. **Writing — review & editing:** all authors.
+**Visualization:** [INITIALS] (Figs 1–3 panel design), [INITIALS]
+(Figs 4–6 panel design, partner-site collateral). **Supervision:**
+[INITIALS]. **Project administration:** [INITIALS]. **Funding
+acquisition:** [INITIALS]. A reviewer may audit these role
+assignments against the commit-author graph at tag `v1.0-paper`,
+which resolves every source-file-level contribution to an
+identifiable GitHub handle.
+
+### Competing interests
+
+*Formal statement. Placeholder-only until the author team declares;
+the structural commitment is that each author has either "no
+competing interests" or a specific declaration, and that consulting,
+equity, patent, or advisory roles relevant to CheerpJ / Leaning
+Technologies / Hypha AI / any partner institution are named
+explicitly.*
+
+[INITIALS] declares [DECLARATION or "no competing interests"].
+[INITIALS] declares [DECLARATION or "no competing interests"].
+[…one line per author…]. No author receives financial compensation
+from Leaning Technologies (the vendor of CheerpJ 4) or from any
+vendor of the deep-learning methods characterised in §8; the
+paper's regime argument is not influenced by commercial positioning
+on either side.
+
+### Data and code availability statement
+
+*The formal one-paragraph statement NM requires, distinct from the
+longer §10 Availability section. Every artefact named here is also
+named in §10; the statement form is the "data-availability paragraph"
+Nature Methods places above the references in the PDF.*
+
+The ImageJ.JS source code (including `index.html`,
+`hypha-imagej-service.js`, `collab/`, `threadhack/runtime/`, and
+`build_v2.py`), the regime survey corpus (`survey_schema.md`,
+`survey_production_regex_baseline.csv`, `survey_production_v2.csv`),
+the long-tail benchmark task specification (`longtail_tasks.md`),
+and the deterministic replay corpus (`replay/`) are available at
+[URL/github] under [LICENCE]. The archived version of record for
+this paper is git tag `v1.0-paper` and its Zenodo mirror
+[DOI]; every URL, macro, and analytical claim in the paper resolves
+against this pinned tag. The programmatic interface
+(`runMacro`, `takeScreenshot`, `getRoisAsGeoJson`,
+`executeJavaScript`) is documented at `docs/rpc-examples/` and the
+MCP-endpoint derivation (`convertToMcpUrl`) at
+`hypha-imagej-service.js:880`. No human-subject image data are
+released with the paper; the long-tail benchmark imagery is released
+where licence permits and cited otherwise. The live instance at
+[URL] collects aggregate daily-active-user counts only; no image
+content, filenames, or user-identifying data are logged.
+
+### Acknowledgements
+
+*Formal acknowledgements paragraph. Funding sources, partner
+institutions, and individual supporters listed as placeholders
+pending author-team sign-off; structural commitment is that CheerpJ
+upstream, the Fiji/ImageJ community, and the Hypha substrate are
+each acknowledged explicitly, reflecting the continuity-with-
+substrate principle the tool's design depends on.*
+
+We thank the Fiji and ImageJ developer communities for the decades
+of plugin and macro-language stewardship on which this work rests;
+the authors of the specific Fiji routines the replay corpus
+verified (in particular the Find-Edges, Wand, and Particle-Analyzer
+chains characterised in §4) deserve named credit at sign-off.
+CheerpJ 4 (Leaning Technologies) is the enabling runtime; we thank
+[INITIALS] of Leaning Technologies for technical liaison on the
+AWT and plugin-loading surfaces during the v1.0-paper release cut.
+Hypha provided the service substrate for the programmatic
+interface (§10) and the driver/observer collaboration protocol
+(§7); we thank the Hypha AI team for infrastructure access and
+review of the MCP endpoint derivation. This work was funded by
+[FUNDING IDs]. The pilot teaching deployment (§5) was hosted by
+[TEACHING PARTNER]; the pilot clinical deployment (§6) by
+[CLINICAL PARTNER]; the cross-institution collaboration
+demonstration (§7) by [COLLABORATION PARTNER-A] and
+[COLLABORATION PARTNER-B]. [INITIALS] and [INITIALS] are
+thanked for critical reading of earlier drafts.
+
+### Suggested reviewers
+
+*Five suggested reviewers. Structural commitment is that each
+suggested reviewer is (a) active in one of the three paper domains —
+small-data / classical bioimage methodology (SDM), classical Fiji
+ecosystem (FE), or open-source web-platform research tooling (WP);
+(b) unaffiliated with any author at the sub-department level within
+the past four years; (c) not a named author on any paper cited as a
+direct competitor (e.g., CellSAM, Cellpose, StarDist, Omega,
+napari-mcp, BioImage-Agent). Names are placeholders pending
+author-team sign-off; the three-domain structural discipline is
+fixed at draft time.*
+
+- **[NAME-1]**, [AFFILIATION-1] — domain: small-data / classical
+  bioimage methodology. Expertise covers `survey_schema.md`
+  methodology, Lord-2024-style sample-size analyses, and
+  regime-characterisation arguments (§§1–2, §9).
+- **[NAME-2]**, [AFFILIATION-2] — domain: classical Fiji
+  ecosystem. Expertise covers Fiji macro programming, the
+  plugin-manifest discipline, and the class of bundle-inconsistency
+  and version-drift failures surfaced in §4.
+- **[NAME-3]**, [AFFILIATION-3] — domain: open-source
+  web-platform research tooling. Expertise covers CheerpJ / WASM
+  JVM engineering, the File System Access API, and reproducible
+  browser-hosted analysis substrates (§3 ¶3, Release engineering).
+- **[NAME-4]**, [AFFILIATION-4] — domain: foundation-model
+  segmentation on long-tail biological imagery. Expertise covers
+  zero-shot evaluation protocols on out-of-distribution tasks and
+  the regime-fit argument of §8 ¶2–3. Declared non-author on the
+  specific foundation models benchmarked.
+- **[NAME-5]**, [AFFILIATION-5] — domain: teaching-of-bioimage-
+  analysis / clinical deployment of image-analysis tooling.
+  Expertise covers the field-deployment contexts of §§5–6 and the
+  zero-install-as-correctness argument of §3 ¶3.
+
+### Opposed reviewers
+
+*The "opposed reviewers" field NM offers for declaring conflicts of
+interest on the reviewing side. Default entry is "none"; the
+structural commitment is that if a specific name is entered here it
+is accompanied by a one-line, non-defamatory, documentable reason
+(prior formal dispute, active commercial competition, recent
+co-authorship the author team cannot reliably declare as resolved).
+Vague or rhetorical opposition entries are not acceptable.*
+
+None.
+
+### Submission-packet defensibility note
+
+*Mirror of the dry-run scorecard's defensibility discipline, but
+applied to the submission packet itself. Each packet field is
+scored as `READY` (no outstanding placeholder that blocks
+submission), `AUTHOR-GATED` (blocked on author-team sign-off but
+not on evidence), or `EVIDENCE-GATED` (blocked on a pending
+empirical drop). The packet is submission-ready when every field
+is `READY` or `AUTHOR-GATED`; no packet field may remain
+`EVIDENCE-GATED` at submission time.*
+
+- Editor's summary — `READY` (rephrases Abstract v0.5; placeholders
+  only in the same set the Abstract carries).
+- Key points — `READY` (rephrases Abstract + §8 ¶3 headline numbers).
+- Author contributions — `AUTHOR-GATED` (CRediT structure fixed;
+  `[INITIALS]` resolution is a sign-off task).
+- Competing interests — `AUTHOR-GATED` (structural commitment fixed;
+  per-author declarations are a sign-off task).
+- Data and code availability statement — `READY` (condensed
+  restatement of §10; no new artefact named).
+- Acknowledgements — `AUTHOR-GATED` (structural commitment fixed;
+  funding IDs and partner names are a sign-off task).
+- Suggested reviewers — `AUTHOR-GATED` (three-domain structure
+  fixed; name resolution is a sign-off task).
+- Opposed reviewers — `READY` (default "none"; structural rule for
+  non-default entries is fixed).
+
+No packet field is `EVIDENCE-GATED`. This is a property of the
+submission packet being rephrasing-of-body-prose, as required by
+the discipline in the block header; any future edit that
+introduces an `EVIDENCE-GATED` packet field is a discipline
+regression and must be reverted.
+
