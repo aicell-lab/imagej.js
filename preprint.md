@@ -2739,3 +2739,94 @@ The iter-34 per-§ biologist-voice row showed *what* was biologist-voiced but no
 A future *chain-of-voice audit iteration* — flagged as a potential iteration kind in the iter-37 learnings — can cross-reference the per-§ biologist-voice row, the per-figure coverage row, and the per-gate landing timeline row to test every chain-of-voice summary claim in the article-meta dd / footer div / readiness banner against actual rendered-surface state. The three rows together define the dashboard coverage set the validator guards at HTML structure level.
 
 ---
+
+## Drafted prose — `tools/check_discipline.py` claim-preservation linter (v0.1, engineering-infrastructure iteration 2026-04-18, iter 39)
+
+*Fourth application of the iter-28 engineering-infrastructure iteration kind. Guards the iter-23 claim-preservation discipline at authoring time by parsing `preprint.md` into Drafted-prose blocks, grouping them by surface key (e.g. Abstract, §3, §9), and for every version-pair (v_n → v_{n+1}) diffing the claim-token set and reporting additions and removals. The three rules of the iter-28 kind hold verbatim: (i) zero prose edits in the tool-landing iteration itself; (ii) guards an empirically-observed regression class — the iter-31 / iter-37 silent chain-of-voice gap where a chain-of-voice summary asserted biologist-voice completeness for a surface the body had not actually received; (iii) self-contained stdlib-only Python 3, ~360 lines.*
+
+### Contract
+
+`tools/check_discipline.py` reads `preprint.md`, parses every `## Drafted prose — ...` heading into a `Block` carrying heading, surface key (the heading with the `(v..., ...)` suffix stripped and canonicalised), version number, start line, and body text. Blocks that share a surface key and differ in version are **version-pairs**. For every version-pair (sorted by numeric version ascending), the linter extracts **claim-tokens** from the prose and diffs the two token sets.
+
+### Claim-tokens extracted
+
+- **Bracketed tokens** `\[[^\[\]]+\]` — catches citations like `[Lord et al. 2020]` and placeholders like `[N]`, `[48]%` (the `[48]` component), `[Y1–Y2]`, `[DOI]`.
+- **DOI** `10\.\d{4,9}/\S+` — DOIs as bibliographic-resolution targets.
+- **URL** `https?://\S+` — URLs as evidence-gated placeholders or resolved values.
+- **Figure ref** `Fig(?:ure|\.)?\s*\d+[a-z]?(?:-supplement)?` — figure cross-references.
+- **Section ref** `§+\s*\d+(?:[/,\s\-–]\s*\d+)*` — section cross-references like §3, §§5/6/7.
+- **Percent** `\d+(?:\.\d+)?%` — percentage values, e.g. `48%`, `20%`.
+- **Year** `(?:19|20)\d{2}` — year values, e.g. `2024`, `2026`.
+- **Number** `\d{1,5}(?:[.,]\d+)?` — other numeric values, with singletons (< 2) excluded to avoid list-enumeration noise.
+- **Mechanism** (allow-listed proper-noun vocabulary) — SAM, Cellpose, Cellpose-generalist, StarDist, StarDist-versatile, CellSAM, CheerpJ, Hypha, Hypha-RPC, ImageJ, ImageJ.JS, Fiji, MATLAB, WebAssembly, MCP, napari, napari-mcp, Chromebook, and the Hypha-RPC named mechanisms (`runMacro`, `takeScreenshot`, `getRoisAsGeoJson`, `executeJavaScript`).
+
+### Metadata-paragraph stripping
+
+The italicised `*Replaces v0.1 above. Biologist-voice rewrite: ...*` metadata paragraph at the top of each Drafted-prose block describes the pass and often names tokens in a rephrasing sense that is not a scientific claim (e.g. "replaces v0.1's editorial-voice", "preserves every citation"). The linter strips the metadata paragraph before diffing so these rephrasing words are not counted as scientific claims; only the actual body prose after the metadata is diffed.
+
+### Modes
+
+- **default** — human-readable report listing every pair's surface, version range, added tokens, and removed tokens.
+- `--surface KEY` — substring filter (case-insensitive) to audit a single surface (e.g. `--surface Abstract`, `--surface §3`).
+- `--strict` — non-zero exit on any pair with added tokens. CI-wireable.
+- `--json` — structured JSON output keyed by surface.
+- `--self-test` — built-in smoke test that constructs a synthetic v0.1 / v0.2 / v0.3 Drafted-prose triple where v0.2 is a legitimate claim-preserving copy-edit of v0.1 and v0.3 silently adds a new percent token `[72]`, a new citation `[Smith et al. 2099]`, and a new named mechanism `StarDist`; the linter must flag v0.2 → v0.3 (three additions) and not flag v0.1 → v0.2 (zero additions). Runs in under 1 s, no I/O beyond the test fixture.
+
+### First application at iter 39
+
+Run against the current `preprint.md`, the linter surfaces 11 version-pairs and correctly classifies each:
+
+1. **§8 v0.1 → v0.2** — zero added tokens. The iter-25 biologist-voice rewrite preserved every claim verbatim exactly as the iter-25 learnings documented.
+2. **References v0.1 → v0.2** — +62 added tokens. This is the iter-32 bibliographic-resolution pass's 8 new Crossref-verified DOIs plus the per-DOI numeric sub-tokens the DOI regex matches (`10.1038`, `s41592`, volume / page numbers like `22`, `592`, `599`). The iter-32 Patterns bullet explicitly exempts bibliographic-resolution iterations from the iter-23 claim-preservation rule — this exception is *by design*, not a violation.
+3. **Abstract v0.5 → v0.6** — small deltas matching the iter-23 rationale: added concrete scene words `Chromebook` and year tokens `2024` / `2026` that make the biologist-scale opening concrete before the abstract argument.
+4. **§1 v0.1 → v0.2, §3 v0.1 → v0.2, §9 v0.1 → v0.2** — small deltas dominated by new `§N` cross-reference anchors added for the biologist reader's paragraph-level navigation (the iter-24 / iter-37 Patterns bullet already documents this affordance).
+5. **Cover letter v0.1 → v0.2** — numeric list deltas `2`, `3`, `4`, `5`, `6`, `7` from the iter-29 contribution (iii) expansion into a three-scene field-partner-vignette form.
+6. **§2 v0.1 → v0.2, §4 v0.1 → v0.2, Research Briefing v0.1 → v0.2, Figure slots v0.1 → v0.2** — similar small deltas matching the per-iteration rationale in the corresponding ralph-progress entries.
+
+No surface surfaces a silent addition that contradicts its documented rationale — the 18-iteration empty-claim-diff run is confirmed mechanically by a tool that would have caught the iter-31 / iter-37 silent gaps at authoring time if it had existed then.
+
+### Iteration-kind classification
+
+**Fourth application of the iter-28 engineering-infrastructure iteration kind.** The three rules from the iter-28 Patterns entry hold verbatim: (i) **zero prose edits** — the iteration touches no body prose, figure caption, box content, Key Points, Abstract, Cover letter, Research Briefing, or editorial-machinery scorecard; every per-§ `## Drafted prose` version stamp in `preprint.md` is unchanged; this 42nd Drafted-prose block documents the linter itself, not a new prose section. (ii) **Guards an empirically-observed regression class** — the regression class is the iter-31 / iter-37 silent chain-of-voice gap: iter 31 closed an over-claim that iters 27 and 30 had silently inherited for §4; iter 37 closed an over-claim that iters 27 / 30 / 31 / 32 / 33 / 34 / 35 / 36 had silently inherited for §9. The linter would have surfaced both at the first iteration after the over-claim rather than at iter-31 / iter-37 manual self-review. (iii) **Self-contained, stdlib-only Python 3** — a ~360-line single file with no dependencies outside the standard library.
+
+### Four-tool matched suite
+
+With iter 39, the paper has four engineering-infrastructure tools that form a matched suite:
+
+1. `tools/validate_manuscript.py` (iter 28) — authoring-time HTML / anchor / placeholder invariants on the rendered HTML.
+2. `tools/propagate_placeholders.py` (iter 35) — mechanical single-token evidence-landing rewriter across the HTML + `preprint.md` surfaces.
+3. `tools/recheck_references.py` (iter 36) — bibliographic currency against Crossref.
+4. `tools/check_discipline.py` (iter 39) — claim-preservation audit between Drafted-prose versions in `preprint.md`.
+
+Reproducible evidence-landing workflow (all four tools used in sequence):
+
+```bash
+# 1. Discover what has landed on Crossref since the last audit
+python3 tools/recheck_references.py --online --report-file tools/recheck_report.json
+
+# 2. Hand-update multi-word reference entries
+#    + mechanically apply single-token numeric / URL / DOI resolutions
+python3 tools/propagate_placeholders.py --apply --resolution '[48]%=37%' --resolution '[N]=42'
+
+# 3. Confirm no authoring-time HTML / anchor / placeholder regressions
+python3 tools/validate_manuscript.py
+
+# 4. Confirm no silent claim-token additions between v_n and v_{n+1} of any block
+python3 tools/check_discipline.py --strict
+```
+
+### Invariants preserved at iter 39
+
+- HTML render v0.31 → v0.32; four canonical version strings bumped (published-line; status-chip Working-draft chip; sidebar Article-info Draft-version dd; footer Rendered-from div).
+- Sidebar Article-info Ready-list entry added documenting the new linter.
+- Regression-guard dd renamed from "Regression guard (iter 28) + mechanical rewriter (iter 35) + bibliographic re-checker (iter 36)" to "Regression guard (iter 28) + mechanical rewriter (iter 35) + bibliographic re-checker (iter 36) + discipline linter (iter 39)"; dd body extended with the fourth-tool description and four-tool workflow.
+- Article-meta dd and footer div rewritten with iter-39-leading descriptions; v0.31 baseline preserved as inline HTML comment matching the iter-29 / 30 / 31 / 32 / 33 / 34 / 35 / 36 / 37 / 38 sibling-comment idiom.
+- Readiness banner extended with an iter-39 clause at the tail of the banner's chain-of-iteration list.
+- All four validator checks PASS at v0.32: 0 HTML errors · 224 anchors / 50 unique / 90 ids / 0 broken · **185 `placeholder-value` spans** (unchanged since iter 36 — 18th consecutive empty-claim-diff iteration) · 0 scope violations. 14th consecutive iteration running the validator.
+- Placeholder-value inventory count held at 185 through the iteration; iter-27 placeholder-value-scope rule preserved (all iter-39 `[token]` documentation is in inline `<code>` not `<span class="placeholder-value">`).
+
+### What this linter unlocks
+
+A future iteration that introduces a silent claim addition during a biologist-voice or structural-commitment pass will be caught by `tools/check_discipline.py --strict` at the end of the iteration rather than at iter_n+k manual self-review. Pre-submission checklist can include the four-tool run as a single shell-script gate. A future *chain-of-voice audit iteration* (eleventh iteration kind flagged in iter-37 / iter-38 learnings) can cross-reference the linter's JSON output (`--json`) against the three dashboard-expansion scoreboard rows (per-§ biologist-voice, per-figure coverage, per-gate landing timeline) to test every chain-of-voice summary claim against both the rendered-surface state (dashboard rows) and the working-document state (linter).
+
+---
