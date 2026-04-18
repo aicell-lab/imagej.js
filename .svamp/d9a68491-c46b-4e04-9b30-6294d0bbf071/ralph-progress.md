@@ -46,6 +46,14 @@
   classical + ImageJ.JS; composition via Hypha-RPC + MCP endpoint (`convertToMcpUrl`) for
   problems that span both. Any cover letter, response-to-reviewers, or public summary that
   has to address AI should use this frame, not a defensive "we're not anti-AI" frame.
+- **Cover letter = rephrasing, not new argument.** The 2026-04-18 cover letter draft
+  deliberately introduces no claim, number, or citation that is not already in the
+  drafted Abstract/§1/§3/§8. Every placeholder (`[48]%`, `[20]%`, `[X]` IoU, `[N]`
+  replay corpus, `[DAU]`, `[URL]`) has the same resolution path as its occurrence in
+  the body. This keeps the cover letter automatically consistent when evidence lands —
+  updating the body once propagates here. Future public-facing summaries (editor
+  responses, pre-submission emails, conference abstracts) should follow the same rule:
+  rephrase from the draft body, don't paraphrase into new ground.
 
 ---
 
@@ -239,4 +247,83 @@
   None introduces Omega / napari-mcp / BioImage-Agent / CellVoyager. This containment
   is correct — AI discussion belongs in §8 only, per the locked framing. Future prose
   drafts must preserve this containment.
+---
+
+## 2026-04-18 — Iteration 4: drafted NM cover letter (v0.1)
+
+### What was implemented
+
+- Drafted `preprint.md §"Drafted prose — Cover letter to Nature Methods (v0.1,
+  2026-04-18)"` — a publication-readable pre-submission cover letter, ~730 words,
+  plain prose, one paragraph per editorial function:
+  1. Opening ask — Brief Communication with working title, scope inquiry framing.
+  2. The regime measurement — Lord 2024 anchor, 80-row v2 survey numbers ([48] %
+     small-data, [48] % ImageJ-any-mention, [20] % DL), long-tail benchmark
+     ([X] IoU, [Y]/30 foundation-model, [Z]/30 human+ImageJ.JS). Every number
+     bracketed, consistent with the Abstract and §1.
+  3. The tool — CheerpJ compile, single HTML page, client-side privacy,
+     URL-addressable state, Hypha-RPC verifier, driver/observer collaboration.
+     All mechanisms named match the §3 prose identifiers.
+  4. Four contributions — survey + benchmark (i), replay corpus with two
+     surfaced failure classes (ii), three field deployments (iii),
+     limits-and-complementarity with MCP composition point (iv). Same list form
+     as §1 last paragraph and the v0.5 Abstract.
+  5. AI-stance — "contribution is AI-free"; "regime not ranking"; names
+     Cellpose/StarDist/CellSAM/Omega/napari-mcp/BioImage-Agent/CellVoyager as
+     regime-complementary, not as competitors. Companion paper cited as
+     Ouyang et al., in preparation — form locked upstream.
+  6. Availability + editorial asks — DAU / URL placeholders; Brief-Comm vs.
+     full-article question to editor; explicit ~1500 words + 3 figures + 1
+     supplementary video target.
+- Added one pattern at top of the progress file: cover letter = rephrasing,
+  not new argument. Placeholders share resolution paths with their body
+  counterparts, so the cover letter self-updates when evidence lands.
+
+### Files changed
+
+- `preprint.md` — appended cover-letter drafted-prose block (after §8 v0.1).
+  File is now 327 lines / ~7,600 words. No existing content modified.
+- `.svamp/d9a68491-c46b-4e04-9b30-6294d0bbf071/ralph-progress.md` — appended
+  this entry; added one pattern bullet at the top.
+
+### Learnings for future iterations
+
+- **Story is now publication-ready at the framing level.** v0.5 Abstract, §1
+  Introduction, §3 Design principles, §8 Limits and complementarity, and
+  Cover letter are all drafted. What remains is *evidence-gated*: §2 (full
+  200-paper survey + benchmark numbers), §4 (replay scale-up), §5 (course
+  partners), §6 (clinical partner), §7 (collaboration demos). None of these
+  should be drafted as prose yet; drafting ahead of evidence bakes in numbers
+  that will change.
+- **Highest-value next iterations without new evidence** (ordered):
+  1. **§10 Availability** — can be drafted now; mechanisms are all in the
+     codebase (URL params, Hypha-RPC service, `convertToMcpUrl`, replay
+     corpus repo structure). No placeholders except [URL] and [DAU].
+  2. **§9 Discussion implications** — methodology-research implications of
+     "first-class tooling for the small-data majority" — one page, all
+     source material in the existing scaffolding (Core framing, Risks,
+     Venue strategy, §"What's deliberately NOT in the abstract").
+  3. **Risks-and-reviewer-pushback rewrite into response-to-reviewer prose
+     format** — the existing table in `preprint.md:190–203` is already
+     complete-sentence; rewriting to ~200-word responses per objection is
+     a low-effort high-return step before submission.
+  4. **Title lock** — three candidates in `preprint.md:19–25`; choosing
+     one before the cover letter is finalised removes a small ambiguity.
+- **Placeholder propagation is now at risk of drift.** Five drafted blocks
+  all reference `[48]%`, `[20]%`, `[X]` IoU, `[Y]`/30, `[Z]`/30, `[N]`
+  replay, `[DAU]`, `[URL]`. When evidence lands, a future iteration should
+  do a single pass resolving each placeholder across all five blocks at
+  once, not one block at a time. Otherwise the Abstract and Cover letter
+  will disagree with §1 for a window, which is exactly the kind of
+  inconsistency reviewers catch.
+- **Do not draft response-to-reviewer prose before submission.** The
+  Risks table (preprint.md:190–203) is scaffolding for *anticipated*
+  objections. Actual reviewer comments will be different. Draft response
+  prose only after real reviews arrive; pre-drafting wastes effort and
+  anchors the author team to objections reviewers may not raise.
+- **Cover letter and Abstract should be reread together, last.** They are
+  the two documents an editor reads before deciding; any disagreement
+  between them undoes the work of both. Before submission, do a one-pass
+  diff of bracketed numbers + claim verbs + citations across Abstract v0.5
+  and Cover letter v0.1 — anything that drifts is a bug.
 ---
