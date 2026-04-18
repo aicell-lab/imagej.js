@@ -3865,3 +3865,230 @@
   over) would pre-empt two catalogued regression classes.
 
 ---
+
+
+## 2026-04-18 — Iteration 24: Biologist-voice copy-edit of §3 Design principles (HTML render v0.17)
+
+### What was implemented
+
+- **Drafted §3 Design principles v0.2 (~900 words, claim-preserving
+  biologist-voice rewrite of v0.1)** in `preprint.md §"Drafted prose —
+  §3 Design principles (v0.2, biologist-voice rewrite 2026-04-18)"`,
+  positioned after the §1 Introduction v0.2 block. v0.2 preserves the
+  six-paragraph structure of v0.1 (intro + five named principles:
+  substrate continuity; zero install; URL-addressable state;
+  collaboration; deliberate non-design). The intro paragraph is
+  reframed from editorial-voice ("The design of ImageJ.JS is governed
+  by a single premise derived from §2") to biologist-voice
+  ("Biologists who work at the small scale §2 measured cannot install
+  software on every device they touch"), with the four constraint
+  scenes (Chromebook teaching lab; phone field ecology; locked
+  hospital laptop; air-gapped forensic machine) leading the abstract
+  argument concrete-before-abstract. The five principles are tightened
+  verb-by-verb: e.g. "The first principle is **continuity with the
+  substrate the field already opens**. The 80-paper survey finds
+  that…" → "[48]% of recent microscopy publications in our 80-paper
+  survey name…" (sentence reorder + dropped editorial framing); "A
+  second correctness consequence follows: because all compute happens
+  client-side…" → "A second consequence follows from the first.
+  Because all compute happens client-side…" (sentence split for
+  biologist parseability); "design choices give up some aesthetic
+  freedom… It earns…" → "The price of this choice is some aesthetic
+  freedom; the gain is…" (parallelism for biologist voice).
+
+- **HTML render v0.17 replaces §3's intro `<p>` and the five
+  `<h3>`-introduced subsection `<p>` elements** with the v0.2 prose.
+  Three internal anchors are added: `<a href="#sec-4">§4</a>`,
+  `<a href="#sec-7">§7</a>` (twice), and `<a href="#sec-8">§8</a>`,
+  replacing bare "§4" / "§7" / "§8" cross-references in the §3 prose
+  with hot links to the existing section ids. No new id, no new
+  element, no new `<aside>`, no new CSS. The HTML structure of §3
+  (six paragraphs grouped under five h3 subsection headings + the
+  intro paragraph + Fig 2 below) is preserved unchanged.
+
+- **Version bumps v0.16 → v0.17** in all four canonical places:
+  article-meta line under Published; draft chip in the status strip;
+  sidebar Draft version dd; footer rendered-from div. The article-meta
+  dd and footer div paragraphs are rewritten to describe the iter-24
+  biologist-voice rewrite of §3 with the same level of detail as the
+  iter-23 description used.
+
+- **Sidebar Ready (prose v0.1) list updated** to bold "§3 v0.2
+  (biologist-voice rewrite, iter 24)" in place of the previous
+  unbolded `§3` entry, matching the convention used for "§1 v0.2
+  (biologist-voice promotion, iter 23)" and "Abstract v0.6
+  (biologist-voice rewrite, iter 23)".
+
+- **Readiness dashboard synchronised in-pass.** Banner extended with
+  "§3 v0.1 → v0.2 biologist-voice rewrite extending the same pass to
+  Design principles iteration 24". Prose-block coverage row's count
+  remains 19/19 (no new block) with "§3 v0.2 biologist-voice iter 24"
+  chip appended after the iter-23 chip; source-column paragraph
+  extended to record the §3 pass and the updated biologist-facing
+  surface chain (Key Points → Abstract v0.6 → §1 v0.2 → Box 1 → §2 →
+  Fig 1 → Box 2 → §3 v0.2 → Fig 2). The supp-outline allocation
+  table's §3 row marker is extended to record "v0.2 biologist-voice
+  rewrite, iter 24 — claim-preserving copy-edit of v0.1".
+
+- **Status-chip evidence-status text rewritten** to lead with the
+  iter-24 §3 rewrite description (4 sentences) rather than the iter-23
+  description (which is preserved in chronological order below as a
+  prior iteration entry).
+
+- **HTML well-formed check passes.** Custom `html.parser`-based
+  validator reports zero tag issues and zero unclosed elements.
+
+- **Anchor-integrity check passes.** A new ad-hoc anchor lint
+  (`href="#…"` against the set of `id="…"` attributes) reports 167
+  total `href` anchors, 48 unique, 0 broken — the three new anchors
+  added by §3 v0.2 (`#sec-4`, `#sec-7`, `#sec-8`) all resolve to
+  existing section ids. The Patterns bullet from iter 22 about
+  anchor-integrity as a fourth validation surface is now exercised
+  programmatically; this is the first iteration where the check has
+  been run as a standalone verification step.
+
+- **Placeholder-inventory check passes.** 77 placeholder tokens
+  catalogued across the document, identical to the v0.16 baseline
+  (ratifying the claim-preservation rule for biologist-voice
+  copy-edits).
+
+- **Disk size 385,113 → 388,416 bytes** (+3,303 bytes: ~3.3 KB §3
+  prose delta + ~50 bytes for the three anchor wrappers + version
+  strings).
+
+- **Served URL confirmed stable.** Mount `manuscript` continues to
+  serve from disk. HTTP HEAD against
+  `https://static-serve-0bc5cde8.svc.hypha.aicell.io/manuscript/` →
+  `200`, `content-length: 388416` exactly matching `wc -c` on disk.
+  `curl … | grep -c "Biologists who work at the small scale"` returns
+  5 matches (§3 ¶1 + four version-string descriptions); `curl … |
+  grep -c "v0.17"` returns 4 matches (the four canonical version
+  bumps).
+
+- **Re-registered svamp session link** with v0.17 label:
+  `svamp session set-link "https://static-serve-0bc5cde8.svc.hypha.aicell.io/manuscript/" "Manuscript draft v0.17 (Nature Methods) — biologist-voice rewrite of §3 Design principles"`.
+
+### Files changed
+
+- `preprint.md` — appended one "Drafted prose — §3 Design principles
+  (v0.2, biologist-voice rewrite 2026-04-18)" block after the §1 v0.2
+  block. No existing content modified. File grew ~16 lines (one
+  blockquote-formatted prose block in the same convention as Abstract
+  v0.6 and §1 v0.2).
+- `manuscript_html/index.html` — replaced §3's intro paragraph and the
+  five h3-subsection-introduced paragraphs with v0.2 prose; added three
+  internal anchor wrappers (`#sec-4`, `#sec-7`, `#sec-8`); bumped
+  version strings v0.16 → v0.17 in four places; promoted §3 in the
+  sidebar Ready list to bolded "§3 v0.2 (biologist-voice rewrite, iter
+  24)"; appended "§3 v0.2 biologist-voice iter 24" chip to the
+  prose-coverage row; extended the prose-coverage source-column
+  paragraph; rewrote status-chip evidence-status text and footer
+  rendered-from div with iter-24-leading descriptions; extended
+  readiness dashboard banner. File grew 385,113 → 388,416 bytes
+  (+3,303 bytes).
+- `.svamp/d9a68491-c46b-4e04-9b30-6294d0bbf071/config.json` —
+  `session_link` updated by `svamp session set-link` with v0.17 label.
+- `.svamp/d9a68491-c46b-4e04-9b30-6294d0bbf071/ralph-progress.md` —
+  this entry; no new Patterns bullet added (iter-23's biologist-voice
+  Patterns bullet already covers iter 24, and the second-application
+  rule from prior patterns means a second instance does not warrant a
+  new pattern unless a novel sub-rule is discovered, which it is not
+  here).
+
+### Learnings for future iterations
+
+- **Iteration kind (iter 24) was pure biologist-voice copy-edit** —
+  the fifth iteration kind catalogued in the iter-23 Patterns bullet,
+  applied for the second time. The iter-23 Patterns bullet's three
+  rules (zero new claims; surface-level edits only; biologist-voice
+  chain inspected as a whole) were honoured: (i) every claim,
+  citation, named mechanism (`runMacro`, `takeScreenshot`,
+  `getRoisAsGeoJson`, `executeJavaScript`, `plugins.dir=`, `open=`,
+  `macro=`, `rois=`, `mount=`), figure reference (Fig 2), and
+  placeholder (`[48]%`) of v0.1 is preserved verbatim in v0.2; (ii)
+  edits are sentence-level (intro reframe; verb-by-verb tightening of
+  the five principles; one sentence split for parseability; one
+  parallelism rewrite); (iii) the biologist-voice chain after iter 24
+  reads Key Points → Abstract v0.6 → §1 v0.2 → Box 1 → §2 → Fig 1 →
+  Box 2 → §3 v0.2 → Fig 2 without editorial-voice seams.
+
+- **Claim-preservation discipline held strictly (sixth application).**
+  Like iters 19 (§4 prose), 20 (Box 1), 21 (Box 2), 22 (Key Points),
+  and 23 (Abstract + §1), iter 24 adds zero new placeholders and zero
+  new claims. The claim-diff against §3 v0.1 is empty. The
+  placeholder-inventory count is 77 in both v0.16 and v0.17.
+
+- **Anchor-integrity as a runnable validation surface.** Iter 24 added
+  three internal anchors and the ad-hoc Python `href` vs `id` lint
+  reports zero broken; this is the first iteration where the
+  anchor-integrity check has been treated as a first-class validation
+  step (vs. the iter-22/23 Patterns bullet that catalogued it as a
+  candidate). The check is small enough (~10 LOC) that it could be
+  extracted into `tools/validate_manuscript.py` in a future iteration
+  without iterating on the manuscript itself; the script would also
+  be the natural home for the placeholder-inventory delta check
+  ("v_n+1 must have the same set of placeholder tokens as v_n unless
+  the iteration entry says otherwise"), turning it into a regression
+  guard rather than a manual recount.
+
+- **Body prose remains AI-free outside §8 (sixth application).** §3
+  v0.2 mentions deep learning only via the deliberate-non-design
+  paragraph's reference to "GPU-accelerated deep-learning inference
+  (served by deepImageJ's desktop integration and by napari's GPU
+  stack)" — identical text to v0.1, no new AI-adjacent claim. The "AI
+  stays contained to §8" pattern is preserved at v0.17.
+
+- **No scorecard re-computation required.** Because the iteration did
+  not change any claim, no Gate state shifts; dry-run defensibility,
+  submission packet, reporting summary, readiness, and research-
+  briefing scorecards all remain valid at v0.17. The prose-coverage
+  row's count is unchanged at 19/19 (no new block).
+
+- **The biologist-first-contact body chain now extends through §3.**
+  After iter 23 the chain reached Key Points → Abstract v0.6 → §1 v0.2
+  → Box 1 → §2 → Fig 1; after iter 24 it extends through Box 2 → §3
+  v0.2 → Fig 2. This is the publication-ready biologist reader path
+  through the first three body sections plus all narrative
+  scaffolding. §§4–7 follow next; their v0.1 prose (drafted iters 18
+  and 19) is already biologist-friendly because the structural-
+  commitment promotion of those sections was carried out with the
+  biologist reader in mind, but a focused biologist-voice copy-edit
+  pass per section remains a candidate for iters 25–28 if editorial-
+  voice phrasings are detected on inspection.
+
+- **Highest-value next iteration without new evidence: Bibliographic
+  verification pass (Gate H), still deferred from iterations 16–23.**
+  Still ~35 `[VOL:PAGES, DOI]` placeholders in References v0.1 remain
+  unresolved; a focused single-pass verification against Crossref /
+  DOI.org / journal records resolves Gate H and drops the placeholder-
+  inventory count from 77 toward ~42 (a measurable inventory
+  reduction).
+
+- **Second-highest next iteration without new evidence: biologist-
+  voice copy-edit of §8 Limits and complementarity.** §8 ¶1 still
+  opens "The argument of this paper is that small-data, human-centred
+  bioimage analysis is a distinct regime — defined in §2 by fewer
+  than 100 images per condition, human-in-the-loop steps in
+  acquisition, segmentation, or scoring, and domain-prior-driven
+  parameter choice — and that tooling for this regime has been
+  methodologically under-invested" — clearly editorial-voice. A
+  claim-preserving biologist-voice rewrite that keeps the five-
+  paragraph structure and every citation (Cellpose, StarDist,
+  CellSAM, deepImageJ, SAM, Lord, Ma, Archit, Royer, Chen) but opens
+  with a biologist scene ("A pathologist working through a stack of
+  H&E slides has, even in the era of foundation models, every reason
+  to reach for ImageJ first; her samples are forty in number, the
+  morphology is rare, and the slide is on her own laptop, not in a
+  cloud bucket") would land naturally as iter 25.
+
+- **Third-highest next iteration: tools/validate_manuscript.py
+  (anchor-integrity + placeholder-inventory delta validator)**, per
+  the iter-24 learning above. The anchor-integrity check has been
+  run twice manually (iter 22 added 14 anchors; iter 24 added 3); the
+  placeholder count is now stable at 77 across iters 22 → 23 → 24,
+  which is the right baseline against which a delta check would
+  trigger. Extracting into a script also pre-empts the iter-21 CSS
+  scoping regression class via a third lint (visual rendering /
+  layout sanity check on the rendered page).
+
+---
