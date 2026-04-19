@@ -12,13 +12,30 @@
 //  operation then works on that snapshot.
 // ============================================================
 
+// --- LOAD-TIME DIAGNOSTIC (visible even if nothing else executes) -----------
+console.log("[ome-loader] module script evaluated");
+window.addEventListener("error", (ev) => {
+  if (ev.filename && ev.filename.includes("ome-loader.js")) {
+    console.error("[ome-loader] window error:", ev.message, "at", ev.lineno + ":" + ev.colno);
+  }
+});
+window.addEventListener("unhandledrejection", (ev) => {
+  try {
+    const s = String(ev.reason && (ev.reason.stack || ev.reason.message || ev.reason));
+    if (s.includes("ome-loader") || s.includes("geotiff") || s.includes("zarrita")) {
+      console.error("[ome-loader] unhandled rejection:", s);
+    }
+  } catch {}
+});
+// ----------------------------------------------------------------------------
+
 const BUDGET_PX_EDGE = 2048;    // max side length for any single-view IJ snapshot
 const TILE_PIX = 512;           // virtual tile size in level-zero pixel space
-const MOUSE_LOG_LEVEL = false;  // flip for noisy event tracing
 
 (async () => {
   const params = new URLSearchParams(location.search);
   const url = params.get("load") || params.get("ome") || window.__omeLoad;
+  console.log("[ome-loader] IIFE running; url =", url);
   if (!url) return;
 
   buildUi();
@@ -417,13 +434,11 @@ async function sendViewToImageJ() {
       for (let i = 0; i < provider.levels.length; i++) {
         const sf2 = provider.levels[i].scaleFactor;
         if (sf2 >= sf * needed) {
-          const L2 = provider.levels[i];
           rx = Math.floor(rx * sf / sf2);
           ry = Math.floor(ry * sf / sf2);
           rw = Math.ceil(rw * sf / sf2);
           rh = Math.ceil(rh * sf / sf2);
           updateStatus(`viewport too large; using level ${i} → ${rw}×${rh}`);
-          level2 = i; L3 = L2;
           const region = await provider.getRegion(i, rx, ry, rw, rh);
           await handToImageJ(region, provider.bitsPerSample);
           return;
