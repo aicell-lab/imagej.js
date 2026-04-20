@@ -32,6 +32,15 @@ window.addEventListener("unhandledrejection", (ev) => {
 const BUDGET_PX_EDGE = 2048;    // max side length for any single-view IJ snapshot
 const TILE_PIX = 512;           // virtual tile size in level-zero pixel space
 
+// -- module-level mutable state (hoisted above the IIFE to avoid TDZ) --------
+let ui;
+let view;          // { scale, tx, ty }
+let provider;
+let dragState;
+const tileCache = new Map();       // level|ti|tj → { bitmap, width, height }
+const fetchInFlight = new Map();   // level|ti|tj → Promise
+// ----------------------------------------------------------------------------
+
 (async () => {
   const params = new URLSearchParams(location.search);
   const url = params.get("load") || params.get("ome") || window.__omeLoad;
@@ -57,7 +66,6 @@ const TILE_PIX = 512;           // virtual tile size in level-zero pixel space
 // ========================================================================
 //  UI chrome
 // ========================================================================
-let ui;
 function buildUi() {
   ui = {};
   const root = document.createElement("div");
@@ -232,10 +240,6 @@ function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
 // ========================================================================
 //  Tile viewer: pan/zoom, pyramid-aware, Google-Maps-like
 // ========================================================================
-let view;   // { scale, tx, ty }  (tx,ty = translation from image(level0) to canvas px)
-let provider, dragState;
-const tileCache = new Map();   // key = level|ti|tj → ImageData
-
 function startViewer(p) {
   provider = p;
   ui.canvas.style.display = "block";
@@ -358,7 +362,6 @@ function render() {
   }
 }
 
-let fetchInFlight = new Map();   // key → promise
 async function fetchTile(level, ti, tj) {
   const key = level + "|" + ti + "|" + tj;
   if (fetchInFlight.has(key)) return;
