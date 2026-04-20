@@ -155,22 +155,63 @@ async function tiffProvider(url) {
     GT.fromUrl(url),
     timeout(45_000, "geotiff fromUrl timed out")
   ]);
-  const count = await tiff.getImageCount();
-  const levels = [];
+  const topCount = await tiff.getImageCount();
+  console.log(`[ome-loader] TIFF top-level IFDs: ${topCount}`);
+
+  // Collect all potential pyramid levels.
+  // OME-TIFF stores pyramids in two styles:
+  //   (a) one top-level IFD per resolution level (legacy)
+  //   (b) SUBIFDs of the base IFD (newer Bio-Formats default)
+  // We merge both into a single list, then filter to the largest-per-IFD
+  // and de-duplicate by (w,h).
+  const raw = [];
   let bits = 8, channels = 1;
-  for (let i = 0; i < count; i++) {
+
+  for (let i = 0; i < topCount; i++) {
     const img = await tiff.getImage(i);
     const w = img.getWidth(), h = img.getHeight();
-    levels.push({ w, h, image: img });
+    raw.push({ w, h, image: img, source: `top#${i}` });
     if (i === 0) {
       const b = img.getBitsPerSample();
       bits = Array.isArray(b) ? b[0] : b;
       channels = img.getSamplesPerPixel();
     }
+    // SUBIFDs — geotiff.js returns them via image.fileDirectory.SubIFDs (array of u32 offsets)
+    const subIFDOffsets = img.fileDirectory && img.fileDirectory.SubIFDs;
+    if (subIFDOffsets && subIFDOffsets.length > 0) {
+      console.log(`[ome-loader] top IFD ${i} has ${subIFDOffsets.length} SUBIFDs`);
+      for (let k = 0; k < subIFDOffsets.length; k++) {
+        try {
+          const subImg = await tiff.parseFileDirectoryAt(Number(subIFDOffsets[k]));
+          const geoSubImg = new GT.GeoTIFFImage(
+            subImg.fileDirectory, subImg.geoKeys, tiff.dataView,
+            tiff.littleEndian, tiff.cache, tiff.source);
+          const sw = geoSubImg.getWidth(), sh = geoSubImg.getHeight();
+          raw.push({ w: sw, h: sh, image: geoSubImg, source: `top#${i}.sub${k}` });
+        } catch (e) {
+          console.warn(`[ome-loader] failed to read SUBIFD ${k}:`, e);
+        }
+      }
+    }
   }
-  // Sort levels highest-res first, compute scaleFactor relative to level 0.
-  levels.sort((a, b) => b.w * b.h - a.w * a.h);
+
+  console.log(`[ome-loader] raw levels collected: ${raw.length}`,
+    raw.map(r => `${r.w}×${r.h}(${r.source})`).join(", "));
+
+  // De-duplicate by (w,h): keep the first one seen. Sort highest-res first.
+  const seen = new Set();
+  const levels = [];
+  raw.sort((a, b) => b.w * b.h - a.w * a.h);
+  for (const r of raw) {
+    const k = r.w + "x" + r.h;
+    if (seen.has(k)) continue;
+    seen.add(k);
+    levels.push(r);
+  }
   for (const L of levels) L.scaleFactor = levels[0].w / L.w;
+
+  console.log(`[ome-loader] deduped pyramid: ${levels.length} levels —`,
+    levels.map(L => `${L.w}×${L.h}(sf=${L.scaleFactor.toFixed(2)})`).join(", "));
 
   return {
     kind: "tiff", url,
