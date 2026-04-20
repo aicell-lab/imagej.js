@@ -12,6 +12,8 @@
 
 console.log("[ome-loader] module evaluated");
 
+const STATUS_ID = "__ome_loader_status__";
+
 (async () => {
   const params = new URLSearchParams(location.search);
   const url = params.get("load") || params.get("ome") || window.__omeLoad;
@@ -48,7 +50,6 @@ console.log("[ome-loader] module evaluated");
 })();
 
 // ----- status pill ----------------------------------------------------------
-const STATUS_ID = "__ome_loader_status__";
 function buildStatus() {
   if (document.getElementById(STATUS_ID)) return;
   const el = document.createElement("div");
