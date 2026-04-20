@@ -53,6 +53,11 @@ else
     exit 1
 fi
 
+# Build threadhack parallel-tool.jar against the freshly-built ij.jar
+# (so com.hack.viewer.LazyImagePlus can compile against ImagePlus etc.)
+echo "Building threadhack parallel-tool.jar..."
+IJ_JAR="$(pwd)/lib/ImageJ/ij.jar" bash threadhack/java/build.sh
+
 # Copy other necessary files
 echo "Copying ImageJ resources..."
 if [ -d "$BUILD_DIR/plugins" ]; then

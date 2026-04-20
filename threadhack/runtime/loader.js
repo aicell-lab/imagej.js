@@ -94,6 +94,66 @@
     }
   };
 
+  // ---- LazyImagePlus / TileSource natives -----------------------------
+  // JS-side data sources register themselves as window.__tileSources[key].
+  // A provider has shape: { levels:[{w,h,scaleFactor}], bitsPerSample,
+  //   async getRegion(level,x,y,w,h) -> { data: TypedArray, width, height } }
+  window.__tileSources = window.__tileSources || {};
+
+  function getSrc(key) {
+    var s = window.__tileSources[key];
+    if (!s) throw new Error('[threadhack] no tile source registered for key=' + key);
+    return s;
+  }
+
+  // Per-(key,level) min/max cache for auto-stretch (avoids re-scanning).
+  var _statsCache = new Map();
+
+  function autoStretchToU8(typedArr, bits, statKey) {
+    if (bits <= 8) {
+      return (typedArr instanceof Uint8Array) ? typedArr : new Uint8Array(typedArr);
+    }
+    var stats = _statsCache.get(statKey);
+    if (!stats) {
+      var mn = Infinity, mx = -Infinity;
+      var stride = Math.max(1, Math.floor(typedArr.length / 50000));
+      for (var i = 0; i < typedArr.length; i += stride) {
+        var v = typedArr[i];
+        if (v < mn) mn = v;
+        if (v > mx) mx = v;
+      }
+      if (!isFinite(mn) || mx <= mn) { mn = 0; mx = bits <= 16 ? 65535 : 1; }
+      stats = { mn: mn, mx: mx };
+      _statsCache.set(statKey, stats);
+    }
+    var scale = 255 / (stats.mx - stats.mn);
+    var out = new Uint8Array(typedArr.length);
+    for (var j = 0; j < typedArr.length; j++) {
+      var w = (typedArr[j] - stats.mn) * scale;
+      if (w < 0) w = 0; else if (w > 255) w = 255;
+      out[j] = w;
+    }
+    return out;
+  }
+
+  var tileSourceNatives = {
+    Java_com_hack_viewer_JSTileSource_nativeLevelCount:    async function (lib, key) { return getSrc(key).levels.length; },
+    Java_com_hack_viewer_JSTileSource_nativeBitsPerSample: async function (lib, key) { return getSrc(key).bitsPerSample || 8; },
+    Java_com_hack_viewer_JSTileSource_nativeLevelWidth:    async function (lib, key, level) { return getSrc(key).levels[level].w; },
+    Java_com_hack_viewer_JSTileSource_nativeLevelHeight:   async function (lib, key, level) { return getSrc(key).levels[level].h; },
+    Java_com_hack_viewer_JSTileSource_nativeLevelScale:    async function (lib, key, level) { return getSrc(key).levels[level].scaleFactor; },
+    Java_com_hack_viewer_JSTileSource_nativeGetTile: async function (lib, key, level, x, y, w, h) {
+      var src = getSrc(key);
+      var region = await src.getRegion(level, x, y, w, h);
+      if (!region.data) {
+        return new Int8Array(w * h); // black tile
+      }
+      var u8 = autoStretchToU8(region.data, src.bitsPerSample || 8, key + '|' + level);
+      // CheerpJ native byte[] return: Int8Array view of the same buffer
+      return new Int8Array(u8.buffer, u8.byteOffset, u8.byteLength);
+    }
+  };
+
   // Wrap cheerpjInit --------------------------------------------------------
   if (typeof cheerpjInit !== 'function') {
     console.error('[threadhack-runtime] stock cheerpjInit not defined — stock loader failed?');
@@ -106,7 +166,7 @@
     opts = Object.assign({}, opts || {});
     var poolSize = opts.threadhackPool !== undefined ? opts.threadhackPool : DEFAULT_POOL;
     delete opts.threadhackPool;
-    opts.natives = Object.assign({}, threadHookNatives, opts.natives || {});
+    opts.natives = Object.assign({}, threadHookNatives, tileSourceNatives, opts.natives || {});
 
     // Install our classloader as the system classloader so plugin jars
     // loaded by ImageJ's internal PluginClassLoader (and any child

@@ -135,6 +135,10 @@ def apply_patches():
     print("\n--- Patching YesNoCancelDialog.java ---")
     patch_yes_no_cancel_dialog_java()
 
+    # Patch ImageWindow + ImageCanvas to support LazyImagePlus (Google-Maps mode)
+    print("\n--- Patching ImageWindow + ImageCanvas for LazyImagePlus ---")
+    patch_lazy_image_plus_hooks()
+
     print("\n" + "=" * 60)
     print("✓ Successfully applied all patches!")
     print("  - Interpreter.java: Silent macro execution")
@@ -560,6 +564,99 @@ def patch_yes_no_cancel_dialog_java():
         f.write(content)
 
     print("✓ YesNoCancelDialog.java patched successfully")
+    return True
+
+def patch_lazy_image_plus_hooks():
+    """Patch ImageWindow.mouseWheelMoved + ImageCanvas.mouseDragged to give
+    LazyImagePlus images Google-Maps-style cursor-anchored zoom and drag-pan."""
+    import os
+
+    # ---- ImageWindow.java: cursor-anchored wheel zoom ------------------
+    iw_path = "ImageJ-build/ij/gui/ImageWindow.java"
+    if not os.path.exists(iw_path):
+        print(f"Warning: {iw_path} not found, skipping")
+    else:
+        with open(iw_path, 'r') as f:
+            content = f.read()
+
+        marker = "public synchronized void mouseWheelMoved(MouseWheelEvent e) {"
+        injection = (
+            "\n\t\t// [threadhack] LazyImagePlus → cursor-anchored zoom\n"
+            "\t\tif (imp instanceof com.hack.viewer.LazyImagePlus) {\n"
+            "\t\t\tcom.hack.viewer.LazyImagePlus lip = (com.hack.viewer.LazyImagePlus) imp;\n"
+            "\t\t\tint rot = e.getWheelRotation();\n"
+            "\t\t\tif (rot == 0) return;\n"
+            "\t\t\tdouble factor = Math.pow(1.25, -rot);\n"
+            "\t\t\tjava.awt.Point p = ic.getCursorLoc();\n"
+            "\t\t\tint sx = ic.screenX(p.x), sy = ic.screenY(p.y);\n"
+            "\t\t\tint cw = ic.getWidth(), ch = ic.getHeight();\n"
+            "\t\t\tdouble oldZ = lip.getZoomLevel();\n"
+            "\t\t\tdouble cx = lip.getCx(), cy = lip.getCy();\n"
+            "\t\t\tdouble level0X = cx + (sx - cw/2.0) / oldZ;\n"
+            "\t\t\tdouble level0Y = cy + (sy - ch/2.0) / oldZ;\n"
+            "\t\t\tdouble newZ = Math.max(1e-4, Math.min(32.0, oldZ * factor));\n"
+            "\t\t\tdouble newCx = level0X - (sx - cw/2.0) / newZ;\n"
+            "\t\t\tdouble newCy = level0Y - (sy - ch/2.0) / newZ;\n"
+            "\t\t\tlip.setView(newCx, newCy, newZ);\n"
+            "\t\t\treturn;\n"
+            "\t\t}\n"
+        )
+        if marker in content and "[threadhack] LazyImagePlus" not in content:
+            content = content.replace(marker, marker + injection, 1)
+            with open(iw_path, 'w') as f:
+                f.write(content)
+            print("✓ Patched ImageWindow.mouseWheelMoved for LazyImagePlus")
+        else:
+            print("⊘ ImageWindow patch already applied or marker missing")
+
+    # ---- ImageCanvas.java: drag-to-pan when imp is LazyImagePlus -------
+    ic_path = "ImageJ-build/ij/gui/ImageCanvas.java"
+    if not os.path.exists(ic_path):
+        print(f"Warning: {ic_path} not found, skipping")
+        return False
+
+    with open(ic_path, 'r') as f:
+        content = f.read()
+
+    marker = "public void mouseDragged(MouseEvent e) {"
+    drag_inject = (
+        "\n\t\t// [threadhack] LazyImagePlus → drag is pan (any tool)\n"
+        "\t\tif (imp instanceof com.hack.viewer.LazyImagePlus) {\n"
+        "\t\t\tcom.hack.viewer.LazyImagePlus lip = (com.hack.viewer.LazyImagePlus) imp;\n"
+        "\t\t\tint x = e.getX(), y = e.getY();\n"
+        "\t\t\tint dx = x - lazyDragX;\n"
+        "\t\t\tint dy = y - lazyDragY;\n"
+        "\t\t\tlazyDragX = x; lazyDragY = y;\n"
+        "\t\t\tdouble z = lip.getZoomLevel();\n"
+        "\t\t\tlip.setView(lip.getCx() - dx / z, lip.getCy() - dy / z, z);\n"
+        "\t\t\treturn;\n"
+        "\t\t}\n"
+    )
+    # Add field for drag tracking + patch mouseDragged + mousePressed
+    if "[threadhack] LazyImagePlus" not in content:
+        # 1. Add fields right after `protected ImagePlus imp;`
+        content = content.replace(
+            "protected ImagePlus imp;",
+            "protected ImagePlus imp;\n\t/** [threadhack] LazyImagePlus drag tracking */\n\tint lazyDragX, lazyDragY;",
+            1
+        )
+        # 2. Inject pan hook at top of mouseDragged
+        content = content.replace(marker, marker + drag_inject, 1)
+        # 3. Capture starting drag pos in mousePressed (so first dx/dy is 0)
+        press_marker = "public void mousePressed(final MouseEvent e) {"
+        press_inject = (
+            "\n\t\t// [threadhack] capture drag origin for LazyImagePlus pan\n"
+            "\t\tif (imp instanceof com.hack.viewer.LazyImagePlus) {\n"
+            "\t\t\tlazyDragX = e.getX(); lazyDragY = e.getY();\n"
+            "\t\t}\n"
+        )
+        content = content.replace(press_marker, press_marker + press_inject, 1)
+        with open(ic_path, 'w') as f:
+            f.write(content)
+        print("✓ Patched ImageCanvas.mouseDragged + mousePressed for LazyImagePlus pan")
+    else:
+        print("⊘ ImageCanvas patch already applied")
+
     return True
 
 if __name__ == "__main__":
