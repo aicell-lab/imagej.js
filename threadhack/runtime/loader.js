@@ -50,10 +50,12 @@
 
   async function spawnPool(n) {
     var t0 = performance.now();
+    var WORKER_TIMEOUT_MS = 30000;
     for (var i = 0; i < n; i++) {
       var w = new Worker(WORKER_URL + '?cb=' + Date.now() + '_' + i, { name: 'w' + i });
       w.__name = 'w' + i;
-      var readyP = new Promise(function (res) { w._res = res; });
+      var workerName = 'w' + i;
+      var readyP = new Promise(function (res, rej) { w._res = res; w._rej = rej; });
       w.onmessage = function (e) {
         var d = e.data;
         if (d.kind === 'ready') { w._res(); }
@@ -64,10 +66,22 @@
           d.kind === 'error' ? p.reject(new Error(d.err)) : p.resolve(d);
         }
       };
-      pool.push(w);
-      await readyP;
+      w.onerror = (function(name, rej) { return function(ev) {
+        console.warn('[threadhack-runtime] ' + name + ' onerror: ' + (ev.message || ev));
+        try { rej(new Error('worker onerror')); } catch(_){}
+      }; })(workerName, w._rej);
+      var timeoutP = new Promise(function (res, rej) {
+        setTimeout(function () { rej(new Error('boot timeout (' + WORKER_TIMEOUT_MS + 'ms)')); }, WORKER_TIMEOUT_MS);
+      });
+      try {
+        await Promise.race([readyP, timeoutP]);
+        pool.push(w);
+      } catch (e) {
+        console.warn('[threadhack-runtime] ' + workerName + ' failed: ' + e.message + ' — skipping');
+        try { w.terminate(); } catch(_){}
+      }
     }
-    console.log('[threadhack-runtime] ' + n + ' workers ready in ' + (performance.now() - t0).toFixed(0) + 'ms');
+    console.log('[threadhack-runtime] ' + pool.length + '/' + n + ' workers ready in ' + (performance.now() - t0).toFixed(0) + 'ms');
   }
 
   var threadHookNatives = {
