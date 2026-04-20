@@ -155,52 +155,40 @@ async function tiffProvider(url) {
     GT.fromUrl(url),
     timeout(45_000, "geotiff fromUrl timed out")
   ]);
-  const topCount = await tiff.getImageCount();
-  console.log(`[ome-loader] TIFF top-level IFDs: ${topCount}`);
-
-  // Collect all potential pyramid levels.
-  // OME-TIFF stores pyramids in two styles:
-  //   (a) one top-level IFD per resolution level (legacy)
-  //   (b) SUBIFDs of the base IFD (newer Bio-Formats default)
-  // We merge both into a single list, then filter to the largest-per-IFD
-  // and de-duplicate by (w,h).
+  // AVOID getImageCount() — it forces enumeration of all top-level IFDs
+  // (brain.pyramid.ome.tif has 3910 → took ~60s). We only need IFD 0;
+  // if it has SUBIFDs, those carry the full pyramid ladder. If no SUBIFDs
+  // (legacy-style pyramid-as-IFDs), we walk a few more top IFDs.
   const raw = [];
   let bits = 8, channels = 1;
 
-  // Walk top-level IFDs but STOP after the first one whose SUBIFDs
-  // already give us a full pyramid. For typical OME-TIFFs, the first IFD +
-  // its SUBIFDs cover the full resolution ladder; additional top IFDs are
-  // Z/T/C planes at the same size and walking them is pure waste of network.
-  // Limit to at most 4 top IFDs so we bail fast on multi-plane files.
-  const maxTopToWalk = Math.min(topCount, 4);
-  for (let i = 0; i < maxTopToWalk; i++) {
-    const img = await tiff.getImage(i);
-    const w = img.getWidth(), h = img.getHeight();
-    raw.push({ w, h, image: img, source: `top#${i}` });
-    if (i === 0) {
-      const b = img.getBitsPerSample();
-      bits = Array.isArray(b) ? b[0] : b;
-      channels = img.getSamplesPerPixel();
+  const img0 = await tiff.getImage(0);
+  const w0 = img0.getWidth(), h0 = img0.getHeight();
+  raw.push({ w: w0, h: h0, image: img0, source: "top#0" });
+  const bps = img0.getBitsPerSample();
+  bits = Array.isArray(bps) ? bps[0] : bps;
+  channels = img0.getSamplesPerPixel();
+
+  const subIFDOffsets = img0.fileDirectory && img0.fileDirectory.SubIFDs;
+  if (subIFDOffsets && subIFDOffsets.length > 0) {
+    console.log(`[ome-loader] top IFD 0 has ${subIFDOffsets.length} SUBIFDs — pyramid via SUBIFDs`);
+    for (let k = 0; k < subIFDOffsets.length; k++) {
+      try {
+        const subImg = await tiff.parseFileDirectoryAt(Number(subIFDOffsets[k]));
+        const geoSubImg = new GT.GeoTIFFImage(
+          subImg.fileDirectory, subImg.geoKeys, tiff.dataView,
+          tiff.littleEndian, tiff.cache, tiff.source);
+        raw.push({ w: geoSubImg.getWidth(), h: geoSubImg.getHeight(), image: geoSubImg, source: `top#0.sub${k}` });
+      } catch (e) { console.warn(`[ome-loader] SUBIFD ${k} failed:`, e); }
     }
-    const subIFDOffsets = img.fileDirectory && img.fileDirectory.SubIFDs;
-    if (subIFDOffsets && subIFDOffsets.length > 0) {
-      console.log(`[ome-loader] top IFD ${i} has ${subIFDOffsets.length} SUBIFDs — pyramid via SUBIFDs`);
-      for (let k = 0; k < subIFDOffsets.length; k++) {
-        try {
-          const subImg = await tiff.parseFileDirectoryAt(Number(subIFDOffsets[k]));
-          const geoSubImg = new GT.GeoTIFFImage(
-            subImg.fileDirectory, subImg.geoKeys, tiff.dataView,
-            tiff.littleEndian, tiff.cache, tiff.source);
-          const sw = geoSubImg.getWidth(), sh = geoSubImg.getHeight();
-          raw.push({ w: sw, h: sh, image: geoSubImg, source: `top#${i}.sub${k}` });
-        } catch (e) {
-          console.warn(`[ome-loader] failed to read SUBIFD ${k}:`, e);
-        }
-      }
-      // SUBIFDs carry the full ladder — bail out of the top-IFD walk.
-      // Extra top IFDs in pyramidal OME-TIFFs are Z/T/C planes at level 0,
-      // not additional resolution levels.
-      if (i === 0) break;
+  } else {
+    // Legacy pyramid-as-top-IFDs. Walk a few more; cap at 8.
+    console.log("[ome-loader] no SUBIFDs; walking top IFDs as pyramid (cap 8)");
+    for (let i = 1; i < 8; i++) {
+      try {
+        const img = await tiff.getImage(i);
+        raw.push({ w: img.getWidth(), h: img.getHeight(), image: img, source: `top#${i}` });
+      } catch (e) { break; }   // out of bounds → stop
     }
   }
 
