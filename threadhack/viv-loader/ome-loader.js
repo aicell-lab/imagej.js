@@ -231,31 +231,41 @@ async function openInImageJ(region, prov, title) {
 }
 
 async function makeProcessor(pixels, w, h, bits) {
-  // CheerpJ library mode chokes on overload disambiguation when null is
-  // passed for ColorModel. Construct the processor without a pixels arg
-  // and then setPixels(...) — works for all ImageProcessor subclasses.
-  if (bits <= 8) {
-    const u8 = (pixels instanceof Uint8Array) ? pixels : new Uint8Array(pixels);
-    const BP = await lib.ij.process.ByteProcessor;
-    const p = await new BP(w, h);
-    await p.setPixels(u8);
-    return p;
-  }
-  if (bits <= 16) {
-    const s16 = (pixels instanceof Uint16Array) ? pixels
-              : (pixels instanceof Int16Array)  ? new Uint16Array(pixels.buffer, pixels.byteOffset || 0, pixels.length)
-              : new Uint16Array(pixels);
-    const SP = await lib.ij.process.ShortProcessor;
-    const p = await new SP(w, h);
-    await p.setPixels(s16);
-    return p;
-  }
-  // 32-bit float fallback
-  const f32 = (pixels instanceof Float32Array) ? pixels : new Float32Array(pixels);
-  const FP = await lib.ij.process.FloatProcessor;
-  const p = await new FP(w, h);
-  await p.setPixels(f32);
+  // CheerpJ library mode can't disambiguate ShortProcessor / FloatProcessor
+  // overloads when given a JS typed array (both `setPixels(Object)` and
+  // `setPixels(int, FloatProcessor)` exist, and the bridge fails). The
+  // ByteProcessor(int, int) + setPixels(byte[]) path works reliably.
+  // We auto-contrast 16/32-bit pixels down to 8-bit for display.
+  const u8 = toU8(pixels, bits);
+  const BP = await lib.ij.process.ByteProcessor;
+  const p = await new BP(w, h);
+  await p.setPixels(u8);
   return p;
+}
+
+function toU8(pixels, bits) {
+  if (bits <= 8) {
+    return (pixels instanceof Uint8Array) ? pixels : new Uint8Array(pixels);
+  }
+  // 16- or 32-bit: percentile auto-stretch (1%..99%) into 0..255
+  const N = pixels.length;
+  const out = new Uint8Array(N);
+  let mn = Infinity, mx = -Infinity;
+  // Subsample for speed
+  const stride = Math.max(1, Math.floor(N / 50000));
+  for (let i = 0; i < N; i += stride) {
+    const v = pixels[i];
+    if (v < mn) mn = v;
+    if (v > mx) mx = v;
+  }
+  if (!isFinite(mn) || mx <= mn) { mn = 0; mx = bits <= 16 ? 65535 : 1; }
+  const scale = 255 / (mx - mn);
+  for (let i = 0; i < N; i++) {
+    let v = (pixels[i] - mn) * scale;
+    if (v < 0) v = 0; else if (v > 255) v = 255;
+    out[i] = v;
+  }
+  return out;
 }
 
 async function swapImpPixels(region, prov) {
