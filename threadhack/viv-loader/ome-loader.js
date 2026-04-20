@@ -167,7 +167,13 @@ async function tiffProvider(url) {
   const raw = [];
   let bits = 8, channels = 1;
 
-  for (let i = 0; i < topCount; i++) {
+  // Walk top-level IFDs but STOP after the first one whose SUBIFDs
+  // already give us a full pyramid. For typical OME-TIFFs, the first IFD +
+  // its SUBIFDs cover the full resolution ladder; additional top IFDs are
+  // Z/T/C planes at the same size and walking them is pure waste of network.
+  // Limit to at most 4 top IFDs so we bail fast on multi-plane files.
+  const maxTopToWalk = Math.min(topCount, 4);
+  for (let i = 0; i < maxTopToWalk; i++) {
     const img = await tiff.getImage(i);
     const w = img.getWidth(), h = img.getHeight();
     raw.push({ w, h, image: img, source: `top#${i}` });
@@ -176,10 +182,9 @@ async function tiffProvider(url) {
       bits = Array.isArray(b) ? b[0] : b;
       channels = img.getSamplesPerPixel();
     }
-    // SUBIFDs — geotiff.js returns them via image.fileDirectory.SubIFDs (array of u32 offsets)
     const subIFDOffsets = img.fileDirectory && img.fileDirectory.SubIFDs;
     if (subIFDOffsets && subIFDOffsets.length > 0) {
-      console.log(`[ome-loader] top IFD ${i} has ${subIFDOffsets.length} SUBIFDs`);
+      console.log(`[ome-loader] top IFD ${i} has ${subIFDOffsets.length} SUBIFDs — pyramid via SUBIFDs`);
       for (let k = 0; k < subIFDOffsets.length; k++) {
         try {
           const subImg = await tiff.parseFileDirectoryAt(Number(subIFDOffsets[k]));
@@ -192,6 +197,10 @@ async function tiffProvider(url) {
           console.warn(`[ome-loader] failed to read SUBIFD ${k}:`, e);
         }
       }
+      // SUBIFDs carry the full ladder — bail out of the top-IFD walk.
+      // Extra top IFDs in pyramidal OME-TIFFs are Z/T/C planes at level 0,
+      // not additional resolution levels.
+      if (i === 0) break;
     }
   }
 
