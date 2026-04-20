@@ -35,13 +35,10 @@ async function boot() {
   });
   log(`cheerpjInit done +${(performance.now()-t0).toFixed(0)}ms`);
 
-  // Classpath: tool jar + sample jar + optional app-level ij.jar
+  // Classpath: tool jar + optional app-level ij.jar
   // (convention: if BASE is …/threadhack/runtime/ or …/threadhack/, try …/lib/ImageJ/ij.jar at app root)
   const appRoot = BASE.replace(/\/threadhack(\/runtime)?\/?$/, "/");
-  const candidates = [
-    `/app${BASE}parallel-tool.jar`,
-    `/app${BASE}threadspawn-sample.jar`,
-  ];
+  const candidates = [`/app${BASE}parallel-tool.jar`];
   if (appRoot !== BASE) candidates.push(`/app${appRoot}lib/ImageJ/ij.jar`);
   const cp = candidates.join(":");
   log(`loading library classpath: ${cp}`);
