@@ -135,6 +135,12 @@ def apply_patches():
     print("\n--- Patching YesNoCancelDialog.java ---")
     patch_yes_no_cancel_dialog_java()
 
+    # Inject com.hack.viewer.* sources so ImageJ's ant build compiles them
+    # alongside ij.*. Required before patching ImageWindow / ImageCanvas
+    # (those patches reference com.hack.viewer.LazyImagePlus by name).
+    print("\n--- Injecting com.hack.viewer sources into ImageJ build tree ---")
+    inject_viewer_sources()
+
     # Patch ImageWindow + ImageCanvas to support LazyImagePlus (Google-Maps mode)
     print("\n--- Patching ImageWindow + ImageCanvas for LazyImagePlus ---")
     patch_lazy_image_plus_hooks()
@@ -564,6 +570,41 @@ def patch_yes_no_cancel_dialog_java():
         f.write(content)
 
     print("✓ YesNoCancelDialog.java patched successfully")
+    return True
+
+def inject_viewer_sources():
+    """Copy threadhack viewer sources (com.hack.viewer.*) into ImageJ-build/
+    and update build.xml so ant compiles them alongside ij/**."""
+    import os, shutil, glob
+
+    src_dir = "threadhack/java/src/com/hack/viewer"
+    dst_dir = "ImageJ-build/com/hack/viewer"
+
+    if not os.path.isdir(src_dir):
+        print(f"Warning: {src_dir} not found, skipping viewer injection")
+        return False
+
+    os.makedirs(dst_dir, exist_ok=True)
+    for f in glob.glob(os.path.join(src_dir, "*.java")):
+        shutil.copy2(f, dst_dir)
+        print(f"✓ Copied {os.path.basename(f)} → {dst_dir}")
+
+    # Add ./com as a second source root in build.xml so javac picks it up.
+    build_xml = "ImageJ-build/build.xml"
+    if os.path.exists(build_xml):
+        with open(build_xml, 'r') as f:
+            content = f.read()
+        # Replace the single-srcdir <javac ... srcdir="./ij" ...> with one that
+        # uses nested <src> elements pointing at both roots.
+        old = '<javac srcdir="./ij"'
+        new = '<javac srcdir="./ij:./com"'
+        if old in content and new not in content:
+            content = content.replace(old, new, 1)
+            with open(build_xml, 'w') as f:
+                f.write(content)
+            print("✓ Updated build.xml javac srcdir → ./ij:./com")
+        else:
+            print("⊘ build.xml srcdir already updated (or unrecognised)")
     return True
 
 def patch_lazy_image_plus_hooks():
