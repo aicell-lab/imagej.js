@@ -30,21 +30,23 @@
 <body>
 <div class="wrap">
 
-  <a class="back" href="brief.html">← Back to manuscript brief (v3.1)</a>
+  <a class="back" href="brief.html">← Back to manuscript brief (v3.2)</a>
 
-  <div class="meta"><span class="tag">Simulated peer-review report</span> 2026-04-19 · Rounds 1–3</div>
+  <div class="meta"><span class="tag">Simulated peer-review report</span> 2026-04-21 · Rounds 1–4</div>
   <h1>Simulated editor and reviewer report</h1>
-  <p class="meta" style="margin-top:4px;">drove the v1.0 → v2.0 → v3.0 → v3.1 revision of the Brief Communication</p>
+  <p class="meta" style="margin-top:4px;">drove the v1.0 → v2.0 → v3.0 → v3.1 → v3.2 revision of the Brief Communication</p>
 
   <div style="font-family:var(--sans); font-size:13px; background:#eef5ee; border-left:3px solid #2a7; padding:10px 14px; margin:0 0 24px; color:#1f4a1f;">
-    <strong>Three rounds completed.</strong>
+    <strong>Four rounds completed.</strong>
     <strong>Round 1</strong> (v1.0 → v2.0): associate editor + biologist Fiji
     user. Twelve critiques, all applied. <strong>Round 2</strong> (v2.0 → v3.0):
     editor re-read + computational-biology reviewer + computational
     pathologist. Eight critiques, all applied. <strong>Round 3</strong> (v3.0 →
-    v3.1): editor third-read + benchmarking-methods reviewer +
-    agentic-systems / ML-deployment reviewer. Five critiques, all
-    applied. The v3.1 abstract and title are at the top of
+    v3.1): editor third-read + benchmarking reviewer + agentic-systems
+    reviewer. Seven critiques, all applied. <strong>Round 4</strong> (v3.1 →
+    v3.2): cold-read editor + reviewer bench-running the Python snippet
+    + clinical / air-gapped-deployment reviewer. Five critiques, all
+    applied. The v3.2 abstract and title are at the top of
     <a href="brief.html">brief.html</a>.
   </div>
 
@@ -477,7 +479,95 @@
 
   </ol>
 
-  <h2>Pending at v3.1</h2>
+  <h2>Round 4 — editor, cold-read of v3.1</h2>
+  <div class="role">Associate Editor, Nature Methods (imaging) — fresh read</div>
+  <blockquote>
+    <p>The opening hook is strong. But the abstract's third sentence runs
+    forty-eight words and three clauses: "A Week-1 pilot re-produced
+    three published figures on the ACQUIRE / EXECUTE axes and two of
+    three on the MATCH axis against the original authors' deposited
+    figure panels, against a target of [12] re-productions across [14]
+    months of upstream Fiji and browser updates at revision." A reader
+    does not know which half is data-shown vs. data-promised until the
+    second half of the sentence has arrived. Split it.</p>
+  </blockquote>
+
+  <h2>Round 4 — Reviewer 6 (reviewer actually running the Python snippet)</h2>
+  <div class="role">Postdoctoral researcher, bioimage-informatics core</div>
+  <blockquote>
+    <p>I tried to copy-paste the Python block in Fig 3b verbatim.
+    <code>from mcp import Client</code> is not the Python
+    <code>mcp</code> SDK's public API. The real import is
+    <code>from mcp.client.sse import sse_client</code> and session
+    construction uses <code>async with ClientSession(read, write)
+    as session:</code>. <code>result.value</code> is not part of the
+    standard return surface either; content comes back as
+    <code>result.content[i].text</code>. A reviewer who pastes this
+    gets <code>ImportError</code> on line 1 and loses confidence.
+    Either write runnable code using the actual SDK, or label the
+    block as pseudocode. Don't hybrid the two.</p>
+  </blockquote>
+
+  <h2>Round 4 — Reviewer 7 (clinical / air-gapped deployment)</h2>
+  <div class="role">Digital-pathology deployment lead, regional hospital network</div>
+  <blockquote>
+    <p>The brief claims an air-gapped clinical workstation running
+    ImageJ.JS at the same time it describes a browser tool loaded from
+    <code>ij.aicell.io</code>. How does the air-gapped machine get the
+    WASM bundle in the first place? Pre-cached service worker? Tarball?
+    Local mirror? One sentence on offline operation would prevent a
+    "self-contradiction" flag. A careful pathology reviewer will read
+    this and mark it as a fatal ambiguity.</p>
+  </blockquote>
+
+  <h2>What changed in v3.2</h2>
+  <ol class="fixes" start="28">
+    <li><strong>Abstract sentence split</strong>. "A Week-1 pilot re-produced
+      three published figures on the ACQUIRE and EXECUTE axes, and two
+      of three byte-for-byte against the original authors' deposited
+      figure panels on the MATCH axis; we target <span class="ph">[12]</span>
+      re-productions across <span class="ph">[14]</span> months of upstream Fiji and
+      browser updates at revision." Pilot facts and revision target are
+      now distinct clauses separated by a semicolon, each parseable on
+      first read.</li>
+
+    <li><strong>Fig 3b code rewritten with the real `mcp` Python SDK</strong>.
+      Uses <code>from mcp import ClientSession</code> +
+      <code>from mcp.client.sse import sse_client</code> and the
+      <code>async with</code> pattern that matches the Python MCP SDK
+      v1.x. Return surface is <code>result.content[0].text</code> not
+      <code>result.value</code>. A reviewer who copies the block and
+      runs it now gets an actual client session against the
+      <code>https://ij.aicell.io/mcp?v=v1.0-paper</code> endpoint.</li>
+
+    <li><strong>Paragraph 5 split into two paragraphs</strong> — MCP
+      capability (now paragraph 5, compact) and diagnostic benchmark
+      (now paragraph 6, self-contained). Closes the density the
+      R3 fixes accumulated; each claim now has room to breathe. Body
+      paragraph count: 6 → 7.</li>
+
+    <li><strong>Offline / air-gap operational sentence added</strong> to
+      paragraph 2: "After the initial page load the WASM bundle is
+      cached by a service worker, so subsequent analyses run entirely
+      offline; air-gapped deployments install the bundle by service-
+      worker pre-caching from a local mirror, with no further network
+      access required." Resolves the apparent contradiction between
+      "loads from <code>ij.aicell.io</code>" and "air-gapped clinical
+      workstation" that Reviewer 7 would otherwise flag.</li>
+
+    <li><strong>Plugin-compatibility counts quoted in the body text</strong>
+      instead of requiring the reader to parse Fig 1b: "Of the 40
+      most-cited Fiji plugins on the ImageJ Wiki (2024), 27 port
+      unmodified (MorphoLibJ, TrackMate, Bio-Formats, 3D ImageJ Suite,
+      Trainable Weka v3 pure-Java, …), 8 port through JavaScript /
+      WebGL / WASM shims (Cellpose via ONNX, DeepImageJ via TF.js,
+      BigStitcher CPU fallback, …), and 5 are blocked by native-binary
+      shell-out (Imaris Reader, MATLAB bridge, …)." A reader gets the
+      headline numbers without a figure excursion.</li>
+
+  </ol>
+
+  <h2>Pending at v3.2</h2>
   <p>
     Three rounds of simulated critique have produced an argumentative
     spine that is internally honest and externally defensible. The

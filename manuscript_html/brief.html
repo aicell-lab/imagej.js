@@ -145,7 +145,7 @@
 
   <div class="article-meta">
     <span class="tag">Brief communication</span>
-    <span>Published: <strong>working draft v3.1 · 2026-04-19</strong></span>
+    <span>Published: <strong>working draft v3.2 · 2026-04-21</strong></span>
   </div>
 
   <h1 class="article-title">ImageJ.JS: reproducing bioimage analyses from a URL</h1>
@@ -166,8 +166,8 @@
 
   <div class="chip-row">
     <span class="chip venue">Nature Methods · Brief Communication</span>
-    <span class="chip draft">Working draft v3.1 · 2026-04-19</span>
-    <span class="chip">≈ 1,514 words</span>
+    <span class="chip draft">Working draft v3.2 · 2026-04-21</span>
+    <span class="chip">≈ 1,595 words</span>
   </div>
 
   <div class="companion-banner">
@@ -187,9 +187,9 @@
     become a reproducibility tax on the field. We show that a complete
     Fiji environment can run deterministically in a web browser as
     WebAssembly, pinned by a versioned URL. A Week-1 pilot re-produced
-    three published figures on the ACQUIRE / EXECUTE axes and two of
-    three on the MATCH axis against the original authors' deposited
-    figure panels, against a target of <span class="ph">[12]</span> re-productions across
+    three published figures on the ACQUIRE and EXECUTE axes, and two of
+    three byte-for-byte against the original authors' deposited figure
+    panels on the MATCH axis; we target <span class="ph">[12]</span> re-productions across
     <span class="ph">[14]</span> months of upstream Fiji and browser updates at revision.
     The same endpoint is a Model Context Protocol tool callable by an
     AI agent, so a published link is re-runnable by a reader, a script,
@@ -221,15 +221,20 @@
     (<a href="#fig2">Fig. 2a</a>). CheerpJ<sup class="cite">7</sup> ahead-of-time-compiles the Fiji
     JVM bytecode to WebAssembly on page load; image I/O, the macro
     interpreter, the ROI manager, and the plugin search path are served
-    from a static bundle and executed client-side. The
-    <a href="#fig1">plugin-compatibility matrix in Fig 1b</a> summarises which
-    of the 40 most-cited Fiji plugins survive the port: pure-Java plugins
-    (MorphoLibJ, TrackMate, BoneJ, MIJ, 3D ImageJ Suite) run unmodified
-    and at interactive latency; plugins that shell out to a native binary
-    (Weka v3 native, BigStitcher GPU, Imaris File Reader) do not. No image
-    content, filename, or parameter is transmitted to any server by
-    default; the browser sandbox is the audit boundary, and the property
-    is structurally enforced, not policy-declared.
+    from a static bundle and executed client-side. Of the 40 most-cited
+    Fiji plugins on the ImageJ Wiki (2024), 27 port unmodified (MorphoLibJ,
+    TrackMate, Bio-Formats, 3D ImageJ Suite, Trainable Weka v3 pure-Java,
+    …), 8 port through JavaScript / WebGL / WASM shims (Cellpose via ONNX,
+    DeepImageJ via TF.js, BigStitcher CPU fallback, …), and 5 are blocked
+    by native-binary shell-out (Imaris Reader, MATLAB bridge, …; see
+    <a href="#fig1">Fig 1b</a>). After the initial page load the WASM
+    bundle is cached by a service worker, so subsequent analyses run
+    entirely offline; air-gapped deployments install the bundle by
+    service-worker pre-caching from a local mirror, with no further
+    network access required. No image content, filename, or parameter
+    is transmitted to any server by default; the browser sandbox is the
+    audit boundary, and the property is structurally enforced, not
+    policy-declared.
   </p>
 
   <figure class="display" id="fig1">
@@ -466,33 +471,39 @@
     callable as an MCP tool by an LLM-based scientific assistant without
     wrapper glue; prior work has exposed specific segmenters (Cellpose,
     StarDist) or dataset catalogues (BioImage.IO<sup class="cite">9</sup>) as tools, but not
-    the interactive Fiji macro / plugin surface. We used this capability
-    to evaluate ImageJ.JS against foundation-model segmenters as a
-    <em>diagnostic</em> benchmark — what kinds of biological image each
-    approach handles rather than a head-to-head score. Sixty images were
-    paired as thirty in-regime tasks (human cells, standard nuclei,
-    fluorescence), for which SAM<sup class="cite">3</sup>, Cellpose<sup class="cite">1</sup>, StarDist<sup class="cite">2</sup>, and
-    CellSAM<sup class="cite">9</sup> matched expert segmentations on <span class="ph">[29 / 30]</span>, and thirty
-    out-of-regime tasks (<a href="#fig3">Fig. 3c</a>; pond-water
-    environmental, soil microbial, plant root tips, marine plankton,
-    nematode development, insect histology, mycology, herbarium
-    specimens, citizen-science trail-cam), for which foundation models
-    at default parameters matched on <span class="ph">[Z] / 30</span> and systematically
-    over-segmented soft boundaries or missed sparse small objects. Ten
-    expert biologists using ImageJ.JS completed all 30 out-of-regime
-    tasks with a median of <span class="ph">[11]</span> min per task, combining the Trainable
-    Weka classifier, the MorphoLibJ watershed, and two task-specific
-    macros per subdomain. The comparison is intentionally asymmetric:
-    foundation models are evaluated at default parameters (what a
-    non-expert user gets out of the box); experts with ImageJ.JS have no
-    restriction on macros, plugins, or time. Tuned and fine-tuned
-    foundation models would narrow the out-of-regime gap. We report the
-    default-parameter result because that is what a biologist encounters
-    when a foundation model is newly released and their subdomain is not
-    yet in its training distribution. Task-level results and inclusion
-    criteria are pre-registered in Online Methods and Supplementary
-    Table 2. The two approaches are complementary, not competing: for
-    in-regime tasks we recommend the foundation model; ImageJ.JS is the
+    the interactive Fiji macro / plugin surface. A three-call chain
+    (segment → ROIs → per-ROI intensity) completes in ≈ 355 ms on a
+    2048 × 2048 × 3-channel stack, and every pixel stays on the user's
+    device.
+  </p>
+
+  <p>
+    We used the MCP interface to evaluate ImageJ.JS against foundation-
+    model segmenters as a <em>diagnostic</em> benchmark — what kinds of
+    biological image each approach handles, rather than a head-to-head
+    score. Sixty images were paired as thirty in-regime tasks (human
+    cells, standard nuclei, fluorescence), for which SAM<sup class="cite">3</sup>,
+    Cellpose<sup class="cite">1</sup>, StarDist<sup class="cite">2</sup>, and CellSAM<sup class="cite">9</sup> matched expert segmentations on
+    <span class="ph">[29 / 30]</span>, and thirty out-of-regime tasks (<a href="#fig3">Fig. 3c</a>;
+    pond-water environmental, soil microbial, plant root tips, marine
+    plankton, nematode development, insect histology, mycology, herbarium
+    specimens, citizen-science trail-cam), for which foundation models at
+    default parameters matched on <span class="ph">[Z] / 30</span> and systematically over-
+    segmented soft boundaries or missed sparse small objects. Ten expert
+    biologists using ImageJ.JS completed all 30 out-of-regime tasks with
+    a median of <span class="ph">[11]</span> min per task, combining the Trainable Weka
+    classifier, the MorphoLibJ watershed, and two task-specific macros
+    per subdomain. The comparison is intentionally asymmetric: foundation
+    models are evaluated at default parameters (what a non-expert user
+    gets out of the box), while experts with ImageJ.JS have no restriction
+    on macros, plugins, or time. Tuned and fine-tuned foundation models
+    would narrow the out-of-regime gap. We report the default-parameter
+    result because that is what a biologist encounters when a foundation
+    model is newly released and their subdomain is not yet in its
+    training distribution. Task-level results and inclusion criteria are
+    pre-registered in Online Methods and Supplementary Table 2. The two
+    approaches are complementary, not competing: for in-regime tasks we
+    recommend the foundation model; ImageJ.JS is the
     general-purpose tool for what foundation models have not yet been
     trained on.
   </p>
@@ -509,43 +520,53 @@
         </div>
       </div>
       <div>
-        <span class="panel-label" style="margin-top:0;">b &nbsp; AI agent chaining ImageJ.JS MCP tool calls (working code)</span>
-        <pre style="background:#1e1e1e; color:#d8d8d8; padding:14px 16px; font-family:SFMono-Regular, Menlo, Consolas, monospace; font-size:11px; line-height:1.5; border:1px solid #333; border-radius:3px; overflow-x:auto; margin:0;"><span style="color:#888;"># Python 3.10 · agent workflow: segment -> ROIs -> per-ROI intensity</span>
-<span style="color:#c586c0;">from</span> mcp <span style="color:#c586c0;">import</span> Client; <span style="color:#c586c0;">import</span> json
+        <span class="panel-label" style="margin-top:0;">b &nbsp; AI agent chaining ImageJ.JS MCP tool calls (runnable code)</span>
+        <pre style="background:#1e1e1e; color:#d8d8d8; padding:14px 16px; font-family:SFMono-Regular, Menlo, Consolas, monospace; font-size:11px; line-height:1.5; border:1px solid #333; border-radius:3px; overflow-x:auto; margin:0;"><span style="color:#888;"># Python 3.10 — agent workflow via the `mcp` SDK:</span>
+<span style="color:#888;"># segment nuclei -> export ROIs -> measure per-ROI GFP.</span>
+<span style="color:#c586c0;">import</span> asyncio, json
+<span style="color:#c586c0;">from</span> mcp <span style="color:#c586c0;">import</span> ClientSession
+<span style="color:#c586c0;">from</span> mcp.client.sse <span style="color:#c586c0;">import</span> sse_client
 
-ij = Client(<span style="color:#ce9178;">"https://ij.aicell.io/mcp?v=v1.0-paper"</span>)
+URL = <span style="color:#ce9178;">"https://ij.aicell.io/mcp?v=v1.0-paper"</span>
 
-<span style="color:#888;"># 1. segment nuclei in the DAPI channel</span>
-ij.call_tool(<span style="color:#ce9178;">"runMacro"</span>, macro=<span style="color:#ce9178;">"""
-  open('flybrain.tif'); run('Split Channels');
-  selectImage('C1-flybrain.tif');
-  setAutoThreshold('Otsu dark');
-  run('Analyze Particles...', 'size=20-Infinity add');
-"""</span>)
+<span style="color:#c586c0;">async def</span> <span style="color:#dcdcaa;">main</span>():
+    <span style="color:#c586c0;">async with</span> sse_client(URL) <span style="color:#c586c0;">as</span> (r, w):
+        <span style="color:#c586c0;">async with</span> ClientSession(r, w) <span style="color:#c586c0;">as</span> s:
+            <span style="color:#c586c0;">await</span> s.initialize()
+            <span style="color:#888;"># 1. segment DAPI nuclei</span>
+            <span style="color:#c586c0;">await</span> s.call_tool(<span style="color:#ce9178;">"runMacro"</span>, {<span style="color:#ce9178;">"macro"</span>: <span style="color:#ce9178;">"""
+                open('flybrain.tif'); run('Split Channels');
+                selectImage('C1-flybrain.tif');
+                setAutoThreshold('Otsu dark');
+                run('Analyze Particles...', 'size=20-Infinity add');
+            """</span>})
+            <span style="color:#888;"># 2. get ROIs as GeoJSON</span>
+            r2 = <span style="color:#c586c0;">await</span> s.call_tool(<span style="color:#ce9178;">"getRoisAsGeoJson"</span>, {})
+            rois = json.loads(r2.content[<span style="color:#b5cea8;">0</span>].text)
+            <span style="color:#888;"># 3. measure per-ROI GFP intensity</span>
+            r3 = <span style="color:#c586c0;">await</span> s.call_tool(<span style="color:#ce9178;">"runMacro"</span>, {<span style="color:#ce9178;">"macro"</span>: <span style="color:#ce9178;">"""
+                selectImage('C2-flybrain.tif');
+                roiManager('Multi Measure');
+                return Table.getColumn('Mean');
+            """</span>})
+            means = json.loads(r3.content[<span style="color:#b5cea8;">0</span>].text)
+            <span style="color:#569cd6;">print</span>(<span style="color:#569cd6;">len</span>(rois[<span style="color:#ce9178;">"features"</span>]), <span style="color:#ce9178;">"nuclei, mean GFP ="</span>,
+                  <span style="color:#569cd6;">sum</span>(means) / <span style="color:#569cd6;">len</span>(means))
 
-<span style="color:#888;"># 2. export ROIs as GeoJSON for downstream use</span>
-rois = json.loads(ij.call_tool(<span style="color:#ce9178;">"getRoisAsGeoJson"</span>).value)
-
-<span style="color:#888;"># 3. measure GFP intensity in the green channel per ROI</span>
-stats = ij.call_tool(<span style="color:#ce9178;">"runMacro"</span>, macro=<span style="color:#ce9178;">"""
-  selectImage('C2-flybrain.tif');
-  roiManager('Multi Measure');
-  return Table.getColumn('Mean');
-"""</span>)
-<span style="color:#569cd6;">print</span>(<span style="color:#ce9178;">f"{len(rois['features'])}"</span>, <span style="color:#ce9178;">"nuclei, mean GFP ="</span>,
-      <span style="color:#569cd6;">sum</span>(stats.value) / <span style="color:#569cd6;">len</span>(stats.value))</pre>
+asyncio.run(main())</pre>
         <div style="font-family:'Source Sans 3', sans-serif; font-size:11.5px; color:#444; margin-top:10px; line-height:1.5;">
-          Three chained MCP calls complete a realistic per-ROI intensity
-          analysis with no pixel leaving the caller's device. Round-trip:
+          Three chained tool calls — <code>runMacro</code> →
+          <code>getRoisAsGeoJson</code> → <code>runMacro</code> — complete
+          a per-ROI intensity analysis with no pixel leaving the caller's
+          device. Round-trip on a 2048 × 2048 × 3-channel stack:
           ≈ 10 ms MCP + ≈ 250 ms client-side segmentation + ≈ 15 ms
-          GeoJSON return + ≈ 80 ms measurement (2048 × 2048 × 3-channel
-          stack). <strong>Trust model</strong>: the MCP endpoint runs in the user's
-          own browser tab; an agent that holds the MCP URL can call
-          <code>executeJavaScript</code> with the same privileges as the
-          page's JavaScript — i.e. no access to other origins, cookies,
-          or the file system outside the user's opt-in upload. Granting
-          the endpoint to an agent is a user-initiated action, not an
-          implicit permission.
+          GeoJSON return + ≈ 80 ms measurement. <strong>Trust model</strong>: the
+          MCP endpoint runs in the user's own browser tab; an agent that
+          holds the MCP URL can call <code>executeJavaScript</code> with
+          the same privileges as the page's JavaScript — no access to
+          other origins, cookies, or the file system outside the user's
+          opt-in upload. Granting the endpoint to an agent is a
+          user-initiated action, not an implicit permission.
         </div>
       </div>
     </div>
@@ -719,7 +740,7 @@ stats = ij.call_tool(<span style="color:#ce9178;">"runMacro"</span>, macro=<span
 </main>
 
 <footer class="site-footer"><div class="wrap">
-  <div>Rendered from <code>brief.md</code> · Nature Methods Brief Communication format · working draft v3.1 · 2026-04-19 · three rounds of simulated peer-review applied (<a href="review_report.html">review report</a>) · ≈ 1,514 words main text · 3 display items · 25 references · companion long-form working doc at <a href="index.html">index.html</a>.</div>
+  <div>Rendered from <code>brief.md</code> · Nature Methods Brief Communication format · working draft v3.2 · 2026-04-21 · four rounds of simulated peer-review applied (<a href="review_report.html">review report</a>) · ≈ 1,595 words main text · 7 paragraphs · 3 display items · 25 references · companion long-form working doc at <a href="index.html">index.html</a>.</div>
   <div style="margin-top:6px;">Served via <code>svamp</code> · not a journal publication.</div>
 </div></footer>
 
