@@ -53,6 +53,15 @@ public class LazyImagePlus extends ImagePlus {
     /** Last level chosen by pickLevel() — surfaced in title bar for diagnostic. */
     private int currentLevel = 0;
 
+    /** Last fetched tile + its geometry, used for instant NN-scaled previews
+     *  on setView() before the next fetch lands. */
+    private byte[] cachedTile;
+    private int cacheLevel = -1;
+    private int cacheX0, cacheY0, cacheRw, cacheRh;
+
+    /** Debounce timer for the actual network fetch. */
+    private javax.swing.Timer fetchTimer;
+
     /**
      * Viewport-stable ROI state. After every user interaction with the ROI
      * tool, the current display-coord ROI is converted to level-0 coords and
@@ -145,12 +154,68 @@ public class LazyImagePlus extends ImagePlus {
         refresh();
     }
 
-    /** Pan + zoom in level-0 coords. zoom = displayedPx / level-0-px. */
+    /** Pan + zoom in level-0 coords. zoom = displayedPx / level-0-px.
+     *
+     *  Fast path: re-render from the cached tile (NN-rescale) so the
+     *  viewport snaps immediately. Crisp pixels arrive in a debounced
+     *  fetch ~120 ms later, once the user stops interacting.
+     */
     public void setView(double cx, double cy, double zoom) {
         this.cx = cx;
         this.cy = cy;
         this.zoom = clamp(zoom, 1e-4, 32.0);
-        refresh();
+        renderFromCache();            // instant, no network
+        scheduleFetch();              // debounced, may fire later
+    }
+
+    /**
+     * Paint the current viewport by NN-resampling the last fetched tile.
+     * Good enough as a preview; the scheduled fetch will replace it with
+     * pixels from the correct pyramid level.
+     */
+    private void renderFromCache() {
+        if (cachedTile == null) return;
+        final int lvl = cacheLevel;
+        final double sf = src.levelScaleFactor(lvl);
+        final byte[] dst = new byte[viewW * viewH];
+        // For each dst pixel, compute its level-0 coord via the view
+        // transform, then map to the cached tile's level + offset.
+        for (int dy = 0; dy < viewH; dy++) {
+            double l0y = cy + (dy - viewH / 2.0) / zoom;
+            double tyD = l0y / sf - cacheY0;
+            int ty = (int) Math.round(tyD);
+            if (ty < 0 || ty >= cacheRh) continue;
+            int dstRow = dy * viewW;
+            int tileRow = ty * cacheRw;
+            for (int dx = 0; dx < viewW; dx++) {
+                double l0x = cx + (dx - viewW / 2.0) / zoom;
+                double txD = l0x / sf - cacheX0;
+                int tx = (int) Math.round(txD);
+                if (tx < 0 || tx >= cacheRw) continue;
+                dst[dstRow + dx] = cachedTile[tileRow + tx];
+            }
+        }
+        processor.setPixels(dst);
+        ImageCanvas ic = getCanvas();
+        if (ic != null) {
+            ic.setMagnification(1.0);
+            ic.setSourceRect(new Rectangle(0, 0, viewW, viewH));
+        }
+        reprojectCachedRoi();
+        updateAndDraw();
+    }
+
+    private void scheduleFetch() {
+        if (fetchTimer != null) fetchTimer.stop();
+        fetchTimer = new javax.swing.Timer(120, new java.awt.event.ActionListener() {
+            @Override
+            public void actionPerformed(java.awt.event.ActionEvent e) {
+                fetchTimer = null;
+                refresh();
+            }
+        });
+        fetchTimer.setRepeats(false);
+        fetchTimer.start();
     }
 
     /**
@@ -286,12 +351,17 @@ public class LazyImagePlus extends ImagePlus {
             int rh = ry1 - ry0;
 
             byte[] dst = new byte[viewW * viewH];
+            byte[] tile = null;
             if (rw > 0 && rh > 0) {
-                byte[] tile = src.getTile(lvl, rx0, ry0, rw, rh);
+                tile = src.getTile(lvl, rx0, ry0, rw, rh);
                 if (tile != null && tile.length >= rw * rh) {
+                    // Cache the fetched tile so setView() can render instant
+                    // NN previews from it before the next fetch arrives.
+                    cachedTile = tile;
+                    cacheLevel = lvl;
+                    cacheX0 = rx0; cacheY0 = ry0;
+                    cacheRw = rw; cacheRh = rh;
                     // Map each dst pixel to (ideal-viewport → tile) via NN.
-                    // Offsets = where the clamped fetch sits inside the ideal
-                    // viewport (may be >0 if the ideal extends past image bounds).
                     double dxScale = (double) rW / viewW;
                     double dyScale = (double) rH / viewH;
                     int tileOffX = rx0 - x0;
