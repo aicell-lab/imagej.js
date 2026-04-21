@@ -650,7 +650,7 @@ def patch_lazy_image_plus_hooks():
         else:
             print("⊘ ImageWindow patch already applied or marker missing")
 
-    # ---- ImageCanvas.java: drag-to-pan when imp is LazyImagePlus -------
+    # ---- ImageCanvas.java: full Google-Maps interaction for LazyImagePlus ----
     ic_path = "ImageJ-build/ij/gui/ImageCanvas.java"
     if not os.path.exists(ic_path):
         print(f"Warning: {ic_path} not found, skipping")
@@ -659,9 +659,35 @@ def patch_lazy_image_plus_hooks():
     with open(ic_path, 'r') as f:
         content = f.read()
 
-    marker = "public void mouseDragged(MouseEvent e) {"
+    if "[threadhack] LazyImagePlus" in content:
+        print("⊘ ImageCanvas patch already applied")
+        return True
+
+    # 1. Add drag-tracking field
+    content = content.replace(
+        "protected ImagePlus imp;",
+        "protected ImagePlus imp;\n\t/** [threadhack] LazyImagePlus drag tracking */\n\tint lazyDragX, lazyDragY;",
+        1
+    )
+
+    # 2. mousePressed: capture drag origin AND return early (suppresses
+    #    ROI creation, magnifier click-zoom, tool-specific actions).
+    press_marker = "public void mousePressed(final MouseEvent e) {"
+    press_inject = (
+        "\n\t\t// [threadhack] LazyImagePlus: capture drag origin + skip all tools\n"
+        "\t\tif (imp instanceof com.hack.viewer.LazyImagePlus) {\n"
+        "\t\t\tlazyDragX = e.getX(); lazyDragY = e.getY();\n"
+        "\t\t\t// capture x/yMouse so other handlers (coord display) keep working\n"
+        "\t\t\txMouse = offScreenX(e.getX()); yMouse = offScreenY(e.getY());\n"
+        "\t\t\treturn;\n"
+        "\t\t}\n"
+    )
+    content = content.replace(press_marker, press_marker + press_inject, 1)
+
+    # 3. mouseDragged: pan via LazyImagePlus.setView()
+    drag_marker = "public void mouseDragged(MouseEvent e) {"
     drag_inject = (
-        "\n\t\t// [threadhack] LazyImagePlus → drag is pan (any tool)\n"
+        "\n\t\t// [threadhack] LazyImagePlus: drag = pan (any tool)\n"
         "\t\tif (imp instanceof com.hack.viewer.LazyImagePlus) {\n"
         "\t\t\tcom.hack.viewer.LazyImagePlus lip = (com.hack.viewer.LazyImagePlus) imp;\n"
         "\t\t\tint x = e.getX(), y = e.getY();\n"
@@ -673,31 +699,29 @@ def patch_lazy_image_plus_hooks():
         "\t\t\treturn;\n"
         "\t\t}\n"
     )
-    # Add field for drag tracking + patch mouseDragged + mousePressed
-    if "[threadhack] LazyImagePlus" not in content:
-        # 1. Add fields right after `protected ImagePlus imp;`
-        content = content.replace(
-            "protected ImagePlus imp;",
-            "protected ImagePlus imp;\n\t/** [threadhack] LazyImagePlus drag tracking */\n\tint lazyDragX, lazyDragY;",
-            1
-        )
-        # 2. Inject pan hook at top of mouseDragged
-        content = content.replace(marker, marker + drag_inject, 1)
-        # 3. Capture starting drag pos in mousePressed (so first dx/dy is 0)
-        press_marker = "public void mousePressed(final MouseEvent e) {"
-        press_inject = (
-            "\n\t\t// [threadhack] capture drag origin for LazyImagePlus pan\n"
-            "\t\tif (imp instanceof com.hack.viewer.LazyImagePlus) {\n"
-            "\t\t\tlazyDragX = e.getX(); lazyDragY = e.getY();\n"
-            "\t\t}\n"
-        )
-        content = content.replace(press_marker, press_marker + press_inject, 1)
-        with open(ic_path, 'w') as f:
-            f.write(content)
-        print("✓ Patched ImageCanvas.mouseDragged + mousePressed for LazyImagePlus pan")
-    else:
-        print("⊘ ImageCanvas patch already applied")
+    content = content.replace(drag_marker, drag_marker + drag_inject, 1)
 
+    # 4. mouseClicked: swallow clicks so magnifier/ROI-tool clicks are inert
+    click_marker = "public void mouseClicked(MouseEvent e) {"
+    click_inject = (
+        "\n\t\t// [threadhack] LazyImagePlus: clicks are inert (magnifier off)\n"
+        "\t\tif (imp instanceof com.hack.viewer.LazyImagePlus) return;\n"
+    )
+    if click_marker in content:
+        content = content.replace(click_marker, click_marker + click_inject, 1)
+
+    # 5. mouseReleased: also return early so no ROI finalisation happens
+    release_marker = "public void mouseReleased(MouseEvent e) {"
+    release_inject = (
+        "\n\t\t// [threadhack] LazyImagePlus: suppress ROI/tool release logic\n"
+        "\t\tif (imp instanceof com.hack.viewer.LazyImagePlus) return;\n"
+    )
+    if release_marker in content:
+        content = content.replace(release_marker, release_marker + release_inject, 1)
+
+    with open(ic_path, 'w') as f:
+        f.write(content)
+    print("✓ Patched ImageCanvas.mousePressed/Dragged/Clicked/Released for LazyImagePlus")
     return True
 
 if __name__ == "__main__":

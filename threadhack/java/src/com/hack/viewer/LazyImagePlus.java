@@ -1,131 +1,224 @@
 package com.hack.viewer;
 
 import ij.ImagePlus;
+import ij.gui.ImageCanvas;
+import ij.gui.ImageWindow;
+import ij.gui.Toolbar;
 import ij.process.ByteProcessor;
-import ij.process.ImageProcessor;
+
+import java.awt.Rectangle;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 
 /**
- * An ImagePlus backed by a pyramidal TileSource. Holds viewport state
- * (centre cx,cy in level-0 coords + zoom) and re-fetches a viewport's
- * worth of pixels whenever the view changes.
+ * An ImagePlus backed by a pyramidal TileSource.
  *
- * The displayed ImageProcessor is always sized to the current viewport in
- * canvas-pixel units, populated by a downsampled fetch from the most
- * appropriate pyramid level.
+ * Invariants (by design):
+ *   1. ImageProcessor dimensions are FIXED at viewW × viewH. All viewport
+ *      changes happen by re-filling the existing processor's pixel buffer
+ *      via ip.setPixels(), never by setProcessor(newIp-of-different-size).
+ *      This prevents ImageJ's ImageWindow.pack() from resizing the window
+ *      whenever the user zooms.
+ *   2. ImageCanvas.magnification is locked at 1.0 and srcRect at the full
+ *      processor. All zoom state lives in LazyImagePlus.zoom, not in
+ *      ImageCanvas — so ImageJ's zoomIn/zoomOut (which calls pack()) never
+ *      fires through our code path.
+ *   3. When the user resizes the window, a ComponentListener grows/shrinks
+ *      viewW/viewH to match the new canvas and re-fetches. No empty padding.
  *
- * ImageCanvas is patched to recognise this subclass and translate
- * mouse-wheel / drag interactions into setView() calls, giving native
- * Google-Maps-style behaviour without any JS overlay.
+ * Google-Maps-style semantics (delivered by patched ImageWindow + ImageCanvas):
+ *   - wheel       → cursor-anchored zoom, window stays the same size
+ *   - drag        → pan, any tool
+ *   - click       → ignored (magnifier is disabled)
+ *   - resize drag → viewport grows to fill the canvas
  */
 public class LazyImagePlus extends ImagePlus {
 
     private final TileSource src;
 
-    /** viewport centre in level-0 coords */
+    /** Viewport centre in level-0 coordinates. */
     private double cx, cy;
-    /** displayed-pixels-per-level0-pixel; 1.0 = full base resolution */
+    /** displayed-pixels-per-level-0-pixel. 1.0 = native resolution. */
     private double zoom;
-    /** current viewport size in displayed pixels (≈ canvas size) */
-    private int viewW = 800, viewH = 800;
+    /** Processor dimensions, in screen pixels. Kept = canvas size. */
+    private int viewW = 640, viewH = 640;
 
+    private ByteProcessor processor;
     private boolean refreshing = false;
+    private int pendingTicket = 0;
 
     public LazyImagePlus(String title, TileSource src) {
         super();
         this.src = src;
-        setTitle(title);
-        // Centre + start at a zoom that fits the base image in ~viewW pixels.
         this.cx = src.levelWidth(0) / 2.0;
         this.cy = src.levelHeight(0) / 2.0;
+        // Start zoomed so base pyramid level fits the viewport.
         double zx = (double) viewW / src.levelWidth(0);
         double zy = (double) viewH / src.levelHeight(0);
         this.zoom = Math.min(zx, zy);
-        // Initial processor (so super.show() has something to render).
-        ByteProcessor seed = new ByteProcessor(viewW, viewH);
-        setProcessor(seed);
+        this.processor = new ByteProcessor(viewW, viewH);
+        setProcessor(title, processor);
+        setTitle(title);
+    }
+
+    @Override
+    public void show() {
+        super.show();
+        try {
+            ImageWindow win = getWindow();
+            ImageCanvas ic = getCanvas();
+            if (ic != null) {
+                ic.setMagnification(1.0);
+                ic.setSourceRect(new Rectangle(0, 0, viewW, viewH));
+            }
+            // Hand tool avoids ROI-creation fights with our drag hook
+            Toolbar tb = Toolbar.getInstance();
+            if (tb != null) tb.setTool(Toolbar.HAND);
+            // Track window-resize so the viewport grows with the canvas
+            if (win != null) {
+                win.addComponentListener(new ComponentAdapter() {
+                    @Override
+                    public void componentResized(ComponentEvent e) {
+                        ImageCanvas ic2 = getCanvas();
+                        if (ic2 == null) return;
+                        int w = Math.max(64, ic2.getWidth());
+                        int h = Math.max(64, ic2.getHeight());
+                        setViewport(w, h);
+                    }
+                });
+            }
+        } catch (Throwable t) {
+            System.out.println("[LazyImagePlus] show() setup failed: " + t);
+        }
         refresh();
     }
 
-    public TileSource source() { return src; }
-    public double getCx()    { return cx; }
-    public double getCy()    { return cy; }
-    public double getZoomLevel() { return zoom; }
-    public int viewportWidth()   { return viewW; }
-    public int viewportHeight()  { return viewH; }
+    public TileSource source()    { return src; }
+    public double getCx()         { return cx; }
+    public double getCy()         { return cy; }
+    public double getZoomLevel()  { return zoom; }
+    public int viewportWidth()    { return viewW; }
+    public int viewportHeight()   { return viewH; }
 
-    /** Called by ImageCanvas after the user changes window size. */
+    /** Called by ImageCanvas resize or ImageWindow componentResized. */
     public void setViewport(int w, int h) {
         if (w == viewW && h == viewH) return;
-        this.viewW = Math.max(64, w);
-        this.viewH = Math.max(64, h);
+        this.viewW = w;
+        this.viewH = h;
+        // Rebuild the processor at the new size. setPixels() alone cannot
+        // grow the buffer. This is the ONLY place we setProcessor() after
+        // construction — the user explicitly resized the window, so a
+        // single layout pass is expected here.
+        this.processor = new ByteProcessor(viewW, viewH);
+        setProcessor(processor);
+        ImageCanvas ic = getCanvas();
+        if (ic != null) {
+            ic.setMagnification(1.0);
+            ic.setSourceRect(new Rectangle(0, 0, viewW, viewH));
+        }
         refresh();
     }
 
-    /** Pan + zoom in level-0 coords. zoom = displayedPx / level0Px. */
+    /** Pan + zoom in level-0 coords. zoom = displayedPx / level-0-px. */
     public void setView(double cx, double cy, double zoom) {
-        this.cx = cx; this.cy = cy;
+        this.cx = cx;
+        this.cy = cy;
         this.zoom = clamp(zoom, 1e-4, 32.0);
         refresh();
     }
 
-    /** Fetch the appropriate level + region for the current view, swap pixels. */
+    /** Fetch appropriate level/region, blit into the fixed-size processor. */
     public void refresh() {
+        final int ticket = ++pendingTicket;
         if (refreshing) return;
         refreshing = true;
         try {
             int lvl = pickLevel(zoom);
             double sf = src.levelScaleFactor(lvl);
-            int Lw = src.levelWidth(lvl), Lh = src.levelHeight(lvl);
+            int Lw = src.levelWidth(lvl);
+            int Lh = src.levelHeight(lvl);
 
-            // Region in level-coords. Viewport in level0 coords is viewW/zoom.
-            double regionWf = viewW / zoom / sf;
-            double regionHf = viewH / zoom / sf;
-            int rW = (int) Math.max(1, Math.ceil(regionWf));
-            int rH = (int) Math.max(1, Math.ceil(regionHf));
-            int x0 = (int) Math.floor(cx / sf - rW / 2.0);
-            int y0 = (int) Math.floor(cy / sf - rH / 2.0);
-            // Clamp viewport to image bounds; allow black margin if region exceeds image
+            // Ideal viewport in level-coords (may extend past image bounds).
+            double rWf = viewW / zoom / sf;
+            double rHf = viewH / zoom / sf;
+            int rW = Math.max(1, (int) Math.ceil(rWf));
+            int rH = Math.max(1, (int) Math.ceil(rHf));
+            int x0 = (int) Math.round(cx / sf - rW / 2.0);
+            int y0 = (int) Math.round(cy / sf - rH / 2.0);
+
+            // Clamped fetch region
             int rx0 = Math.max(0, x0);
             int ry0 = Math.max(0, y0);
             int rx1 = Math.min(Lw, x0 + rW);
             int ry1 = Math.min(Lh, y0 + rH);
             int rw = rx1 - rx0;
             int rh = ry1 - ry0;
-            if (rw <= 0 || rh <= 0) {
-                setProcessor(new ByteProcessor(viewW, viewH));
-                updateAndDraw();
-                return;
+
+            byte[] dst = new byte[viewW * viewH];
+            if (rw > 0 && rh > 0) {
+                byte[] tile = src.getTile(lvl, rx0, ry0, rw, rh);
+                if (tile != null && tile.length >= rw * rh) {
+                    // Map each dst pixel to (ideal-viewport → tile) via NN.
+                    // Offsets = where the clamped fetch sits inside the ideal
+                    // viewport (may be >0 if the ideal extends past image bounds).
+                    double dxScale = (double) rW / viewW;
+                    double dyScale = (double) rH / viewH;
+                    int tileOffX = rx0 - x0;
+                    int tileOffY = ry0 - y0;
+                    for (int dy = 0; dy < viewH; dy++) {
+                        int yInIdeal = (int) (dy * dyScale);
+                        int yInTile = yInIdeal - tileOffY;
+                        if (yInTile < 0 || yInTile >= rh) continue;
+                        int dstRow = dy * viewW;
+                        int tileRow = yInTile * rw;
+                        for (int dx = 0; dx < viewW; dx++) {
+                            int xInIdeal = (int) (dx * dxScale);
+                            int xInTile = xInIdeal - tileOffX;
+                            if (xInTile < 0 || xInTile >= rw) continue;
+                            dst[dstRow + dx] = tile[tileRow + xInTile];
+                        }
+                    }
+                }
             }
-            byte[] tile = src.getTile(lvl, rx0, ry0, rw, rh);
-            if (tile == null) return;
-            ByteProcessor bp = new ByteProcessor(rw, rh, tile, null);
-            setProcessor(bp);
-            updateAndDraw();
+            // In-place pixel swap: same buffer size, no setProcessor = no pack().
+            if (ticket == pendingTicket) {
+                processor.setPixels(dst);
+                // Keep canvas locked at 1:1 full-processor view.
+                ImageCanvas ic = getCanvas();
+                if (ic != null) {
+                    ic.setMagnification(1.0);
+                    ic.setSourceRect(new Rectangle(0, 0, viewW, viewH));
+                }
+                updateAndDraw();
+            }
         } catch (Throwable t) {
             System.out.println("[LazyImagePlus] refresh failed: " + t);
+            t.printStackTrace();
         } finally {
             refreshing = false;
+            // If more refresh() calls arrived while we were busy, coalesce them
+            // into one follow-up pass.
+            if (ticket != pendingTicket) {
+                // schedule single tail refresh (re-entrant safe)
+                javax.swing.SwingUtilities.invokeLater(new Runnable() {
+                    public void run() { refresh(); }
+                });
+            }
         }
     }
 
-    /** Pick the highest-resolution level whose scale factor still keeps
-     *  the per-displayed-pixel sample-rate <= 1 (no upsampling on display). */
     private int pickLevel(double zoom) {
-        // Want: sf >= 1/zoom, but as small as possible (i.e. highest resolution
-        // that still fits the viewport without massive oversampling).
         double target = 1.0 / zoom;
         int n = src.levelCount();
         int best = 0;
         double bestErr = Double.POSITIVE_INFINITY;
         for (int i = 0; i < n; i++) {
             double sf = src.levelScaleFactor(i);
-            // accept any sf <= target * 1.5 (a little oversampling tolerated)
             if (sf <= target * 1.5) {
                 double err = Math.abs(target - sf);
                 if (err < bestErr) { bestErr = err; best = i; }
             }
         }
-        // Fallback: if nothing matched (super-zoomed-in), return level 0
         return best;
     }
 
