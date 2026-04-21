@@ -3,9 +3,13 @@ package com.hack.viewer;
 import ij.ImagePlus;
 import ij.gui.ImageCanvas;
 import ij.gui.ImageWindow;
+import ij.gui.Roi;
+import ij.gui.PolygonRoi;
+import ij.gui.OvalRoi;
 import ij.gui.Toolbar;
 import ij.process.ByteProcessor;
 
+import java.awt.Polygon;
 import java.awt.Rectangle;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
@@ -48,6 +52,22 @@ public class LazyImagePlus extends ImagePlus {
     private int pendingTicket = 0;
     /** Last level chosen by pickLevel() — surfaced in title bar for diagnostic. */
     private int currentLevel = 0;
+
+    /**
+     * Viewport-stable ROI state. After every user interaction with the ROI
+     * tool, the current display-coord ROI is converted to level-0 coords and
+     * cached here. On refresh(), the cached ROI is projected back to the new
+     * display coords and re-installed, so ROIs "stick" to the underlying
+     * image no matter how the user pans / zooms.
+     *
+     * Represented as pixel arrays in level-0 coords so any ROI shape
+     * (Rectangle, Oval, Polygon, Freehand) can be round-tripped.
+     */
+    private int[] roiLevel0Xs;
+    private int[] roiLevel0Ys;
+    private int roiType = -1;    // Roi.RECTANGLE / OVAL / POLYGON / FREEROI etc.
+    /** A tag we set on the imp's Roi so we know we synthesised it (don't re-snapshot). */
+    private Roi lastProjectedRoi;
 
     public LazyImagePlus(String title, TileSource src) {
         super();
@@ -133,6 +153,96 @@ public class LazyImagePlus extends ImagePlus {
         refresh();
     }
 
+    /**
+     * Snapshot the current display-coord ROI to level-0 coords. Called
+     * by the patched ImageCanvas.mouseReleased after a user-driven ROI edit.
+     */
+    public void captureRoiToLevel0() {
+        Roi r = getRoi();
+        if (r == null) { roiType = -1; roiLevel0Xs = roiLevel0Ys = null; lastProjectedRoi = null; return; }
+        if (r == lastProjectedRoi) return;  // we made this, don't round-trip
+        Polygon poly = r.getPolygon();
+        if (poly == null || poly.npoints == 0) {
+            // Rectangle-style with no polygon (shouldn't happen often)
+            Rectangle b = r.getBounds();
+            roiLevel0Xs = new int[]{b.x, b.x + b.width, b.x + b.width, b.x};
+            roiLevel0Ys = new int[]{b.y, b.y, b.y + b.height, b.y + b.height};
+        } else {
+            roiLevel0Xs = new int[poly.npoints];
+            roiLevel0Ys = new int[poly.npoints];
+            for (int i = 0; i < poly.npoints; i++) {
+                double[] lv = displayToLevel0(poly.xpoints[i], poly.ypoints[i]);
+                roiLevel0Xs[i] = (int) Math.round(lv[0]);
+                roiLevel0Ys[i] = (int) Math.round(lv[1]);
+            }
+        }
+        roiType = r.getType();
+    }
+
+    private double[] displayToLevel0(double dx, double dy) {
+        double level0X = cx + (dx - viewW / 2.0) / zoom;
+        double level0Y = cy + (dy - viewH / 2.0) / zoom;
+        return new double[]{ level0X, level0Y };
+    }
+
+    private double[] level0ToDisplay(double lx, double ly) {
+        double dx = viewW / 2.0 + (lx - cx) * zoom;
+        double dy = viewH / 2.0 + (ly - cy) * zoom;
+        return new double[]{ dx, dy };
+    }
+
+    /** Rebuild an ROI in current display coords from the cached level-0 points. */
+    private void reprojectCachedRoi() {
+        if (roiType < 0 || roiLevel0Xs == null || roiLevel0Ys == null) return;
+        int n = roiLevel0Xs.length;
+        int[] xs = new int[n];
+        int[] ys = new int[n];
+        for (int i = 0; i < n; i++) {
+            double[] d = level0ToDisplay(roiLevel0Xs[i], roiLevel0Ys[i]);
+            xs[i] = (int) Math.round(d[0]);
+            ys[i] = (int) Math.round(d[1]);
+        }
+        Roi newRoi;
+        switch (roiType) {
+            case Roi.RECTANGLE: {
+                int minX = xs[0], minY = ys[0], maxX = xs[0], maxY = ys[0];
+                for (int i = 1; i < n; i++) { if (xs[i]<minX) minX=xs[i]; if (xs[i]>maxX) maxX=xs[i]; if (ys[i]<minY) minY=ys[i]; if (ys[i]>maxY) maxY=ys[i]; }
+                newRoi = new Roi(minX, minY, maxX - minX, maxY - minY);
+                break;
+            }
+            case Roi.OVAL: {
+                int minX = xs[0], minY = ys[0], maxX = xs[0], maxY = ys[0];
+                for (int i = 1; i < n; i++) { if (xs[i]<minX) minX=xs[i]; if (xs[i]>maxX) maxX=xs[i]; if (ys[i]<minY) minY=ys[i]; if (ys[i]>maxY) maxY=ys[i]; }
+                newRoi = new OvalRoi(minX, minY, maxX - minX, maxY - minY);
+                break;
+            }
+            case Roi.POLYGON:
+                newRoi = new PolygonRoi(xs, ys, n, Roi.POLYGON);
+                break;
+            case Roi.FREEROI:
+                newRoi = new PolygonRoi(xs, ys, n, Roi.FREEROI);
+                break;
+            case Roi.POLYLINE:
+                newRoi = new PolygonRoi(xs, ys, n, Roi.POLYLINE);
+                break;
+            case Roi.FREELINE:
+                newRoi = new PolygonRoi(xs, ys, n, Roi.FREELINE);
+                break;
+            case Roi.POINT:
+                newRoi = new PolygonRoi(xs, ys, n, Roi.POINT);
+                break;
+            case Roi.LINE:
+                if (n >= 2) newRoi = new ij.gui.Line(xs[0], ys[0], xs[1], ys[1]);
+                else return;
+                break;
+            default:
+                // Unknown Roi type; skip reprojection
+                return;
+        }
+        lastProjectedRoi = newRoi;
+        setRoi(newRoi);
+    }
+
     /** Fetch appropriate level/region, blit into the fixed-size processor. */
     public void refresh() {
         final int ticket = ++pendingTicket;
@@ -210,6 +320,10 @@ public class LazyImagePlus extends ImagePlus {
                     ic.setMagnification(1.0);
                     ic.setSourceRect(new Rectangle(0, 0, viewW, viewH));
                 }
+                // Re-project any level-0-anchored ROI onto the new viewport
+                // so rectangles / polygons stay on the underlying image
+                // region as the user pans and zooms.
+                reprojectCachedRoi();
                 updateAndDraw();
             }
         } catch (Throwable t) {
