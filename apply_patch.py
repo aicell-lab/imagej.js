@@ -663,6 +663,21 @@ def patch_lazy_image_plus_hooks():
         print("⊘ ImageCanvas patch already applied")
         return True
 
+    # ---- Global magnifier-tool behaviour change ----
+    # zoomIn()/zoomOut() normally call canEnlarge() → setSize() + win.pack(),
+    # which grows the window to fit the new magnification. We want the window
+    # size to be user-controlled ONLY (via dragging the frame border). Force
+    # canEnlarge to always return null so zoomIn/Out take the adjustSourceRect
+    # branch — only srcRect + magnification change, canvas dimensions stay put.
+    can_enlarge_marker = "protected Dimension canEnlarge(int newWidth, int newHeight) {"
+    can_enlarge_inject = (
+        "\n\t\t// [threadhack] never grow the window on zoom — user controls size\n"
+        "\t\tif (true) return null;\n"
+    )
+    if can_enlarge_marker in content:
+        content = content.replace(can_enlarge_marker, can_enlarge_marker + can_enlarge_inject, 1)
+        print("✓ Patched ImageCanvas.canEnlarge → always null (zoom no longer resizes window)")
+
     # 1. Add drag-tracking field
     content = content.replace(
         "protected ImagePlus imp;",
