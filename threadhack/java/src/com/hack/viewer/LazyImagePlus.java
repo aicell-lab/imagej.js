@@ -46,6 +46,8 @@ public class LazyImagePlus extends ImagePlus {
     private ByteProcessor processor;
     private boolean refreshing = false;
     private int pendingTicket = 0;
+    /** Last level chosen by pickLevel() — surfaced in title bar for diagnostic. */
+    private int currentLevel = 0;
 
     public LazyImagePlus(String title, TileSource src) {
         super();
@@ -99,6 +101,10 @@ public class LazyImagePlus extends ImagePlus {
     public double getZoomLevel()  { return zoom; }
     public int viewportWidth()    { return viewW; }
     public int viewportHeight()   { return viewH; }
+    public int getCurrentLevel()  { return currentLevel; }
+    public int getLevelCount()    { return src.levelCount(); }
+    public int getLevelWidth(int lvl)  { return src.levelWidth(lvl); }
+    public int getLevelHeight(int lvl) { return src.levelHeight(lvl); }
 
     /** Called by ImageCanvas resize or ImageWindow componentResized. */
     public void setViewport(int w, int h) {
@@ -134,6 +140,21 @@ public class LazyImagePlus extends ImagePlus {
         refreshing = true;
         try {
             int lvl = pickLevel(zoom);
+            if (lvl != currentLevel) {
+                System.out.println("[LazyImagePlus] level " + currentLevel + " → " + lvl
+                        + "  zoom=" + String.format("%.4f", zoom)
+                        + "  level" + lvl + " " + src.levelWidth(lvl) + "x" + src.levelHeight(lvl));
+                currentLevel = lvl;
+                // Encode level into title so it's visible without opening devtools.
+                final int levelNow = lvl;
+                final int nLevels = src.levelCount();
+                final String baseTitle = stripLevelSuffix(getTitle());
+                javax.swing.SwingUtilities.invokeLater(new Runnable() {
+                    public void run() {
+                        setTitle(baseTitle + "  [level " + levelNow + "/" + (nLevels - 1) + "]");
+                    }
+                });
+            }
             double sf = src.levelScaleFactor(lvl);
             int Lw = src.levelWidth(lvl);
             int Lh = src.levelHeight(lvl);
@@ -224,5 +245,11 @@ public class LazyImagePlus extends ImagePlus {
 
     private static double clamp(double v, double lo, double hi) {
         return Math.max(lo, Math.min(hi, v));
+    }
+
+    private static String stripLevelSuffix(String t) {
+        if (t == null) return "";
+        int i = t.indexOf("  [level ");
+        return i >= 0 ? t.substring(0, i) : t;
     }
 }

@@ -685,15 +685,34 @@ def patch_lazy_image_plus_hooks():
         1
     )
 
-    # 2. mousePressed: capture drag origin AND return early (suppresses
-    #    ROI creation, magnifier click-zoom, tool-specific actions).
+    # 2. mousePressed: custom tool dispatch.
+    #    - MAGNIFIER tool: cursor-anchored zoom on click (content only, no
+    #      window resize). Modifier (alt/ctrl/meta) or right-click = zoom out.
+    #    - Everything else: capture drag origin (pan takes over in mouseDragged).
+    #    Always return early — ROI / tool-plugin paths never run for Lazy images.
     press_marker = "public void mousePressed(final MouseEvent e) {"
     press_inject = (
-        "\n\t\t// [threadhack] LazyImagePlus: capture drag origin + skip all tools\n"
+        "\n\t\t// [threadhack] LazyImagePlus: tool-aware dispatch, no ImageJ-internal zoom\n"
         "\t\tif (imp instanceof com.hack.viewer.LazyImagePlus) {\n"
+        "\t\t\tcom.hack.viewer.LazyImagePlus lip = (com.hack.viewer.LazyImagePlus) imp;\n"
         "\t\t\tlazyDragX = e.getX(); lazyDragY = e.getY();\n"
-        "\t\t\t// capture x/yMouse so other handlers (coord display) keep working\n"
         "\t\t\txMouse = offScreenX(e.getX()); yMouse = offScreenY(e.getY());\n"
+        "\t\t\tif (Toolbar.getToolId() == Toolbar.MAGNIFIER) {\n"
+        "\t\t\t\tint sx = e.getX(), sy = e.getY();\n"
+        "\t\t\t\tint cw = getWidth(), ch = getHeight();\n"
+        "\t\t\t\tdouble oldZ = lip.getZoomLevel();\n"
+        "\t\t\t\tdouble pcx = lip.getCx(), pcy = lip.getCy();\n"
+        "\t\t\t\tdouble level0X = pcx + (sx - cw/2.0) / oldZ;\n"
+        "\t\t\t\tdouble level0Y = pcy + (sy - ch/2.0) / oldZ;\n"
+        "\t\t\t\tint mods = e.getModifiers();\n"
+        "\t\t\t\tboolean zoomOut = (mods & (java.awt.event.InputEvent.ALT_MASK|java.awt.event.InputEvent.CTRL_MASK|java.awt.event.InputEvent.META_MASK)) != 0\n"
+        "\t\t\t\t                   || e.isPopupTrigger() || ((mods & java.awt.event.InputEvent.BUTTON3_MASK) != 0);\n"
+        "\t\t\t\tdouble factor = zoomOut ? (1.0 / 1.5) : 1.5;\n"
+        "\t\t\t\tdouble newZ = Math.max(1e-4, Math.min(32.0, oldZ * factor));\n"
+        "\t\t\t\tdouble newCx = level0X - (sx - cw/2.0) / newZ;\n"
+        "\t\t\t\tdouble newCy = level0Y - (sy - ch/2.0) / newZ;\n"
+        "\t\t\t\tlip.setView(newCx, newCy, newZ);\n"
+        "\t\t\t}\n"
         "\t\t\treturn;\n"
         "\t\t}\n"
     )

@@ -130,21 +130,27 @@ async function tiffProvider(url) {
 }
 
 async function zarrProvider(url) {
-  const zarrita = await import("https://esm.sh/zarrita");
-  const store = (zarrita.withConsolidated ? await zarrita.withConsolidated(new zarrita.FetchStore(url)) : new zarrita.FetchStore(url));
-  const grp = await zarrita.open.asGroup(zarrita.root(store));
-  const ms = grp.attrs && grp.attrs.multiscales;
-  if (!ms || !ms.length) throw new Error("no multiscales metadata");
-  const datasets = ms[0].datasets;
+  // Follow vizarr's zarrita pattern: Location.resolve() for paths,
+  // zarr.open(loc) for auto-detect. Works for OME-NGFF v0.1 → v0.4.
+  const zarr = await import("https://esm.sh/zarrita@0.5");
+  const store = new zarr.FetchStore(url);
+  const rootLoc = zarr.root(store);
+  const grp = await zarr.open(rootLoc);
+  if (!grp || grp.kind !== "group") throw new Error("zarr root is not a group");
+  const attrs = grp.attrs || {};
+  // OME-NGFF: multiscales either at top-level or under "omero" (rare)
+  const ms = attrs.multiscales || (attrs.omero && attrs.omero.multiscales);
+  if (!ms || !ms.length) throw new Error("no multiscales metadata on zarr root");
+  const datasets = ms[0].datasets || [{ path: "0" }];
   const levels = [];
   let bits = 8;
   for (const d of datasets) {
-    const arr = await zarrita.open.asArray(zarrita.resolve(store, d.path));
+    const arr = await zarr.open(grp.resolve(d.path), { kind: "array" });
     const shape = arr.shape;
     const [w, h] = [shape[shape.length - 1], shape[shape.length - 2]];
     const dt = String(arr.dtype || "").toLowerCase();
-    if (dt.includes("16")) bits = 16;
-    else if (dt.includes("32")) bits = 32;
+    if (dt.includes("int16") || dt.includes("uint16")) bits = 16;
+    else if (dt.includes("32") || dt.includes("float")) bits = 32;
     levels.push({ w, h, array: arr, shape, path: d.path });
   }
   levels.sort((a, b) => b.w * b.h - a.w * a.h);
@@ -158,9 +164,9 @@ async function zarrProvider(url) {
       if (x1 <= x0 || y1 <= y0) return { data: null, width: 0, height: 0 };
       const ndim = L.shape.length;
       const sel = new Array(ndim).fill(0);
-      sel[ndim - 1] = zarrita.slice(x0, x1);
-      sel[ndim - 2] = zarrita.slice(y0, y1);
-      const chunk = await zarrita.get(L.array, sel);
+      sel[ndim - 1] = zarr.slice(x0, x1);
+      sel[ndim - 2] = zarr.slice(y0, y1);
+      const chunk = await zarr.get(L.array, sel);
       return { data: chunk.data, width: x1 - x0, height: y1 - y0 };
     }
   };
