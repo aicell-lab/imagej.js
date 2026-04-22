@@ -332,30 +332,14 @@
 </head>
 
 <body>
-<!-- Native File System and Connect Buttons -->
+<!--
+  Floating control buttons have been folded into ImageJ's "Extensions" menu
+  via com.hack.menu.MenuRegistry. Only status indicators remain down here.
+  The Copy-MCP-URL button stays because it appears only when Hypha is
+  connected and is useful as a quick-access clipboard shortcut.
+-->
 <div class="button-panel fixed bottom-4 left-4 z-50 flex gap-2">
-  <div class="tooltip-wrapper">
-    <button id="loadFolderBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg shadow-lg transition-colors duration-200 flex items-center space-x-2">
-      <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-5l-2-2H5a2 2 0 00-2 2z"></path>
-      </svg>
-      <span class="truncate max-w-[200px]">Mount Local Folder</span>
-    </button>
-    <div id="loadFolderTooltip" class="tooltip">
-      Mount a local folder to enable read/write access<br>
-      Files will be available under <strong>/files/</strong> in ImageJ
-    </div>
-  </div>
-
-  <button id="connectBtn" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-lg shadow-lg transition-colors duration-200 flex items-center space-x-2">
-    <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-    </svg>
-    <span class="truncate max-w-[200px]">Hypha MCP Server</span>
-  </button>
-
   <button id="copyMcpBtn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg shadow-lg transition-colors duration-200 flex items-center space-x-2 hidden relative">
-    <!-- Green dot indicator -->
     <div class="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full border-2 border-white"></div>
     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
@@ -384,13 +368,6 @@
     <div class="text-sm font-bold" id="hyphaStatusText">Disconnected</div>
   </div>
   <div id="hyphaServiceUrl" class="text-xs mt-1 hidden"></div>
-</div>
-
-<!-- Test Button -->
-<div class="fixed bottom-4 right-4 z-50">
-  <button id="testRoiBtn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg shadow-lg transition-colors duration-200">
-    <span id="testBtnText">Test ROI↔GeoJSON</span>
-  </button>
 </div>
 
 <!-- Load utilities -->
@@ -478,11 +455,9 @@ async function parseAndMountGitHub() {
             await window.githubFS.mountRepo(owner, repo, branch);
             console.log(`Successfully mounted ${owner}/${repo}@${branch} at /github/${owner}/${repo}@${branch}`);
 
-            // Update test button text
-            const testBtnText = document.getElementById('testBtnText');
-            if (testBtnText) {
-                testBtnText.textContent = 'Test GitHub FS';
-            }
+            // (Legacy UI note: a floating "Test ROI↔GeoJSON" button used
+            // to toggle to "Test GitHub FS" here; functionality now lives
+            // under Extensions → Test ROI ↔ GeoJSON.)
         } catch (err) {
             console.error('Failed to mount GitHub repository:', err);
             alert(`Failed to mount GitHub repository ${owner}/${repo}: ${err.message}`);
@@ -640,214 +615,146 @@ function setupDragAndDrop() {
 let lib = null;
 let IJClass = null;
 
-// Event listener for buttons
-document.addEventListener('DOMContentLoaded', () => {
-    // Setup drag and drop after DOM is ready
-    setupDragAndDrop();
+// Register menu handlers (invoked from com.hack.menu.MenuRegistry via the
+// nativeInvokeJSHandler bridge). The "Extensions" menu is installed on
+// ImageJ's menu bar further down in the main boot script.
+window.__menuHandlers = window.__menuHandlers || {};
 
-    const loadFolderBtn = document.getElementById('loadFolderBtn');
-    const loadFolderTooltip = document.getElementById('loadFolderTooltip');
-
-    // Check if File System Access API is supported (Chromium-based browsers)
+window.__menuHandlers.mount = async () => {
     if (!('showDirectoryPicker' in window)) {
-        // Disable button for non-Chromium browsers
-        loadFolderBtn.disabled = true;
-        loadFolderBtn.classList.remove('bg-blue-600', 'hover:bg-blue-700');
-        loadFolderBtn.classList.add('bg-gray-400', 'cursor-not-allowed', 'opacity-50');
-
-        // Update tooltip to explain why it's disabled
-        if (loadFolderTooltip) {
-            loadFolderTooltip.innerHTML = `<strong>⚠️ Not Supported</strong><br>This feature requires a Chromium-based browser<br>(Chrome, Edge, Opera, etc.)`;
-        }
-
-        console.warn('File System Access API not supported in this browser');
-    } else {
-        // Enable button click for supported browsers
-        loadFolderBtn.addEventListener('click', () => {
-            // Use the nativeFS instance from utils.js
-            window.nativeFS.loadDirectory();
-        });
+        alert('Mount Local Folder requires a Chromium-based browser (Chrome, Edge, Opera).');
+        return;
     }
+    if (window.nativeFS && typeof window.nativeFS.loadDirectory === 'function') {
+        await window.nativeFS.loadDirectory();
+    } else {
+        console.warn('[menu:mount] nativeFS not ready');
+    }
+};
 
-    const testRoiBtn = document.getElementById('testRoiBtn');
-    testRoiBtn.addEventListener('click', async () => {
+window.__menuHandlers['roi-test'] = () => runRoiGeoJsonTest();
+
+async function runRoiGeoJsonTest() {
+    try {
+        if (!IJClass) {
+            alert('IJ class not loaded yet. Please wait for ImageJ to start.');
+            return;
+        }
+        console.log('🧪 Testing ROI ↔ GeoJSON conversion...');
+        await IJClass.log('========================================');
+        await IJClass.log('🧪 TEST: ROI ↔ GeoJSON Round-trip');
+        await IJClass.log('========================================');
+
+        let hasCurrentRoi = false;
         try {
-            if (!IJClass) {
-                alert('IJ class not loaded yet. Please wait for ImageJ to start.');
-                return;
-            }
+            const imp = await IJClass.getImage();
+            if (imp) {
+                const currentRoi = await imp.getRoi();
+                if (currentRoi) {
+                    hasCurrentRoi = true;
+                    await IJClass.log('✓ Found current ROI on active image');
+                    const roiType = await currentRoi.getTypeAsString();
+                    const roiName = await currentRoi.getName();
+                    await IJClass.log(`  Type: ${roiType}`);
+                    await IJClass.log(`  Name: ${roiName || 'Unnamed'}`);
+                } else { await IJClass.log('No ROI selected on active image'); }
+            } else { await IJClass.log('No active image'); }
+        } catch (e) { await IJClass.log('No active image with ROI'); }
 
-            console.log('🧪 Testing ROI ↔ GeoJSON conversion...');
+        let roiManagerCount = 0;
+        try {
+            const RoiManager = await window.lib.ij.plugin.frame.RoiManager;
+            const rm = await RoiManager.getInstance();
+            if (rm) {
+                roiManagerCount = await rm.getCount();
+                await IJClass.log(`✓ ROI Manager open with ${roiManagerCount} ROI(s)`);
+            } else { await IJClass.log('ROI Manager not open'); }
+        } catch (e) { await IJClass.log('ROI Manager not available'); }
 
-            await IJClass.log('========================================');
-            await IJClass.log('🧪 TEST: ROI ↔ GeoJSON Round-trip');
-            await IJClass.log('========================================');
+        const { roiToGeoJson, geoJsonToRoi } = await import('./hypha-imagej-service.js');
 
-            // Get current ROI from active image
-            let hasCurrentRoi = false;
-            try {
+        if (hasCurrentRoi || roiManagerCount > 0) {
+            await IJClass.log('');
+            await IJClass.log('PART 1: Converting ROIs → GeoJSON');
+            await IJClass.log('─────────────────────────────────────');
+            const features = [];
+            if (hasCurrentRoi) {
                 const imp = await IJClass.getImage();
-                if (imp) {
-                    const currentRoi = await imp.getRoi();
-                    if (currentRoi) {
-                        hasCurrentRoi = true;
-                        await IJClass.log('✓ Found current ROI on active image');
-
-                        // Get ROI type and name
-                        const roiType = await currentRoi.getTypeAsString();
-                        const roiName = await currentRoi.getName();
-                        await IJClass.log(`  Type: ${roiType}`);
-                        await IJClass.log(`  Name: ${roiName || 'Unnamed'}`);
-                    } else {
-                        await IJClass.log('No ROI selected on active image');
-                    }
-                } else {
-                    await IJClass.log('No active image');
-                }
-            } catch (e) {
-                await IJClass.log('No active image with ROI');
+                const currentRoi = await imp.getRoi();
+                const feature = await roiToGeoJson(currentRoi, 'Current Selection', true);
+                if (feature) { features.push(feature); await IJClass.log('✓ Converted current ROI'); }
             }
-
-            // Check ROI Manager
-            let roiManagerCount = 0;
-            try {
+            if (roiManagerCount > 0) {
                 const RoiManager = await window.lib.ij.plugin.frame.RoiManager;
                 const rm = await RoiManager.getInstance();
-
-                if (rm) {
-                    roiManagerCount = await rm.getCount();
-                    await IJClass.log(`✓ ROI Manager open with ${roiManagerCount} ROI(s)`);
-                } else {
-                    await IJClass.log('ROI Manager not open');
-                }
-            } catch (e) {
-                await IJClass.log('ROI Manager not available');
-            }
-
-            // Import the conversion functions from hypha-imagej-service.js
-            const { roiToGeoJson, geoJsonToRoi } = await import('./hypha-imagej-service.js');
-
-            if (hasCurrentRoi || roiManagerCount > 0) {
-                await IJClass.log('');
-                await IJClass.log('PART 1: Converting ROIs → GeoJSON');
-                await IJClass.log('─────────────────────────────────────');
-
-                // Get GeoJSON
-                const features = [];
-
-                // Convert current ROI
-                if (hasCurrentRoi) {
-                    const imp = await IJClass.getImage();
-                    const currentRoi = await imp.getRoi();
-                    const feature = await roiToGeoJson(currentRoi, 'Current Selection', true);
+                for (let i = 0; i < roiManagerCount; i++) {
+                    const roi = await rm.getRoi(i);
+                    const roiName = await roi.getName() || `ROI ${i + 1}`;
+                    const feature = await roiToGeoJson(roi, roiName, true);
                     if (feature) {
+                        feature.properties.index = i;
+                        feature.properties.source = 'ROI Manager';
                         features.push(feature);
-                        await IJClass.log('✓ Converted current ROI');
                     }
                 }
-
-                // Convert ROI Manager ROIs
-                if (roiManagerCount > 0) {
-                    const RoiManager = await window.lib.ij.plugin.frame.RoiManager;
-                    const rm = await RoiManager.getInstance();
-
-                    for (let i = 0; i < roiManagerCount; i++) {
-                        const roi = await rm.getRoi(i);
-                        const roiName = await roi.getName() || `ROI ${i + 1}`;
-                        const feature = await roiToGeoJson(roi, roiName, true);
-                        if (feature) {
-                            feature.properties.index = i;
-                            feature.properties.source = 'ROI Manager';
-                            features.push(feature);
-                        }
-                    }
-                    await IJClass.log(`✓ Converted ${roiManagerCount} ROI(s) from ROI Manager`);
-                }
-
-                // Create GeoJSON FeatureCollection
-                const geojson = {
-                    type: "FeatureCollection",
-                    features: features
-                };
-
-                // Log to console
-                console.log('GeoJSON Result:');
-                console.log(JSON.stringify(geojson, null, 2));
-
-                await IJClass.log('');
-                await IJClass.log(`✓ Exported ${features.length} ROI(s) to GeoJSON`);
-                await IJClass.log('📋 GeoJSON printed to browser console (F12)');
-
-                // PART 2: Test reverse conversion
-                await IJClass.log('');
-                await IJClass.log('PART 2: Converting GeoJSON → ROI');
-                await IJClass.log('─────────────────────────────────────');
-                await IJClass.log('Converting GeoJSON back to ROIs...');
-
-                // Clear ROI Manager
-                try {
-                    const RoiManager = await window.lib.ij.plugin.frame.RoiManager;
-                    let rm = await RoiManager.getInstance();
-                    if (!rm) {
-                        rm = await new RoiManager();
-                        await IJClass.log('Created new ROI Manager');
-                    }
-                    const count = await rm.getCount();
-                    if (count > 0) {
-                        await rm.runCommand('Delete');
-                        await IJClass.log(`Cleared ${count} existing ROI(s)`);
-                    }
-
-                    // Convert GeoJSON back to ROIs
-                    let convertedCount = 0;
-                    for (const feature of geojson.features) {
-                        try {
-                            const roi = await geoJsonToRoi(feature);
-                            if (roi) {
-                                // Rename to indicate it's from GeoJSON
-                                const originalName = await roi.getName();
-                                await roi.setName(`[GeoJSON] ${originalName}`);
-
-                                // Add to ROI Manager
-                                await rm.addRoi(roi);
-                                convertedCount++;
-                                await IJClass.log(`  ✓ Imported: ${originalName}`);
-                            }
-                        } catch (convError) {
-                            await IJClass.log(`  ✗ Failed to convert feature: ${convError.message}`);
-                        }
-                    }
-
-                    await IJClass.log('');
-                    await IJClass.log(`✓ Imported ${convertedCount} ROI(s) back from GeoJSON`);
-                    await IJClass.log('Check ROI Manager to see the round-trip results!');
-
-                } catch (rmError) {
-                    await IJClass.log(`⚠️  Error with ROI Manager: ${rmError.message}`);
-                }
-
-            } else {
-                await IJClass.log('');
-                await IJClass.log('⚠️  No ROIs found!');
-                await IJClass.log('');
-                await IJClass.log('To test:');
-                await IJClass.log('1. Open an image in ImageJ');
-                await IJClass.log('2. Draw an ROI using selection tools');
-                await IJClass.log('3. Or add ROIs to ROI Manager');
-                await IJClass.log('4. Click this button again');
+                await IJClass.log(`✓ Converted ${roiManagerCount} ROI(s) from ROI Manager`);
             }
-
-            await IJClass.log('========================================');
-
-        } catch (err) {
-            console.error('Test error:', err);
-            if (IJClass) {
-                await IJClass.log('✗ Error: ' + err.message);
-            }
-            alert('Error: ' + (err.message || err.toString()));
+            const geojson = { type: "FeatureCollection", features: features };
+            console.log('GeoJSON Result:');
+            console.log(JSON.stringify(geojson, null, 2));
+            await IJClass.log('');
+            await IJClass.log(`✓ Exported ${features.length} ROI(s) to GeoJSON`);
+            await IJClass.log('📋 GeoJSON printed to browser console (F12)');
+            await IJClass.log('');
+            await IJClass.log('PART 2: Converting GeoJSON → ROI');
+            await IJClass.log('─────────────────────────────────────');
+            await IJClass.log('Converting GeoJSON back to ROIs...');
+            try {
+                const RoiManager = await window.lib.ij.plugin.frame.RoiManager;
+                let rm = await RoiManager.getInstance();
+                if (!rm) { rm = await new RoiManager(); await IJClass.log('Created new ROI Manager'); }
+                const count = await rm.getCount();
+                if (count > 0) { await rm.runCommand('Delete'); await IJClass.log(`Cleared ${count} existing ROI(s)`); }
+                let convertedCount = 0;
+                for (const feature of geojson.features) {
+                    try {
+                        const roi = await geoJsonToRoi(feature);
+                        if (roi) {
+                            const originalName = await roi.getName();
+                            await roi.setName(`[GeoJSON] ${originalName}`);
+                            await rm.addRoi(roi);
+                            convertedCount++;
+                            await IJClass.log(`  ✓ Imported: ${originalName}`);
+                        }
+                    } catch (convError) { await IJClass.log(`  ✗ Failed to convert feature: ${convError.message}`); }
+                }
+                await IJClass.log('');
+                await IJClass.log(`✓ Imported ${convertedCount} ROI(s) back from GeoJSON`);
+                await IJClass.log('Check ROI Manager to see the round-trip results!');
+            } catch (rmError) { await IJClass.log(`⚠️  Error with ROI Manager: ${rmError.message}`); }
+        } else {
+            await IJClass.log('');
+            await IJClass.log('⚠️  No ROIs found!');
+            await IJClass.log('To test: open an image, draw an ROI, then run this again.');
         }
-    });
+        await IJClass.log('========================================');
+    } catch (err) {
+        console.error('Test error:', err);
+        if (IJClass) await IJClass.log('✗ Error: ' + err.message);
+        alert('Error: ' + (err.message || err.toString()));
+    }
+}
+
+// Event listeners for the remaining UI wiring (drag-and-drop, etc.)
+document.addEventListener('DOMContentLoaded', () => {
+    setupDragAndDrop();
+    if (!('showDirectoryPicker' in window)) {
+        console.warn('File System Access API not supported — Mount Local Folder menu item will alert.');
+    }
 });
+
+// (The Extensions → "Test ROI↔GeoJSON" menu item calls runRoiGeoJsonTest()
+// defined further above.)
 
 // Get URL configuration
 const urlConfig = parseURLConfig();
@@ -963,6 +870,21 @@ try {
     window.IJ = IJClass; // Expose IJ globally for debugging
     window.IJClass = IJClass; // Also expose as IJClass for Hypha service
     window.lib = lib; // Expose library globally for debugging
+
+    // Install the "Extensions" top-level menu now that ImageJ's frame exists.
+    // Each item dispatches to a JS handler registered in window.__menuHandlers
+    // via the com.hack.menu.MenuRegistry → nativeInvokeJSHandler bridge.
+    try {
+        const MenuRegistry = await lib.com.hack.menu.MenuRegistry;
+        await MenuRegistry.addMenu(
+            "Extensions",
+            ["Mount Local Folder...", "-", "Connect to Hypha MCP...", "-", "Test ROI ↔ GeoJSON"],
+            ["mount",                 "-", "mcp",                     "-", "roi-test"]
+        );
+        console.log('Installed "Extensions" menu');
+    } catch (e) {
+        console.warn('Failed to install Extensions menu:', e);
+    }
 } catch (err) {
     console.error('Failed to load ImageJ:', err);
 }

@@ -150,6 +150,25 @@
     return out;
   }
 
+  // ---- MenuRegistry native ----------------------------------------------
+  // Java calls this when a menu item is clicked; dispatches to the JS-side
+  // handler registered under `window.__menuHandlers[key]`.
+  window.__menuHandlers = window.__menuHandlers || {};
+  var menuRegistryNatives = {
+    Java_com_hack_menu_MenuRegistry_nativeInvokeJSHandler: async function (lib, key) {
+      try {
+        var h = window.__menuHandlers && window.__menuHandlers[key];
+        if (typeof h === 'function') {
+          await h();
+        } else {
+          console.warn('[MenuRegistry] no handler for key=' + key);
+        }
+      } catch (e) {
+        console.error('[MenuRegistry] handler ' + key + ' threw:', e);
+      }
+    }
+  };
+
   var tileSourceNatives = {
     Java_com_hack_viewer_JSTileSource_nativeLevelCount:    async function (lib, key) { return getSrc(key).levels.length; },
     Java_com_hack_viewer_JSTileSource_nativeBitsPerSample: async function (lib, key) { return getSrc(key).bitsPerSample || 8; },
@@ -180,7 +199,7 @@
     opts = Object.assign({}, opts || {});
     var poolSize = opts.threadhackPool !== undefined ? opts.threadhackPool : DEFAULT_POOL;
     delete opts.threadhackPool;
-    opts.natives = Object.assign({}, threadHookNatives, tileSourceNatives, opts.natives || {});
+    opts.natives = Object.assign({}, threadHookNatives, tileSourceNatives, menuRegistryNatives, opts.natives || {});
 
     // Install our classloader as the system classloader so plugin jars
     // loaded by ImageJ's internal PluginClassLoader (and any child
