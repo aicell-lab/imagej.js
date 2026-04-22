@@ -228,16 +228,22 @@ public class LazyImagePlus extends ImagePlus {
     }
 
     private void scheduleFetch() {
-        if (fetchTimer != null) fetchTimer.stop();
-        fetchTimer = new javax.swing.Timer(80, new java.awt.event.ActionListener() {
-            @Override
-            public void actionPerformed(java.awt.event.ActionEvent e) {
-                fetchTimer = null;
-                refresh();
-            }
-        });
-        fetchTimer.setRepeats(false);
-        fetchTimer.start();
+        // Resetting the timer coalesces rapid back-to-back viewport changes
+        // into a single refresh(). Without this, show()'s initial fetch and
+        // the paint-triggered fetch collide and their callbacks race —
+        // leaving the user with no painted tile.
+        if (fetchTimer != null) fetchTimer.restart();
+        else {
+            fetchTimer = new javax.swing.Timer(80, new java.awt.event.ActionListener() {
+                @Override
+                public void actionPerformed(java.awt.event.ActionEvent e) {
+                    fetchTimer = null;
+                    refresh();
+                }
+            });
+            fetchTimer.setRepeats(false);
+            fetchTimer.start();
+        }
     }
 
     /** Schedule a tile fetch for the current viewport. Does NOT block —
