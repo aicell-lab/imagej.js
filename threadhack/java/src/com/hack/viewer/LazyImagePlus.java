@@ -163,14 +163,22 @@ public class LazyImagePlus extends ImagePlus {
         // srcRect / magnification to the viewport-processor dims. Re-lock
         // to level-0 AFTER all that runs.
         lazyCanvas.lockViewportToLevel0();
-        // AWT-side resize hook (may or may not fire reliably under CheerpJ —
-        // we also install a JS-side ResizeObserver on the canvas DOM element,
-        // which is the authoritative trigger on the browser side).
+        // When the user drags the frame border, compute the available canvas
+        // area from the frame's size (minus decorations + slider) and push
+        // that into setViewport, which will force-resize the canvas.
+        // Reading lazyCanvas.getWidth() here doesn't work because
+        // ImageLayout keeps the canvas at its preferred size — frame grows
+        // but the canvas stays put, so the listener thinks nothing changed.
         win.addComponentListener(new ComponentAdapter() {
             @Override
             public void componentResized(ComponentEvent e) {
-                if (lazyCanvas == null) return;
-                setViewport(lazyCanvas.getWidth(), lazyCanvas.getHeight());
+                ImageWindow w2 = getWindow();
+                if (w2 == null) return;
+                java.awt.Insets insets = w2.getInsets();
+                int availW = w2.getWidth()  - insets.left - insets.right;
+                int availH = w2.getHeight() - insets.top  - insets.bottom
+                                            - w2.getSliderHeight();
+                setViewport(availW, availH);
             }
         });
         Toolbar tb = Toolbar.getInstance();

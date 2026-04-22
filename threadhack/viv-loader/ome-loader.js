@@ -42,7 +42,6 @@ const STATUS_ID = "__ome_loader_status__";
     await imp.show();
     window.__omeImp = imp;
     setStatus("ready — wheel to zoom, drag to pan");
-    installResizeObserver(imp);
     setTimeout(() => setStatus(null), 6000);
   } catch (e) {
     console.error("[ome-loader]", e);
@@ -175,59 +174,3 @@ async function zarrProvider(url) {
 
 function timeout(ms, label) { return new Promise((_, r) => setTimeout(() => r(new Error(label + " (" + ms + "ms)")), ms)); }
 function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
-
-// ----- ResizeObserver on the ImageJ canvas ---------------------------------
-// Browser-native drive for LazyImagePlus.setViewport(w, h). Whenever the
-// user drags the ImageJ window border, the AWT canvas DOM element resizes
-// and ResizeObserver fires; we forward the new size into Java. A debounce
-// coalesces rapid drag events and avoids rebuilding the ByteProcessor 60×
-// per second during a resize gesture.
-function installResizeObserver(imp) {
-  if (typeof ResizeObserver === "undefined") return;
-  const tryInstall = () => {
-    const cvs = findIjCanvas();
-    if (!cvs) return false;
-    if (cvs.__lip_resize_installed) return true;
-    cvs.__lip_resize_installed = true;
-    // ResizeObserver always fires once on observe() with the current size.
-    // That first fire happens while the ImageJ window is still settling
-    // (magnification not yet final etc.), so we skip it and only act on
-    // subsequent user-driven resizes.
-    let firstFire = true;
-    let pending = null;
-    let timer = null;
-    const obs = new ResizeObserver(entries => {
-      if (firstFire) { firstFire = false; return; }
-      const e = entries[entries.length - 1];
-      const r = e.contentRect || cvs.getBoundingClientRect();
-      const w = Math.round(r.width), h = Math.round(r.height);
-      if (w <= 0 || h <= 0) return;
-      pending = { w, h };
-      if (timer) clearTimeout(timer);
-      timer = setTimeout(async () => {
-        timer = null;
-        const p = pending; pending = null;
-        if (!p) return;
-        try { await imp.setViewport(p.w, p.h); }
-        catch (err) { console.warn("[ome-loader] setViewport failed:", err); }
-      }, 120);
-    });
-    obs.observe(cvs);
-    return true;
-  };
-  if (tryInstall()) return;
-  const mo = new MutationObserver(() => { if (tryInstall()) mo.disconnect(); });
-  mo.observe(document.body, { childList: true, subtree: true });
-}
-
-function findIjCanvas() {
-  const display = document.getElementById("cheerpjDisplay");
-  if (!display) return null;
-  let best = null, area = 0;
-  for (const c of display.querySelectorAll("canvas")) {
-    const r = c.getBoundingClientRect();
-    const a = r.width * r.height;
-    if (a > area && r.width > 200 && r.height > 200) { area = a; best = c; }
-  }
-  return best;
-}
