@@ -132,19 +132,19 @@ public class LazyImagePlus extends ImagePlus {
     public double getZoomLevel()  { return zoom; }
 
     /**
-     * Status-bar coordinate readout: transform display-pixel coords back to
-     * level-0 (global, full-resolution) coordinates so the user sees where
-     * they are on the underlying image — not on the rescaled viewport.
-     * Also surfaces the current pyramid level + zoom for diagnostic value.
+     * Override the single method ImageJ uses to format the coordinate half
+     * of the status-bar readout. By returning level-0 coords here, every
+     * caller that already formats "x=N, y=N" — mouseMoved, macro
+     * getCursorLoc, pixel inspector, ROI bounds reporting — transparently
+     * reports global full-resolution coords instead of display-pixel ones.
+     * No ImageJ code path is special-cased; this is the natural extension
+     * point ImageJ provides for custom coordinate spaces.
      */
     @Override
-    public void mouseMoved(int x, int y) {
+    public String getLocationAsString(int x, int y) {
         double l0x = cx + (x - viewW / 2.0) / zoom;
         double l0y = cy + (y - viewH / 2.0) / zoom;
-        IJ.showStatus("x=" + (int) Math.round(l0x)
-                + ", y=" + (int) Math.round(l0y)
-                + "   [level " + currentLevel + "/" + (src.levelCount() - 1) + "]"
-                + "   zoom=" + String.format("%.3f", zoom));
+        return "x=" + (int) Math.round(l0x) + ", y=" + (int) Math.round(l0y);
     }
     public int viewportWidth()    { return viewW; }
     public int viewportHeight()   { return viewH; }
