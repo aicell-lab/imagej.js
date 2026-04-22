@@ -51,10 +51,19 @@ public class LazyImageCanvas extends ImageCanvas {
         setSize(imp.viewportWidth(), imp.viewportHeight());
     }
 
-    @Override
-    public Dimension getPreferredSize() {
-        return new Dimension(lip.viewportWidth(), lip.viewportHeight());
-    }
+    // Intentionally NOT overriding getPreferredSize.
+    //
+    // Stock ImageCanvas.getPreferredSize returns (dstWidth, dstHeight) —
+    // the CURRENT canvas size. ImageLayout.layoutContainer uses that value
+    // to call m.setSize(d.width, d.height) in its second loop AFTER calling
+    // ic.resizeCanvas(availW, availH). With a stock canvas setSize → same
+    // size = no-op. But overriding getPreferredSize to return some older
+    // "intended" size (e.g. lip.viewportWidth()) made that second loop
+    // RESET the canvas back to the old viewport size right after
+    // resizeCanvas had grown it, so window-border drag appeared to do
+    // nothing. Letting dstWidth/dstHeight be the source of truth — kept in
+    // sync by our setSize override — makes the loop a no-op as ImageJ
+    // intends.
 
     @Override
     public void paint(Graphics g) {
@@ -109,7 +118,6 @@ public class LazyImageCanvas extends ImageCanvas {
      */
     @Override
     public void setSize(int w, int h) {
-        System.out.println("[LazyImageCanvas] setSize(" + w + ", " + h + ")");
         super.setSize(w, h);
         dstWidth = w;
         dstHeight = h;
