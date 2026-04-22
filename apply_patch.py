@@ -627,7 +627,7 @@ def patch_lazy_image_plus_hooks():
             "\t\t\tcom.hack.viewer.LazyImagePlus lip = (com.hack.viewer.LazyImagePlus) imp;\n"
             "\t\t\tint rot = e.getWheelRotation();\n"
             "\t\t\tif (rot == 0) return;\n"
-            "\t\t\tdouble factor = Math.pow(1.25, -rot);\n"
+            "\t\t\tdouble factor = Math.pow(1.12, -rot);\n"
             "\t\t\tjava.awt.Point p = ic.getCursorLoc();\n"
             "\t\t\tint sx = ic.screenX(p.x), sy = ic.screenY(p.y);\n"
             "\t\t\tint cw = ic.getWidth(), ch = ic.getHeight();\n"
