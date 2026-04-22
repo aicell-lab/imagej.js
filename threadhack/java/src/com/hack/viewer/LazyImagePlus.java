@@ -193,25 +193,44 @@ public class LazyImagePlus extends ImagePlus {
      * because viewW / viewH already match.
      */
     public void setViewport(int w, int h) {
-        if (lazyCanvas == null) return;
-        int cw = Math.max(64, w);
-        int ch = Math.max(64, h);
-        if (cw == viewW && ch == viewH) return;
-        Rectangle sr = lazyCanvas.currentSrcRect();
-        double mag = lazyCanvas.currentMagnification();
-        double cx = sr.x + sr.width / 2.0;
-        double cy = sr.y + sr.height / 2.0;
-        int newSrcW = Math.max(1, (int) Math.round(cw / mag));
-        int newSrcH = Math.max(1, (int) Math.round(ch / mag));
-        int newSrcX = (int) Math.round(cx - newSrcW / 2.0);
-        int newSrcY = (int) Math.round(cy - newSrcH / 2.0);
-        viewW = cw; viewH = ch;
-        processor = new ByteProcessor(viewW, viewH);
-        setProcessor(processor);
-        lazyCanvas.setSize(cw, ch);
-        lazyCanvas.lockViewportToLevel0();
-        lazyCanvas.setSourceRect(new Rectangle(newSrcX, newSrcY, newSrcW, newSrcH));
-        scheduleFetch();
+        try {
+            if (lazyCanvas == null) return;
+            int cw = Math.max(64, w);
+            int ch = Math.max(64, h);
+            if (cw == viewW && ch == viewH) return;
+            Rectangle sr = lazyCanvas.currentSrcRect();
+            double mag = lazyCanvas.currentMagnification();
+            // Sanity bail-outs — the ResizeObserver can fire while the
+            // ImageWindow is still laying out, at which point mag or srcRect
+            // may be degenerate. Keep viewW/viewH in sync anyway so next
+            // refresh uses the right dimensions.
+            if (!(mag > 0) || sr == null || sr.width <= 0 || sr.height <= 0) {
+                viewW = cw; viewH = ch;
+                processor = new ByteProcessor(viewW, viewH);
+                setProcessor(processor);
+                if (lazyCanvas != null) {
+                    lazyCanvas.setSize(cw, ch);
+                    lazyCanvas.lockViewportToLevel0();
+                }
+                scheduleFetch();
+                return;
+            }
+            double cx = sr.x + sr.width / 2.0;
+            double cy = sr.y + sr.height / 2.0;
+            int newSrcW = Math.max(1, (int) Math.round(cw / mag));
+            int newSrcH = Math.max(1, (int) Math.round(ch / mag));
+            int newSrcX = (int) Math.round(cx - newSrcW / 2.0);
+            int newSrcY = (int) Math.round(cy - newSrcH / 2.0);
+            viewW = cw; viewH = ch;
+            processor = new ByteProcessor(viewW, viewH);
+            setProcessor(processor);
+            lazyCanvas.setSize(cw, ch);
+            lazyCanvas.lockViewportToLevel0();
+            lazyCanvas.setSourceRect(new Rectangle(newSrcX, newSrcY, newSrcW, newSrcH));
+            scheduleFetch();
+        } catch (Throwable t) {
+            System.out.println("[LazyImagePlus] setViewport(" + w + "," + h + ") failed: " + t);
+        }
     }
 
     // -------- viewport transforms --------------------------------------
