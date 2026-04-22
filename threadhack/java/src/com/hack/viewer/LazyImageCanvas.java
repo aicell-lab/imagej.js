@@ -124,26 +124,19 @@ public class LazyImageCanvas extends ImageCanvas {
     }
 
     /**
-     * Override setSourceRect so its clamp uses our level-0 imageWidth/Height
-     * (stock implementation clamps against imp.getWidth(), which is the
-     * viewport processor size — not what we want).
+     * Allow srcRect to span beyond the level-0 image bounds — that's how we
+     * let the user zoom out far enough to see the whole image with black
+     * margins around it. Only clamp for size-0 degenerate rects and update
+     * magnification from dstWidth / srcRect.width.
      */
     @Override
     public void setSourceRect(java.awt.Rectangle r) {
         if (r == null) return;
-        int lw = lip.level0Width();
-        int lh = lip.level0Height();
-        imageWidth = lw;
-        imageHeight = lh;
+        imageWidth  = lip.level0Width();
+        imageHeight = lip.level0Height();
         java.awt.Rectangle c = new java.awt.Rectangle(r);
-        if (c.x < 0) c.x = 0;
-        if (c.y < 0) c.y = 0;
         if (c.width  < 1) c.width  = 1;
         if (c.height < 1) c.height = 1;
-        if (c.width  > lw) c.width  = lw;
-        if (c.height > lh) c.height = lh;
-        if (c.x + c.width  > lw) c.x = lw - c.width;
-        if (c.y + c.height > lh) c.y = lh - c.height;
         srcRect = c;
         if (dstWidth == 0) {
             java.awt.Dimension size = getSize();
