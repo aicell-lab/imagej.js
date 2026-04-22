@@ -1,18 +1,16 @@
 // ============================================================
 //  touch-controller.js — unified pan + pinch for LazyImagePlus.
 //
-//  Attaches to #cheerpjDisplay and maps touch gestures to the same
-//  setSourceRect + repaint API that the mouse-wheel handler uses,
-//  so pinch and wheel produce identical internal state.
+//  Semantics (frame-to-frame; pinch ≡ pan + scroll-zoom at midpoint):
+//    1-finger drag → pan; 2-finger → pinch + pan around midpoint.
 //
-//  Semantics:
-//    • 1-finger drag → pan (srcRect translates in level-0 coords)
-//    • 2-finger pinch → cursor-anchored zoom (level-0 point under
-//       the start midpoint stays under the current midpoint)
-//    • No preventDefault on touchstart — a plain tap still reaches
-//       ImageJ as a click (so drawing-tool taps still work). We
-//       preventDefault only once a gesture is unambiguous (>5 px
-//       movement for 1-finger, any 2-finger touch).
+//  Robustness: we track active touches OURSELVES from changedTouches
+//  (event.touches flakes on iOS/Safari during pinch — stationary
+//  fingers are sometimes omitted, which would make pinch degenerate
+//  into a 1-finger pan that jumps to whichever finger moved last).
+//
+//  Performance: single setSourceRect+repaint per rAF frame; cached
+//  Rectangle class ref; no per-touchmove CheerpJ round-trip for reads.
 // ============================================================
 
 (function () {
@@ -24,25 +22,20 @@
     if (display.__tc_installed) return true;
     display.__tc_installed = true;
 
-    let icRef = null;
+    let ic = null;                    // cached LazyImageCanvas ref
+    let RectangleCls = null;          // cached java.awt.Rectangle
     let canvasRect = null;
-    // Frame-to-frame state: on every touchmove we transform the LAST state
-    // by a small pan + zoom step. A gesture is therefore just a sequence of
-    // independent "pan by midpoint delta, zoom by distance ratio at current
-    // midpoint" increments — pinch ≡ pan + wheel-zoom, composed per frame.
-    let lastTouches = [];      // [{id, x, y}] — positions at last frame
-    let lastView = null;       // { x, y, w, h, mag } — srcRect at last frame
+    const active = new Map();         // id → { x, y } — our own source of truth
+    let lastPts = [];                 // [{id,x,y}] — snapshot at last frame
+    let lastView = null;              // { x, y, w, h, mag } at last frame
     let movedEnough = false;
+    let gestureReady = false;         // true once touchstart setup completed
 
-    // Coalesce rapid touchmoves into one CheerpJ call per frame.
+    // rAF coalescer: touchmove enqueues; only the latest apply runs per frame.
     let nextApply = null;
     let rafPending = false;
 
     function findCanvasAt(clientX, clientY) {
-      // Walk up from the point under the finger to the nearest CANVAS inside
-      // cheerpjDisplay. This correctly picks the LazyImagePlus's image canvas
-      // regardless of how many other CheerpJ windows (toolbar, menu,
-      // plugin dialogs) are on the page.
       let el = document.elementFromPoint(clientX, clientY);
       while (el && el !== display) {
         if (el.tagName === 'CANVAS') {
@@ -54,15 +47,19 @@
       return null;
     }
 
-    async function fetchIc() {
-      if (!window.__omeImp) return null;
+    async function primeRefs() {
+      if (!window.__omeImp) return false;
       try {
-        const ic = await window.__omeImp.getCanvas();
-        return ic || null;
-      } catch { return null; }
+        if (!ic) ic = await window.__omeImp.getCanvas();
+        if (!ic) return false;
+        if (!RectangleCls && window.lib) {
+          RectangleCls = await window.lib.java.awt.Rectangle;
+        }
+        return !!RectangleCls;
+      } catch { return false; }
     }
 
-    async function fetchView(ic) {
+    async function fetchView() {
       const sr = await ic.getSrcRect();
       return {
         x: await sr.x, y: await sr.y,
@@ -71,119 +68,150 @@
       };
     }
 
-    async function applyView(ic, x, y, w, h) {
+    async function applyView(x, y, w, h) {
       try {
-        const Rectangle = await window.lib.java.awt.Rectangle;
-        const r = await new Rectangle(
+        const r = await new RectangleCls(
           Math.round(x), Math.round(y),
           Math.max(1, Math.round(w)), Math.max(1, Math.round(h))
         );
         await ic.setSourceRect(r);
         await ic.repaint();
-      } catch (e) {
-        console.warn('[touch] apply failed:', e && (e.message || e));
-      }
+      } catch (e) { console.warn('[touch] apply:', e && (e.message || e)); }
     }
 
     function scheduleApply(x, y, w, h) {
       nextApply = { x, y, w, h };
-      if (!rafPending) {
-        rafPending = true;
-        requestAnimationFrame(async () => {
-          rafPending = false;
-          const a = nextApply;
-          nextApply = null;
-          if (a && icRef) await applyView(icRef, a.x, a.y, a.w, a.h);
-        });
-      }
+      if (rafPending) return;
+      rafPending = true;
+      requestAnimationFrame(async () => {
+        rafPending = false;
+        const a = nextApply; nextApply = null;
+        if (a && ic) await applyView(a.x, a.y, a.w, a.h);
+      });
+    }
+
+    function ptsArray() {
+      return Array.from(active, ([id, p]) => ({ id, x: p.x, y: p.y }));
+    }
+
+    function mid(pts) {
+      if (pts.length === 1) return { x: pts[0].x, y: pts[0].y };
+      return {
+        x: (pts[0].x + pts[1].x) / 2,
+        y: (pts[0].y + pts[1].y) / 2,
+      };
+    }
+
+    function distPair(pts) {
+      if (pts.length < 2) return 0;
+      return Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
+    }
+
+    function rebase() {
+      // Capture the current tracked state as the reference for future
+      // frame-to-frame transforms. Call this on touchstart / touchend to
+      // avoid jumps when the finger count changes.
+      lastPts = ptsArray();
     }
 
     display.addEventListener('touchstart', async (e) => {
-      icRef = await fetchIc();
-      if (!icRef) return;
-      const t0 = e.touches[0];
-      const cvs = findCanvasAt(t0.clientX, t0.clientY);
+      // Always record the new touches so we have accurate state even before
+      // ic is primed.
+      for (const t of e.changedTouches) {
+        active.set(t.identifier, { x: t.clientX, y: t.clientY });
+      }
+      const ok = await primeRefs();
+      if (!ok) return;
+      const anchor = e.changedTouches[0] || e.touches[0];
+      const cvs = findCanvasAt(anchor.clientX, anchor.clientY);
       if (!cvs) return;
       canvasRect = cvs.getBoundingClientRect();
-      lastView = await fetchView(icRef);
-      lastTouches = [...e.touches].map(t => ({
-        id: t.identifier, x: t.clientX, y: t.clientY
-      }));
+      lastView = await fetchView();
+      rebase();
       movedEnough = false;
-      if (e.touches.length >= 2) e.preventDefault();
+      gestureReady = true;
+      if (active.size >= 2) e.preventDefault();
     }, { passive: false, capture: true });
 
     display.addEventListener('touchmove', (e) => {
-      if (!icRef || !lastView || lastTouches.length === 0) return;
-      const touches = [...e.touches].filter(t =>
-        lastTouches.some(s => s.id === t.identifier));
-      if (touches.length === 0) return;
+      // Update tracked positions from changedTouches (reliable).
+      for (const t of e.changedTouches) {
+        if (active.has(t.identifier)) {
+          active.set(t.identifier, { x: t.clientX, y: t.clientY });
+        }
+      }
+      if (!gestureReady || !ic || !lastView || lastPts.length === 0) return;
 
-      // Current + previous midpoint (canvas-local), and current + previous
-      // pair-distance (for pinch). For 1-finger pan, "distance" is 0 and we
-      // only apply the pan step.
-      const tCur = (n) => touches[n];
-      const tLast = (n) => lastTouches.find(t => t.id === touches[n].identifier);
-      let curMidX, curMidY, lastMidX, lastMidY;
-      let curDist = 0, lastDist = 0;
+      const cur = ptsArray();
+      if (cur.length === 0) return;
 
-      if (touches.length >= 2 && lastTouches.length >= 2) {
-        const c1 = tCur(0), c2 = tCur(1);
-        const l1 = tLast(0), l2 = tLast(1);
-        if (!l1 || !l2) return;
-        curMidX  = (c1.clientX + c2.clientX) / 2 - canvasRect.left;
-        curMidY  = (c1.clientY + c2.clientY) / 2 - canvasRect.top;
-        lastMidX = (l1.x + l2.x) / 2 - canvasRect.left;
-        lastMidY = (l1.y + l2.y) / 2 - canvasRect.top;
-        curDist  = Math.hypot(c1.clientX - c2.clientX, c1.clientY - c2.clientY);
-        lastDist = Math.hypot(l1.x - l2.x, l1.y - l2.y);
-        e.preventDefault();
-      } else if (touches.length === 1) {
-        const c = tCur(0);
-        const l = tLast(0);
-        if (!l) return;
-        curMidX  = c.clientX - canvasRect.left;
-        curMidY  = c.clientY - canvasRect.top;
-        lastMidX = l.x - canvasRect.left;
-        lastMidY = l.y - canvasRect.top;
-        const dx = c.clientX - l.x;
-        const dy = c.clientY - l.y;
+      // For frame-to-frame transforms we need the last-frame positions of
+      // EXACTLY the fingers currently active (by id).
+      const curSubset = cur.filter(p => lastPts.some(q => q.id === p.id));
+      if (curSubset.length === 0) return;
+      const lastSubset = lastPts.filter(p => curSubset.some(q => q.id === p.id));
+
+      // Prefer 2-finger gesture state when at least two tracked fingers
+      // continue from the last frame — avoids the browser's stationary-
+      // finger dropout from collapsing pinch into 1-finger pan.
+      const twoF = curSubset.length >= 2 && lastSubset.length >= 2;
+
+      // Build arrays of the same ids in matching order.
+      const mkPair = (src) => {
+        if (src.length >= 2) return [src[0], src[1]];
+        return [src[0]];
+      };
+      const curPair = mkPair(curSubset);
+      const lastPair = curPair.map(p => lastSubset.find(q => q.id === p.id)).filter(Boolean);
+      if (curPair.length !== lastPair.length) return;
+
+      const curMidPage = mid(curPair);
+      const lastMidPage = mid(lastPair);
+      const curMid = { x: curMidPage.x - canvasRect.left, y: curMidPage.y - canvasRect.top };
+      const lastMid = { x: lastMidPage.x - canvasRect.left, y: lastMidPage.y - canvasRect.top };
+
+      if (!twoF) {
+        // 1-finger drag → pure pan; apply the movement threshold.
+        const dx = curMid.x - lastMid.x;
+        const dy = curMid.y - lastMid.y;
         if (!movedEnough && Math.hypot(dx, dy) < MOVE_THRESHOLD_PX) return;
         movedEnough = true;
-        e.preventDefault();
-      } else {
-        return;
       }
+      e.preventDefault();
 
-      // Level-0 coord that was under the previous midpoint (in lastView).
-      const anchorX = lastView.x + lastMidX / lastView.mag;
-      const anchorY = lastView.y + lastMidY / lastView.mag;
-      // Scale step for this frame (1.0 for pure pan).
-      const scale = (lastDist > 1 && curDist > 1) ? (curDist / lastDist) : 1.0;
+      const curDist = twoF ? distPair(curPair) : 0;
+      const lastDist = twoF ? distPair(lastPair) : 0;
+      const scale = (twoF && lastDist > 1 && curDist > 1) ? (curDist / lastDist) : 1.0;
       const newMag = Math.max(1e-5, Math.min(32, lastView.mag * scale));
-      // Place srcRect so anchor lands under the current midpoint at the new mag.
-      const newSrcX = anchorX - curMidX / newMag;
-      const newSrcY = anchorY - curMidY / newMag;
+
+      // Level-0 coord under LAST midpoint in the LAST view = anchor.
+      const anchorX = lastView.x + lastMid.x / lastView.mag;
+      const anchorY = lastView.y + lastMid.y / lastView.mag;
+      // Position srcRect so anchor lands at current midpoint in new view.
+      const newSrcX = anchorX - curMid.x / newMag;
+      const newSrcY = anchorY - curMid.y / newMag;
       const newSrcW = canvasRect.width  / newMag;
       const newSrcH = canvasRect.height / newMag;
       scheduleApply(newSrcX, newSrcY, newSrcW, newSrcH);
 
-      // Advance the reference frame: next move composes against THIS state.
       lastView = { x: newSrcX, y: newSrcY, w: newSrcW, h: newSrcH, mag: newMag };
-      lastTouches = touches.map(t => ({ id: t.identifier, x: t.clientX, y: t.clientY }));
+      lastPts = cur;
     }, { passive: false, capture: true });
 
     function onEnd(e) {
-      if (e.touches && e.touches.length === 0) {
-        icRef = null; lastView = null; lastTouches = []; canvasRect = null;
-        movedEnough = false;
-      } else if (e.touches) {
-        // Some fingers lifted — rebase so the pinch↔pan transition doesn't
-        // jump (level-0 anchor is computed from lastView × lastMidpoint).
-        lastTouches = [...e.touches].map(t => ({
-          id: t.identifier, x: t.clientX, y: t.clientY
-        }));
-        if (icRef) fetchView(icRef).then(v => { lastView = v; });
+      for (const t of e.changedTouches) active.delete(t.identifier);
+      if (active.size === 0) {
+        ic = null; canvasRect = null; lastView = null; lastPts = [];
+        gestureReady = false; movedEnough = false;
+      } else {
+        // Finger count changed — rebase against current state so the next
+        // touchmove doesn't apply a transform computed from the old finger
+        // set.
+        if (ic) {
+          fetchView().then(v => { lastView = v; rebase(); });
+        } else {
+          rebase();
+        }
       }
     }
     display.addEventListener('touchend',    onEnd, { passive: false, capture: true });
