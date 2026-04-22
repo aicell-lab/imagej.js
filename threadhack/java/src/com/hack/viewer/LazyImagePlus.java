@@ -167,19 +167,22 @@ public class LazyImagePlus extends ImagePlus {
         lazyCanvas = new LazyImageCanvas(this);
         ImageWindow win = new ImageWindow(this, lazyCanvas);
         reportViewportForGetWidth = false;
-        System.out.println("[LazyImagePlus] after ctor, frame size = "
-                + win.getWidth() + "x" + win.getHeight()
-                + " canvas = " + lazyCanvas.getWidth() + "x" + lazyCanvas.getHeight());
+        // CheerpJ's Frame emulation inline-styles freshly-shown windows to
+        // the full cheerpjDisplay area, ignoring pack(). Force the frame to
+        // match the intended viewport so we don't open fullscreen.
+        try {
+            java.awt.Insets ins = win.getInsets();
+            int sliderH = win.getSliderHeight();
+            win.setSize(viewW + ins.left + ins.right,
+                        viewH + ins.top + ins.bottom + sliderH);
+            win.validate();
+        } catch (Throwable t) {
+            System.out.println("[LazyImagePlus] initial window sizing: " + t);
+        }
         // Canvas construction + ImageWindow layout both reset imageWidth /
         // srcRect / magnification to the viewport-processor dims. Re-lock
         // to level-0 AFTER all that runs.
         lazyCanvas.lockViewportToLevel0();
-        // When the user drags the frame border, compute the available canvas
-        // area from the frame's size (minus decorations + slider) and push
-        // that into setViewport, which will force-resize the canvas.
-        // Reading lazyCanvas.getWidth() here doesn't work because
-        // ImageLayout keeps the canvas at its preferred size — frame grows
-        // but the canvas stays put, so the listener thinks nothing changed.
         win.addComponentListener(new ComponentAdapter() {
             @Override
             public void componentResized(ComponentEvent e) {
