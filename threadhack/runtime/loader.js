@@ -152,7 +152,7 @@
 
   // ---- MenuRegistry native ----------------------------------------------
   // Java calls this when a menu item is clicked; dispatches to the JS-side
-  // handler registered under `window.__menuHandlers[key]`.
+  // handler registered under window.__menuHandlers[key].
   window.__menuHandlers = window.__menuHandlers || {};
   var menuRegistryNatives = {
     Java_com_hack_menu_MenuRegistry_nativeInvokeJSHandler: async function (lib, key) {
