@@ -113,19 +113,29 @@ public class LazyImagePlus extends ImagePlus {
         return "x=" + x + ", y=" + y;
     }
 
-    /** Pixel-value readout. ImageJ's default passes (x, y) straight to
-     *  processor.getPixel — but our processor is viewport-sized and (x, y)
-     *  here are level-0 coords, so that always read 0. Project (x, y) back
-     *  to viewport pixel coords before sampling. */
+    /**
+     * Build the status-bar message ourselves so we can look up the pixel
+     * value at the correct VIEWPORT coord. The default ImagePlus.mouseMoved
+     * calls getValueAsString(x,y) which indexes the processor at (x,y) —
+     * but (x,y) here are level-0 coords while the processor is viewport-
+     * sized, so the default always returned 0. (getValueAsString itself is
+     * private in ImagePlus, so we can't override it directly.)
+     */
     @Override
-    public String getValueAsString(int x, int y) {
-        if (lazyCanvas == null || processor == null) return "";
-        Rectangle sr = lazyCanvas.currentSrcRect();
-        double mag = lazyCanvas.currentMagnification();
-        int vx = (int) Math.round((x - sr.x) * mag);
-        int vy = (int) Math.round((y - sr.y) * mag);
-        if (vx < 0 || vx >= viewW || vy < 0 || vy >= viewH) return "";
-        return ", value=" + processor.getPixel(vx, vy);
+    public void mouseMoved(int x, int y) {
+        if (IJ.getInstance() == null) return;
+        String loc = getLocationAsString(x, y);
+        String val = "";
+        if (lazyCanvas != null && processor != null) {
+            Rectangle sr = lazyCanvas.currentSrcRect();
+            double mag = lazyCanvas.currentMagnification();
+            int vx = (int) Math.round((x - sr.x) * mag);
+            int vy = (int) Math.round((y - sr.y) * mag);
+            if (vx >= 0 && vx < viewW && vy >= 0 && vy < viewH) {
+                val = ", value=" + processor.getPixel(vx, vy);
+            }
+        }
+        IJ.showStatus(loc + val);
     }
 
     // -------- show(): install the custom canvas -------------------------
