@@ -182,8 +182,35 @@
         return new Int8Array(w * h); // black tile
       }
       var u8 = autoStretchToU8(region.data, src.bitsPerSample || 8, key + '|' + level);
-      // CheerpJ native byte[] return: Int8Array view of the same buffer
       return new Int8Array(u8.buffer, u8.byteOffset, u8.byteLength);
+    },
+    /**
+     * Fire-and-forget tile request. The Java caller is unblocked the
+     * instant this native returns (which is immediate — the actual
+     * fetch runs in the background). When the fetch resolves we call
+     * back into Java via LazyImagePlus.onTileReady(id, bytes).
+     */
+    Java_com_hack_viewer_JSTileSource_nativeRequestTile: function (lib, id, key, level, x, y, w, h) {
+      // Kick off the async fetch WITHOUT awaiting — so this function
+      // returns synchronously (Java thread is immediately freed).
+      (async function () {
+        try {
+          var src = getSrc(key);
+          var region = await src.getRegion(level, x, y, w, h);
+          var bytes;
+          if (!region.data) {
+            bytes = new Uint8Array(w * h);
+          } else {
+            bytes = autoStretchToU8(region.data, src.bitsPerSample || 8, key + '|' + level);
+          }
+          var LazyImagePlus = await lib.com.hack.viewer.LazyImagePlus;
+          var javaBytes = new Int8Array(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+          await LazyImagePlus.onTileReady(id, javaBytes);
+        } catch (e) {
+          console.warn('[tile] request id=' + id + ' failed:', e);
+        }
+      })();
+      // Return synchronously — no Promise awaited by Java.
     }
   };
 
