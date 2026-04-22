@@ -94,15 +94,58 @@ public class LazyImageCanvas extends ImageCanvas {
     public void update(Graphics g) { paint(g); }
 
     /**
-     * Stock ImageCanvas.updateImage resets imageWidth / imageHeight / srcRect
-     * to the processor's dimensions. Our processor is viewport-sized (viewW
-     * × viewH) but the canvas must hold level-0 dimensions + level-0 srcRect.
-     * We only need to flag that the AWT Image needs rebuilding from the
-     * processor — which repaint() will do.
+     * Force the canvas state into its level-0 coordinate space. Call this
+     *   - right after the constructor (ImageWindow's layout pass resets
+     *     magnification during pack()),
+     *   - after any setProcessor()-triggered reset.
+     * Directly mutates the protected fields rather than going through
+     * setSourceRect(), which clamps against imp.getWidth() — that's the
+     * viewport-processor width, not the level-0 width we want.
+     */
+    public void lockViewportToLevel0() {
+        imageWidth  = lip.level0Width();
+        imageHeight = lip.level0Height();
+        if (srcRect == null
+                || srcRect.width > imageWidth || srcRect.height > imageHeight
+                || srcRect.width <= 0) {
+            srcRect = new java.awt.Rectangle(0, 0, imageWidth, imageHeight);
+        }
+        if (dstWidth == 0) {
+            java.awt.Dimension d = getSize();
+            dstWidth = d.width;
+            dstHeight = d.height;
+        }
+        magnification = (double) dstWidth / srcRect.width;
+    }
+
+    /**
+     * Override setSourceRect so its clamp uses our level-0 imageWidth/Height
+     * (stock implementation clamps against imp.getWidth(), which is the
+     * viewport processor size — not what we want).
      */
     @Override
-    public void updateImage(ij.process.ImageProcessor ip) {
-        imageUpdated = true;
+    public void setSourceRect(java.awt.Rectangle r) {
+        if (r == null) return;
+        int lw = lip.level0Width();
+        int lh = lip.level0Height();
+        imageWidth = lw;
+        imageHeight = lh;
+        java.awt.Rectangle c = new java.awt.Rectangle(r);
+        if (c.x < 0) c.x = 0;
+        if (c.y < 0) c.y = 0;
+        if (c.width  < 1) c.width  = 1;
+        if (c.height < 1) c.height = 1;
+        if (c.width  > lw) c.width  = lw;
+        if (c.height > lh) c.height = lh;
+        if (c.x + c.width  > lw) c.x = lw - c.width;
+        if (c.y + c.height > lh) c.y = lh - c.height;
+        srcRect = c;
+        if (dstWidth == 0) {
+            java.awt.Dimension size = getSize();
+            dstWidth = size.width;
+            dstHeight = size.height;
+        }
+        magnification = (double) dstWidth / srcRect.width;
     }
 
     private void detectAndPropagateSrcRectChange() {

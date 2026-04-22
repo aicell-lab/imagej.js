@@ -86,30 +86,22 @@ public class LazyImagePlus extends ImagePlus {
     public void show() {
         lazyCanvas = new LazyImageCanvas(this);
         ImageWindow win = new ImageWindow(this, lazyCanvas);
-        // Force the canvas into its level-0 coordinate space AFTER the
-        // window has done its initial layout (pack/validate can reset
-        // magnification to 1.0 and clip srcRect against the processor-
-        // sized imageWidth the super constructor saw).
-        lazyCanvas.setSourceRect(new Rectangle(0, 0, level0W, level0H));
-        lazyCanvas.setMagnification((double) viewW / level0W);
-        // When the user drags the frame border, grow the viewport processor.
+        // Canvas construction + ImageWindow layout both reset imageWidth /
+        // srcRect / magnification to the viewport-processor dims. Re-lock
+        // to level-0 AFTER all that runs.
+        lazyCanvas.lockViewportToLevel0();
         win.addComponentListener(new ComponentAdapter() {
             @Override
             public void componentResized(ComponentEvent e) {
-                if (lazyCanvas != null) {
-                    int cw = Math.max(64, lazyCanvas.getWidth());
-                    int ch = Math.max(64, lazyCanvas.getHeight());
-                    if (cw != viewW || ch != viewH) {
-                        viewW = cw; viewH = ch;
-                        processor = new ByteProcessor(viewW, viewH);
-                        setProcessor(processor);
-                        // Keep srcRect in level-0; re-derive magnification
-                        // so display-pixel density stays consistent.
-                        Rectangle sr = lazyCanvas.currentSrcRect();
-                        lazyCanvas.setMagnification((double) viewW / sr.width);
-                        scheduleFetch();
-                    }
-                }
+                if (lazyCanvas == null) return;
+                int cw = Math.max(64, lazyCanvas.getWidth());
+                int ch = Math.max(64, lazyCanvas.getHeight());
+                if (cw == viewW && ch == viewH) return;
+                viewW = cw; viewH = ch;
+                processor = new ByteProcessor(viewW, viewH);
+                setProcessor(processor);
+                lazyCanvas.lockViewportToLevel0();   // re-lock after setProcessor
+                scheduleFetch();
             }
         });
         Toolbar tb = Toolbar.getInstance();
