@@ -41,8 +41,28 @@ public class LazyImagePlus extends ImagePlus {
 
     /** Debounced-fetch timer. */
     private javax.swing.Timer fetchTimer;
-    private boolean refreshing = false;
-    private int pendingTicket = 0;
+
+    /** Monotonically-increasing request id. Incremented on every scheduled
+     *  fetch; JS calls back into onTileReady(id, bytes) which drops any
+     *  id != latestRequestId (so stale results don't overwrite fresh ones). */
+    private long latestRequestId = 0;
+    /** In-flight request geometry, keyed by request id — the callback needs
+     *  these to blit correctly. */
+    private static final java.util.Map<Long, Request> requests = new java.util.concurrent.ConcurrentHashMap<>();
+    private String srcKey;
+
+    private static final class Request {
+        final LazyImagePlus owner;
+        final int lvl;
+        final int x0, y0, rw, rh;   // in level-L coords (clamped fetch region)
+        final int ix0, iy0, iW, iH; // in level-L coords, ideal (may extend past bounds)
+        Request(LazyImagePlus owner, int lvl, int x0, int y0, int rw, int rh,
+                int ix0, int iy0, int iW, int iH) {
+            this.owner = owner; this.lvl = lvl;
+            this.x0 = x0; this.y0 = y0; this.rw = rw; this.rh = rh;
+            this.ix0 = ix0; this.iy0 = iy0; this.iW = iW; this.iH = iH;
+        }
+    }
 
     /** Last fetched tile + geometry, used for instant NN previews between
      *  viewport changes and the next tile arriving. */
@@ -56,6 +76,7 @@ public class LazyImagePlus extends ImagePlus {
     public LazyImagePlus(String title, TileSource src) {
         super();
         this.src = src;
+        this.srcKey = (src instanceof JSTileSource) ? ((JSTileSource) src).key() : "";
         this.level0W = src.levelWidth(0);
         this.level0H = src.levelHeight(0);
         // Size the initial viewport to match the level-0 aspect ratio
@@ -90,6 +111,21 @@ public class LazyImagePlus extends ImagePlus {
     @Override
     public String getLocationAsString(int x, int y) {
         return "x=" + x + ", y=" + y;
+    }
+
+    /** Pixel-value readout. ImageJ's default passes (x, y) straight to
+     *  processor.getPixel — but our processor is viewport-sized and (x, y)
+     *  here are level-0 coords, so that always read 0. Project (x, y) back
+     *  to viewport pixel coords before sampling. */
+    @Override
+    public String getValueAsString(int x, int y) {
+        if (lazyCanvas == null || processor == null) return "";
+        Rectangle sr = lazyCanvas.currentSrcRect();
+        double mag = lazyCanvas.currentMagnification();
+        int vx = (int) Math.round((x - sr.x) * mag);
+        int vy = (int) Math.round((y - sr.y) * mag);
+        if (vx < 0 || vx >= viewW || vy < 0 || vy >= viewH) return "";
+        return ", value=" + processor.getPixel(vx, vy);
     }
 
     // -------- show(): install the custom canvas -------------------------
@@ -194,23 +230,18 @@ public class LazyImagePlus extends ImagePlus {
         fetchTimer.start();
     }
 
-    /** Fetch tile for the current viewport (from canvas srcRect + mag) and
-     *  blit into the fixed-size viewport processor. */
+    /** Schedule a tile fetch for the current viewport. Does NOT block —
+     *  dispatches via the fire-and-forget native; the result flows back
+     *  through {@link #onTileReady(long, byte[])}. */
     public void refresh() {
-        final int ticket = ++pendingTicket;
-        if (refreshing) return;
-        refreshing = true;
         try {
             Rectangle sr = currentSrcRectOrDefault();
             double mag = currentMagnificationOrDefault();
-            // Pick best pyramid level for the current zoom.
             int lvl = pickLevelFor(mag);
             logLevelChange(lvl, mag);
             double sf = src.levelScaleFactor(lvl);
-            int Lw = src.levelWidth(lvl);
-            int Lh = src.levelHeight(lvl);
+            int Lw = src.levelWidth(lvl), Lh = src.levelHeight(lvl);
 
-            // Convert canvas-side srcRect (level-0 coords) to level-L coords.
             int x0 = (int) Math.floor(sr.x / sf);
             int y0 = (int) Math.floor(sr.y / sf);
             int rW = (int) Math.ceil(sr.width  / sf);
@@ -221,47 +252,59 @@ public class LazyImagePlus extends ImagePlus {
             int ry1 = Math.min(Lh, y0 + rH);
             int rw = rx1 - rx0;
             int rh = ry1 - ry0;
+            if (rw <= 0 || rh <= 0) return;
+
+            long id = ++latestRequestId;
+            requests.put(id, new Request(this, lvl, rx0, ry0, rw, rh, x0, y0, rW, rH));
+            // Fire-and-forget — returns immediately. JS will call back into
+            // LazyImagePlus.onTileReady(id, bytes) when the fetch resolves.
+            JSTileSource.nativeRequestTile(id, srcKey, lvl, rx0, ry0, rw, rh);
+        } catch (Throwable t) {
+            System.out.println("[LazyImagePlus] refresh dispatch failed: " + t);
+        }
+    }
+
+    /** JS callback: the fire-and-forget fetch finished. Look up the
+     *  originating request; if the owner has moved on to a newer request,
+     *  discard this result. Otherwise blit and repaint. */
+    public static void onTileReady(long id, byte[] bytes) {
+        Request req = requests.remove(id);
+        if (req == null) return;
+        LazyImagePlus lip = req.owner;
+        if (id != lip.latestRequestId) return; // stale
+        lip.blitAndRepaint(req, bytes);
+    }
+
+    private void blitAndRepaint(Request req, byte[] tile) {
+        try {
+            if (tile == null || tile.length < req.rw * req.rh) return;
+            cachedTile = tile;
+            cacheLevel = req.lvl;
+            cacheX0 = req.x0;
+            cacheY0 = req.y0;
+            cacheRw = req.rw;
+            cacheRh = req.rh;
 
             byte[] dst = new byte[viewW * viewH];
-            if (rw > 0 && rh > 0) {
-                byte[] tile = src.getTile(lvl, rx0, ry0, rw, rh);
-                if (tile != null && tile.length >= rw * rh) {
-                    cachedTile = tile;
-                    cacheLevel = lvl;
-                    cacheX0 = rx0; cacheY0 = ry0;
-                    cacheRw = rw; cacheRh = rh;
-                    // NN from (rW,rH) → (viewW,viewH), offsetting for clip.
-                    double dxScale = (double) rW / viewW;
-                    double dyScale = (double) rH / viewH;
-                    int tileOffX = rx0 - x0;
-                    int tileOffY = ry0 - y0;
-                    for (int dy = 0; dy < viewH; dy++) {
-                        int yi = (int) (dy * dyScale) - tileOffY;
-                        if (yi < 0 || yi >= rh) continue;
-                        int dr = dy * viewW;
-                        int tr = yi * rw;
-                        for (int dx = 0; dx < viewW; dx++) {
-                            int xi = (int) (dx * dxScale) - tileOffX;
-                            if (xi < 0 || xi >= rw) continue;
-                            dst[dr + dx] = tile[tr + xi];
-                        }
-                    }
+            double dxScale = (double) req.iW / viewW;
+            double dyScale = (double) req.iH / viewH;
+            int tileOffX = req.x0 - req.ix0;
+            int tileOffY = req.y0 - req.iy0;
+            for (int dy = 0; dy < viewH; dy++) {
+                int yi = (int) (dy * dyScale) - tileOffY;
+                if (yi < 0 || yi >= req.rh) continue;
+                int dr = dy * viewW;
+                int tr = yi * req.rw;
+                for (int dx = 0; dx < viewW; dx++) {
+                    int xi = (int) (dx * dxScale) - tileOffX;
+                    if (xi < 0 || xi >= req.rw) continue;
+                    dst[dr + dx] = tile[tr + xi];
                 }
             }
-            if (ticket == pendingTicket) {
-                processor.setPixels(dst);
-                updateAndDraw();
-            }
+            processor.setPixels(dst);
+            updateAndDraw();
         } catch (Throwable t) {
-            System.out.println("[LazyImagePlus] refresh failed: " + t);
-            t.printStackTrace();
-        } finally {
-            refreshing = false;
-            if (ticket != pendingTicket) {
-                javax.swing.SwingUtilities.invokeLater(new Runnable() {
-                    public void run() { refresh(); }
-                });
-            }
+            System.out.println("[LazyImagePlus] blit failed: " + t);
         }
     }
 

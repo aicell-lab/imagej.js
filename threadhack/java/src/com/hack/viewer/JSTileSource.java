@@ -55,4 +55,13 @@ public final class JSTileSource implements TileSource {
     public static native int nativeLevelHeight(String key, int level);
     public static native double nativeLevelScale(String key, int level);
     public static native byte[] nativeGetTile(String key, int level, int x, int y, int w, int h);
+
+    /**
+     * Fire-and-forget tile request. Returns immediately; the JS side runs
+     * the fetch asynchronously and — when bytes are ready — calls back
+     * into {@link LazyImagePlus#onTileReady(long, byte[])}. Callers should
+     * track the request id and ignore late arrivals.
+     */
+    public static native void nativeRequestTile(long requestId, String key,
+            int level, int x, int y, int w, int h);
 }
