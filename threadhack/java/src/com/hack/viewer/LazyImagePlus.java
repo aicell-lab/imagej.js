@@ -98,13 +98,28 @@ public class LazyImagePlus extends ImagePlus {
 
     // -------- structural getters ---------------------------------------
 
-    /** Full-resolution (level-0) width. The ImagePlus itself reports the
-     *  viewport-processor width via getWidth() because ImagePlus.getImage()
-     *  internally depends on that matching the processor; the canvas, in
-     *  contrast, is initialised with level-0 dimensions so every coord
-     *  transform (srcRect, offScreenX/Y) speaks level-0 natively. */
     public int level0Width()  { return level0W; }
     public int level0Height() { return level0H; }
+
+    /**
+     * Override ImagePlus.getWidth/getHeight to report level-0 dimensions.
+     *
+     * These are consumed by ImageJ code that reasons about "the image size":
+     *   - Roi.setImage sets xMax / yMax from imp.getWidth() — the rectangle
+     *     tool's grow() clamps newly-drawn rectangles to [0, xMax], so if
+     *     xMax is the 640-pixel viewport, any drag past 640 collapses to
+     *     negative width (→ invisible rectangle). Every other tool works
+     *     without this clamp.
+     *   - ImageCanvas constructor uses them to seed imageWidth (already
+     *     overridden by LazyImageCanvas anyway).
+     *   - Analyze > Measure reports pixel counts in these units.
+     *
+     * ImagePlus.getImage() does NOT use these — it goes straight through
+     * ip.createImage() on the processor — so the earlier black-canvas
+     * regression was unrelated to this override and is fixed.
+     */
+    @Override public int getWidth()  { return level0W; }
+    @Override public int getHeight() { return level0H; }
 
     /** ImageJ status bar format — (x, y) here are already level-0 coords
      *  because LazyImageCanvas has srcRect/magnification in level-0 space. */
