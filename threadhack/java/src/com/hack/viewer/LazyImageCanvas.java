@@ -99,6 +99,22 @@ public class LazyImageCanvas extends ImageCanvas {
     public void update(Graphics g) { paint(g); }
 
     /**
+     * ImageCanvas's own setDrawingSize keeps dstWidth/dstHeight in sync with
+     * the canvas size, but AWT's plain setSize does NOT. That caused resize
+     * to visibly fail: lazyCanvas.setSize(newW, newH) updated the canvas
+     * bounds but left dstWidth at the old value, so lockViewportToLevel0 and
+     * setSourceRect kept computing magnification against the previous viewport
+     * size. Bring them in sync here so the canvas size is always the single
+     * source of truth.
+     */
+    @Override
+    public void setSize(int w, int h) {
+        super.setSize(w, h);
+        dstWidth = w;
+        dstHeight = h;
+    }
+
+    /**
      * Override HAND-tool / space-bar scroll so it doesn't clamp srcRect into
      * the level-0 image bounds. Stock ImageCanvas.scroll clamps
      * srcRect.x,y to [0, imageWidth - srcRect.width]; when srcRect is
