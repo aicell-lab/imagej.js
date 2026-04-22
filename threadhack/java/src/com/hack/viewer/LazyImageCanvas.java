@@ -109,6 +109,7 @@ public class LazyImageCanvas extends ImageCanvas {
      */
     @Override
     public void setSize(int w, int h) {
+        System.out.println("[LazyImageCanvas] setSize(" + w + ", " + h + ")");
         super.setSize(w, h);
         dstWidth = w;
         dstHeight = h;

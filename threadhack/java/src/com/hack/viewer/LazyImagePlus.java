@@ -197,6 +197,8 @@ public class LazyImagePlus extends ImagePlus {
             @Override
             public void componentResized(ComponentEvent e) {
                 if (lazyCanvas == null) return;
+                System.out.println("[LazyImagePlus] canvas componentResized → "
+                        + lazyCanvas.getWidth() + "x" + lazyCanvas.getHeight());
                 scheduleViewportFromCanvas();
             }
         });
@@ -226,13 +228,17 @@ public class LazyImagePlus extends ImagePlus {
     private boolean inSetViewport = false;
 
     private void scheduleViewportFromCanvas() {
+        System.out.println("[LazyImagePlus] scheduleViewportFromCanvas inSet=" + inSetViewport);
         if (inSetViewport) return;
         if (resizeDebounce != null) resizeDebounce.stop();
         resizeDebounce = new javax.swing.Timer(120, new java.awt.event.ActionListener() {
             @Override
             public void actionPerformed(java.awt.event.ActionEvent e) {
                 resizeDebounce = null;
-                if (lazyCanvas != null) setViewport(lazyCanvas.getWidth(), lazyCanvas.getHeight());
+                if (lazyCanvas != null) {
+                    System.out.println("[LazyImagePlus] debounce fire → setViewport(" + lazyCanvas.getWidth() + ", " + lazyCanvas.getHeight() + ")");
+                    setViewport(lazyCanvas.getWidth(), lazyCanvas.getHeight());
+                }
             }
         });
         resizeDebounce.setRepeats(false);
