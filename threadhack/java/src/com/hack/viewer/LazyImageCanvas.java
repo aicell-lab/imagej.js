@@ -99,6 +99,27 @@ public class LazyImageCanvas extends ImageCanvas {
     public void update(Graphics g) { paint(g); }
 
     /**
+     * Override HAND-tool / space-bar scroll so it doesn't clamp srcRect into
+     * the level-0 image bounds. Stock ImageCanvas.scroll clamps
+     * srcRect.x,y to [0, imageWidth - srcRect.width]; when srcRect is
+     * larger than the image (deep zoom-out) that makes the range empty,
+     * pinning the image to the canvas corner. We want the user to be able
+     * to freely pan with black margins even when zoomed all the way out.
+     */
+    @Override
+    protected void scroll(int sx, int sy) {
+        if (srcRect == null) return;
+        int ox = xSrcStart + (int) (sx / magnification);
+        int oy = ySrcStart + (int) (sy / magnification);
+        int newx = xSrcStart + (xMouseStart - ox);
+        int newy = ySrcStart + (yMouseStart - oy);
+        srcRect.x = newx;
+        srcRect.y = newy;
+        imp.draw();
+        Thread.yield();
+    }
+
+    /**
      * Force the canvas state into its level-0 coordinate space. Call this
      *   - right after the constructor (ImageWindow's layout pass resets
      *     magnification during pack()),
