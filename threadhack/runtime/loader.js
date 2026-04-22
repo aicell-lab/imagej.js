@@ -191,9 +191,7 @@
      * back into Java via LazyImagePlus.onTileReady(id, bytes).
      */
     Java_com_hack_viewer_JSTileSource_nativeRequestTile: function (lib, id, key, level, x, y, w, h) {
-      // Fetch in parallel; serialize the CALLBACK into Java because
-      // CheerpJ's Java thread is single-threaded and concurrent JS→Java
-      // calls throw "Java code still running, check for a missing 'await'".
+      console.log('[tile] req id=' + id + ' L' + level + ' ' + w + 'x' + h);
       (async function () {
         try {
           var src = getSrc(key);
@@ -201,13 +199,14 @@
           var bytes = region.data
             ? autoStretchToU8(region.data, src.bitsPerSample || 8, key + '|' + level)
             : new Uint8Array(w * h);
+          console.log('[tile] fetched id=' + id + ' bytes=' + bytes.length);
           var javaBytes = new Int8Array(bytes.buffer, bytes.byteOffset, bytes.byteLength);
-          // Serialize delivery via a single promise chain.
           window.__tileDeliverTail = (window.__tileDeliverTail || Promise.resolve()).then(async function () {
             try {
               var LIB = window.lib || lib;
               var LazyImagePlus = await LIB.com.hack.viewer.LazyImagePlus;
               await LazyImagePlus.onTileReady(id, javaBytes);
+              console.log('[tile] delivered id=' + id);
             } catch (e) {
               console.warn('[tile] deliver id=' + id + ' failed:', e && (e.message || e));
             }

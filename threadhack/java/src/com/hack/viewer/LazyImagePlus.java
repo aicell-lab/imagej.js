@@ -284,10 +284,18 @@ public class LazyImagePlus extends ImagePlus {
      *  originating request; if the owner has moved on to a newer request,
      *  discard this result. Otherwise blit and repaint. */
     public static void onTileReady(long id, byte[] bytes) {
+        System.out.println("[LazyImagePlus] onTileReady id=" + id + " bytes="
+                + (bytes == null ? "null" : bytes.length));
         Request req = requests.remove(id);
-        if (req == null) return;
+        if (req == null) {
+            System.out.println("[LazyImagePlus] onTileReady id=" + id + ": no request");
+            return;
+        }
         LazyImagePlus lip = req.owner;
-        if (id != lip.latestRequestId) return; // stale
+        if (id != lip.latestRequestId) {
+            System.out.println("[LazyImagePlus] onTileReady id=" + id + ": stale (latest=" + lip.latestRequestId + ")");
+            return;
+        }
         lip.blitAndRepaint(req, bytes);
     }
 
