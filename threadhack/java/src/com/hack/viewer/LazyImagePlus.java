@@ -45,10 +45,10 @@ public class LazyImagePlus extends ImagePlus {
     /** Monotonically-increasing request id. Incremented on every scheduled
      *  fetch; JS calls back into onTileReady(id, bytes) which drops any
      *  id != latestRequestId (so stale results don't overwrite fresh ones). */
-    private long latestRequestId = 0;
+    private int latestRequestId = 0;
     /** In-flight request geometry, keyed by request id — the callback needs
      *  these to blit correctly. */
-    private static final java.util.Map<Long, Request> requests = new java.util.concurrent.ConcurrentHashMap<>();
+    private static final java.util.Map<Integer, Request> requests = new java.util.concurrent.ConcurrentHashMap<>();
     private String srcKey;
 
     private static final class Request {
@@ -270,7 +270,7 @@ public class LazyImagePlus extends ImagePlus {
             int rh = ry1 - ry0;
             if (rw <= 0 || rh <= 0) return;
 
-            long id = ++latestRequestId;
+            int id = ++latestRequestId;
             requests.put(id, new Request(this, lvl, rx0, ry0, rw, rh, x0, y0, rW, rH));
             // Fire-and-forget — returns immediately. JS will call back into
             // LazyImagePlus.onTileReady(id, bytes) when the fetch resolves.
@@ -283,7 +283,7 @@ public class LazyImagePlus extends ImagePlus {
     /** JS callback: the fire-and-forget fetch finished. Look up the
      *  originating request; if the owner has moved on to a newer request,
      *  discard this result. Otherwise blit and repaint. */
-    public static void onTileReady(long id, byte[] bytes) {
+    public static void onTileReady(int id, byte[] bytes) {
         System.out.println("[LazyImagePlus] onTileReady id=" + id + " bytes="
                 + (bytes == null ? "null" : bytes.length));
         Request req = requests.remove(id);

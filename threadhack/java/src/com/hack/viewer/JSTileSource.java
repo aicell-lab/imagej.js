@@ -59,9 +59,10 @@ public final class JSTileSource implements TileSource {
     /**
      * Fire-and-forget tile request. Returns immediately; the JS side runs
      * the fetch asynchronously and — when bytes are ready — calls back
-     * into {@link LazyImagePlus#onTileReady(long, byte[])}. Callers should
-     * track the request id and ignore late arrivals.
+     * into {@link LazyImagePlus#onTileReady(int, byte[])}. Callers should
+     * track the request id and ignore late arrivals. (int, not long:
+     * CheerpJ's JS↔Java bridging of 64-bit longs round-trips poorly.)
      */
-    public static native void nativeRequestTile(long requestId, String key,
+    public static native void nativeRequestTile(int requestId, String key,
             int level, int x, int y, int w, int h);
 }
