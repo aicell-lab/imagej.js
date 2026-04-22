@@ -813,6 +813,25 @@ function patchCheerpjDisplay() {
     cheerpjDisplay.addEventListener('wheel', (e) => {
       e.preventDefault();
     }, { passive: false, capture: true });
+
+    // Safety net for a CheerpJ bug: during a window-border resize drag
+    // CheerpJ creates a .cjResizerBorder overlay and registers its cleanup
+    // on the resize handle's pointerup (`{once: true}`). When the pointer
+    // is released outside the handle — which happens when the user shrinks
+    // the window so far the handle moves under the cursor — that pointerup
+    // sometimes doesn't fire (browser pointer-capture quirks), leaving the
+    // border orphaned and the window un-shrinkable on subsequent tries.
+    // Any time ANY pointerup or mouseup occurs anywhere, if the original
+    // cleanup hasn't run, remove the orphan so the next resize works.
+    const sweepOrphanResizerBorders = () => {
+      // Defer so CheerpJ's own pointerup (if it's going to fire) runs first.
+      setTimeout(() => {
+        document.querySelectorAll('.cjResizerBorder').forEach(b => b.remove());
+      }, 50);
+    };
+    window.addEventListener('pointerup', sweepOrphanResizerBorders, true);
+    window.addEventListener('mouseup',   sweepOrphanResizerBorders, true);
+    window.addEventListener('pointercancel', sweepOrphanResizerBorders, true);
     
     console.log('✓ Patched cheerpjDisplay - only blank area clicks will be blocked');
     return true;
