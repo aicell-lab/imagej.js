@@ -93,6 +93,18 @@ public class LazyImageCanvas extends ImageCanvas {
     @Override
     public void update(Graphics g) { paint(g); }
 
+    /**
+     * Stock ImageCanvas.updateImage resets imageWidth / imageHeight / srcRect
+     * to the processor's dimensions. Our processor is viewport-sized (viewW
+     * × viewH) but the canvas must hold level-0 dimensions + level-0 srcRect.
+     * We only need to flag that the AWT Image needs rebuilding from the
+     * processor — which repaint() will do.
+     */
+    @Override
+    public void updateImage(ij.process.ImageProcessor ip) {
+        imageUpdated = true;
+    }
+
     private void detectAndPropagateSrcRectChange() {
         Rectangle r = getSrcRect();
         if (lastObservedSrcRect == null
