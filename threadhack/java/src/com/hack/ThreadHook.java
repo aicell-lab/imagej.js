@@ -88,6 +88,34 @@ public final class ThreadHook {
     public static int getFallbackCount() { return fallbackCount; }
     public static void resetCounts()     { startCount = joinCount = shippedCount = fallbackCount = 0; }
 
+    /**
+     * Whether a Runnable is safe to ship to a worker JVM. Workers run
+     * java.awt.headless=true and have their own isolated class state, so
+     * anything that needs to open a UI dialog, register listeners on the
+     * main AWT frames, or mutate main-JVM statics must stay local.
+     *
+     * Worker JVMs are a *compute* substrate, not an event-dispatch
+     * substrate. The short list of classes we WANT parallelised (e.g.
+     * ij.plugin.filter.PlugInFilterRunner slice tasks, bench runnables) is
+     * already handled above. Everything else falls through to local
+     * Thread.start() so stock ImageJ semantics are preserved.
+     */
+    static boolean shouldShip(Object target) {
+        if (target == null) return false;
+        String cls = target.getClass().getName();
+        // ImageJ menu-command runner — opens dialogs, must be local.
+        if (cls.equals("ij.Executer")) return false;
+        // Any ImageJ UI class.
+        if (cls.startsWith("ij.gui.")) return false;
+        if (cls.startsWith("ij.plugin.frame.")) return false;
+        // Drag-and-drop + I/O opens JFileChoosers etc.
+        if (cls.equals("ij.plugin.DragAndDrop")) return false;
+        if (cls.startsWith("ij.io.")) return false;
+        // Macro interpreter runs IJ commands that may open UI.
+        if (cls.startsWith("ij.macro.")) return false;
+        return true;
+    }
+
     public static void start(Thread thread) {
         int n = ++startCount;
         Runnable target = getTarget(thread);
@@ -116,7 +144,7 @@ public final class ThreadHook {
             }
         }
 
-        if (serializable && pool) {
+        if (serializable && pool && shouldShip(target)) {
             try {
                 byte[] bytes = serialize(target);
                 long handle = nativeDispatch(bytes, target.getClass().getName());
