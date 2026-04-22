@@ -191,8 +191,7 @@
      * back into Java via LazyImagePlus.onTileReady(id, bytes).
      */
     Java_com_hack_viewer_JSTileSource_nativeRequestTile: function (lib, id, key, level, x, y, w, h) {
-      // Kick off the async fetch WITHOUT awaiting — so this function
-      // returns synchronously (Java thread is immediately freed).
+      console.log('[tile] req id=' + id + ' key=' + key + ' L' + level + ' ' + w + 'x' + h);
       (async function () {
         try {
           var src = getSrc(key);
@@ -203,11 +202,14 @@
           } else {
             bytes = autoStretchToU8(region.data, src.bitsPerSample || 8, key + '|' + level);
           }
-          var LazyImagePlus = await lib.com.hack.viewer.LazyImagePlus;
+          console.log('[tile] got id=' + id + ' bytes=' + bytes.length);
+          var LIB = window.lib || lib;
+          var LazyImagePlus = await LIB.com.hack.viewer.LazyImagePlus;
           var javaBytes = new Int8Array(bytes.buffer, bytes.byteOffset, bytes.byteLength);
           await LazyImagePlus.onTileReady(id, javaBytes);
+          console.log('[tile] delivered id=' + id);
         } catch (e) {
-          console.warn('[tile] request id=' + id + ' failed:', e);
+          console.warn('[tile] request id=' + id + ' failed:', e && (e.stack || e.message || e));
         }
       })();
       // Return synchronously — no Promise awaited by Java.
