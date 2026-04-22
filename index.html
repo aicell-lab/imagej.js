@@ -15,7 +15,7 @@
 <script src="threadhack/runtime/loader.js"></script>
 <script src="https://cdn.tailwindcss.com"></script>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
 
 <style>
     html,
@@ -901,6 +901,9 @@ try {
 
 <!-- OME-TIFF / OME-Zarr URL loader. Activated by ?load=<url>. -->
 <script type="module" src="threadhack/viv-loader/ome-loader.js"></script>
+
+<!-- Touch / pinch controller for LazyImagePlus (mobile + trackpad). -->
+<script src="threadhack/viv-loader/touch-controller.js"></script>
 
 <div id="container"></div>
 </body>
