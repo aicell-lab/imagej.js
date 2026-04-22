@@ -611,11 +611,18 @@ def inject_viewer_sources():
     return True
 
 def patch_lazy_image_plus_hooks():
-    """Patch ImageWindow.mouseWheelMoved + ImageCanvas.mouseDragged to give
-    LazyImagePlus images Google-Maps-style cursor-anchored zoom and drag-pan."""
+    """Patch ImageWindow.mouseWheelMoved for LazyImagePlus so plain wheel
+    = cursor-anchored zoom (default ImageJ behaviour is pan + Ctrl-zoom).
+
+    The rest of the LazyImagePlus interaction (drag, magnifier click,
+    Roi tools, cursor readout) flows through stock ImageJ paths: our
+    LazyImageCanvas reports level-0 coords via srcRect + magnification,
+    so HAND tool pan, Magnifier zoom, and all Roi creation/editing
+    work natively without any extra patches.
+    """
     import os
 
-    # ---- ImageWindow.java: cursor-anchored wheel zoom ------------------
+    # ---- ImageWindow.java: plain wheel = cursor-anchored zoom ----------
     iw_path = "ImageJ-build/ij/gui/ImageWindow.java"
     if not os.path.exists(iw_path):
         print(f"Warning: {iw_path} not found, skipping")
@@ -625,23 +632,13 @@ def patch_lazy_image_plus_hooks():
 
         marker = "public synchronized void mouseWheelMoved(MouseWheelEvent e) {"
         injection = (
-            "\n\t\t// [threadhack] LazyImagePlus → cursor-anchored zoom\n"
+            "\n\t\t// [threadhack] LazyImagePlus: plain wheel = cursor-anchored zoom\n"
             "\t\tif (imp instanceof com.hack.viewer.LazyImagePlus) {\n"
-            "\t\t\tcom.hack.viewer.LazyImagePlus lip = (com.hack.viewer.LazyImagePlus) imp;\n"
             "\t\t\tint rot = e.getWheelRotation();\n"
             "\t\t\tif (rot == 0) return;\n"
-            "\t\t\tdouble factor = Math.pow(1.12, -rot);\n"
             "\t\t\tjava.awt.Point p = ic.getCursorLoc();\n"
             "\t\t\tint sx = ic.screenX(p.x), sy = ic.screenY(p.y);\n"
-            "\t\t\tint cw = ic.getWidth(), ch = ic.getHeight();\n"
-            "\t\t\tdouble oldZ = lip.getZoomLevel();\n"
-            "\t\t\tdouble cx = lip.getCx(), cy = lip.getCy();\n"
-            "\t\t\tdouble level0X = cx + (sx - cw/2.0) / oldZ;\n"
-            "\t\t\tdouble level0Y = cy + (sy - ch/2.0) / oldZ;\n"
-            "\t\t\tdouble newZ = Math.max(1e-4, Math.min(32.0, oldZ * factor));\n"
-            "\t\t\tdouble newCx = level0X - (sx - cw/2.0) / newZ;\n"
-            "\t\t\tdouble newCy = level0Y - (sy - ch/2.0) / newZ;\n"
-            "\t\t\tlip.setView(newCx, newCy, newZ);\n"
+            "\t\t\tif (rot < 0) ic.zoomIn(sx, sy); else ic.zoomOut(sx, sy);\n"
             "\t\t\treturn;\n"
             "\t\t}\n"
         )
@@ -653,7 +650,9 @@ def patch_lazy_image_plus_hooks():
         else:
             print("⊘ ImageWindow patch already applied or marker missing")
 
-    # ---- ImageCanvas.java: full Google-Maps interaction for LazyImagePlus ----
+    # ---- ImageCanvas.java: the only remaining patch is canEnlarge=null,
+    # so zoom never resizes the window. All other interaction flows through
+    # stock ImageJ paths (LazyImageCanvas makes that correct).
     ic_path = "ImageJ-build/ij/gui/ImageCanvas.java"
     if not os.path.exists(ic_path):
         print(f"Warning: {ic_path} not found, skipping")
@@ -662,16 +661,10 @@ def patch_lazy_image_plus_hooks():
     with open(ic_path, 'r') as f:
         content = f.read()
 
-    if "[threadhack] LazyImagePlus" in content:
-        print("⊘ ImageCanvas patch already applied")
+    if "[threadhack] never grow the window on zoom" in content:
+        print("⊘ ImageCanvas canEnlarge patch already applied")
         return True
 
-    # ---- Global magnifier-tool behaviour change ----
-    # zoomIn()/zoomOut() normally call canEnlarge() → setSize() + win.pack(),
-    # which grows the window to fit the new magnification. We want the window
-    # size to be user-controlled ONLY (via dragging the frame border). Force
-    # canEnlarge to always return null so zoomIn/Out take the adjustSourceRect
-    # branch — only srcRect + magnification change, canvas dimensions stay put.
     can_enlarge_marker = "protected Dimension canEnlarge(int newWidth, int newHeight) {"
     can_enlarge_inject = (
         "\n\t\t// [threadhack] never grow the window on zoom — user controls size\n"
@@ -679,132 +672,9 @@ def patch_lazy_image_plus_hooks():
     )
     if can_enlarge_marker in content:
         content = content.replace(can_enlarge_marker, can_enlarge_marker + can_enlarge_inject, 1)
-        print("✓ Patched ImageCanvas.canEnlarge → always null (zoom no longer resizes window)")
-
-    # 1. Add drag-tracking field
-    content = content.replace(
-        "protected ImagePlus imp;",
-        "protected ImagePlus imp;\n\t/** [threadhack] LazyImagePlus drag tracking */\n\tint lazyDragX, lazyDragY;",
-        1
-    )
-
-    # 2. mousePressed: tool-aware dispatch on LazyImagePlus.
-    #    - MAGNIFIER   → cursor-anchored click-zoom (content only); return.
-    #    - HAND        → capture drag origin; return (drag = pan).
-    #    - Other tools → fall through to ImageJ's default ROI / tool handling.
-    #    Wheel is still handled globally in ImageWindow.mouseWheelMoved.
-    press_marker = "public void mousePressed(final MouseEvent e) {"
-    press_inject = (
-        "\n\t\t// [threadhack] LazyImagePlus: tool-aware dispatch\n"
-        "\t\tif (imp instanceof com.hack.viewer.LazyImagePlus) {\n"
-        "\t\t\tcom.hack.viewer.LazyImagePlus lip = (com.hack.viewer.LazyImagePlus) imp;\n"
-        "\t\t\tint tid = Toolbar.getToolId();\n"
-        "\t\t\tif (tid == Toolbar.MAGNIFIER) {\n"
-        "\t\t\t\tlazyDragX = e.getX(); lazyDragY = e.getY();\n"
-        "\t\t\t\txMouse = offScreenX(e.getX()); yMouse = offScreenY(e.getY());\n"
-        "\t\t\t\tint sx = e.getX(), sy = e.getY();\n"
-        "\t\t\t\tint cw = getWidth(), ch = getHeight();\n"
-        "\t\t\t\tdouble oldZ = lip.getZoomLevel();\n"
-        "\t\t\t\tdouble pcx = lip.getCx(), pcy = lip.getCy();\n"
-        "\t\t\t\tdouble level0X = pcx + (sx - cw/2.0) / oldZ;\n"
-        "\t\t\t\tdouble level0Y = pcy + (sy - ch/2.0) / oldZ;\n"
-        "\t\t\t\tint mods = e.getModifiers();\n"
-        "\t\t\t\tboolean zoomOut = (mods & (java.awt.event.InputEvent.ALT_MASK|java.awt.event.InputEvent.CTRL_MASK|java.awt.event.InputEvent.META_MASK)) != 0\n"
-        "\t\t\t\t                   || e.isPopupTrigger() || ((mods & java.awt.event.InputEvent.BUTTON3_MASK) != 0);\n"
-        "\t\t\t\tdouble factor = zoomOut ? (1.0 / 1.5) : 1.5;\n"
-        "\t\t\t\tdouble newZ = Math.max(1e-4, Math.min(32.0, oldZ * factor));\n"
-        "\t\t\t\tdouble newCx = level0X - (sx - cw/2.0) / newZ;\n"
-        "\t\t\t\tdouble newCy = level0Y - (sy - ch/2.0) / newZ;\n"
-        "\t\t\t\tlip.setView(newCx, newCy, newZ);\n"
-        "\t\t\t\treturn;\n"
-        "\t\t\t}\n"
-        "\t\t\tif (tid == Toolbar.HAND || IJ.spaceBarDown()) {\n"
-        "\t\t\t\tlazyDragX = e.getX(); lazyDragY = e.getY();\n"
-        "\t\t\t\txMouse = offScreenX(e.getX()); yMouse = offScreenY(e.getY());\n"
-        "\t\t\t\treturn;\n"
-        "\t\t\t}\n"
-        "\t\t\t// Any other tool: ImageJ handles (ROI creation, etc.)\n"
-        "\t\t}\n"
-    )
-    content = content.replace(press_marker, press_marker + press_inject, 1)
-
-    # 3. mouseDragged: pan only when HAND is selected (or space bar held).
-    #    Other tools (rectangle/oval/polygon/etc.) use ImageJ's default ROI
-    #    resize-drag, and on release we snapshot the ROI to level-0 coords.
-    drag_marker = "public void mouseDragged(MouseEvent e) {"
-    drag_inject = (
-        "\n\t\t// [threadhack] LazyImagePlus: HAND drag = pan; other tools pass through\n"
-        "\t\tif (imp instanceof com.hack.viewer.LazyImagePlus) {\n"
-        "\t\t\tint tid = Toolbar.getToolId();\n"
-        "\t\t\tif (tid == Toolbar.HAND || IJ.spaceBarDown()) {\n"
-        "\t\t\t\tcom.hack.viewer.LazyImagePlus lip = (com.hack.viewer.LazyImagePlus) imp;\n"
-        "\t\t\t\tint x = e.getX(), y = e.getY();\n"
-        "\t\t\t\tint dx = x - lazyDragX;\n"
-        "\t\t\t\tint dy = y - lazyDragY;\n"
-        "\t\t\t\tlazyDragX = x; lazyDragY = y;\n"
-        "\t\t\t\tdouble z = lip.getZoomLevel();\n"
-        "\t\t\t\tlip.setView(lip.getCx() - dx / z, lip.getCy() - dy / z, z);\n"
-        "\t\t\t\treturn;\n"
-        "\t\t\t}\n"
-        "\t\t}\n"
-    )
-    content = content.replace(drag_marker, drag_marker + drag_inject, 1)
-
-    # 4. mouseClicked: inert only for MAGNIFIER / HAND on LazyImagePlus. Other
-    #    tools (multi-point, etc.) still work via ImageJ default paths.
-    click_marker = "public void mouseClicked(MouseEvent e) {"
-    click_inject = (
-        "\n\t\t// [threadhack] LazyImagePlus: inert click for HAND/MAGNIFIER\n"
-        "\t\tif (imp instanceof com.hack.viewer.LazyImagePlus) {\n"
-        "\t\t\tint tid = Toolbar.getToolId();\n"
-        "\t\t\tif (tid == Toolbar.HAND || tid == Toolbar.MAGNIFIER) return;\n"
-        "\t\t}\n"
-    )
-    if click_marker in content:
-        content = content.replace(click_marker, click_marker + click_inject, 1)
-
-    # 5. mouseReleased: for HAND/MAGNIFIER → no-op. For ROI tools → let
-    #    ImageJ finalise the ROI, THEN snapshot it to level-0 coords so it
-    #    survives subsequent zoom/pan.
-    release_marker = "public void mouseReleased(MouseEvent e) {"
-    release_inject = (
-        "\n\t\t// [threadhack] LazyImagePlus: route release by tool\n"
-        "\t\tif (imp instanceof com.hack.viewer.LazyImagePlus) {\n"
-        "\t\t\tint tid = Toolbar.getToolId();\n"
-        "\t\t\tif (tid == Toolbar.HAND || tid == Toolbar.MAGNIFIER) return;\n"
-        "\t\t\t// Let ImageJ finalise the ROI below, then snapshot.\n"
-        "\t\t}\n"
-    )
-    if release_marker in content:
-        content = content.replace(release_marker, release_marker + release_inject, 1)
-
-    # 6. End-of-mouseReleased snapshot hook: after the method body runs, if
-    #    we're on LazyImagePlus, capture the resulting ROI to level-0 space.
-    #    Insertion point: the unique trailing lines of mouseReleased in the
-    #    pinned ImageJ commit.
-    end_marker = (
-        "\t\t\telse\n"
-        "\t\t\t\troi.handleMouseUp(e.getX(), e.getY());\n"
-        "\t\t}\n"
-        "\t}"
-    )
-    end_replacement = (
-        "\t\t\telse\n"
-        "\t\t\t\troi.handleMouseUp(e.getX(), e.getY());\n"
-        "\t\t}\n"
-        "\t\t// [threadhack] LazyImagePlus: snapshot finalised ROI to level-0\n"
-        "\t\tif (imp instanceof com.hack.viewer.LazyImagePlus) {\n"
-        "\t\t\t((com.hack.viewer.LazyImagePlus) imp).captureRoiToLevel0();\n"
-        "\t\t}\n"
-        "\t}"
-    )
-    if end_marker in content and "captureRoiToLevel0" not in content:
-        content = content.replace(end_marker, end_replacement, 1)
-        print("✓ Patched ImageCanvas end-of-mouseReleased → captureRoiToLevel0")
-
-    with open(ic_path, 'w') as f:
-        f.write(content)
-    print("✓ Patched ImageCanvas.mousePressed/Dragged/Clicked/Released for LazyImagePlus")
+        with open(ic_path, 'w') as f:
+            f.write(content)
+        print("✓ Patched ImageCanvas.canEnlarge → always null")
     return True
 
 if __name__ == "__main__":
