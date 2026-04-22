@@ -1,11 +1,13 @@
 package com.hack.viewer;
 
+import ij.IJ;
 import ij.ImagePlus;
 import ij.gui.ImageCanvas;
 import ij.gui.ImageWindow;
-import ij.gui.Roi;
-import ij.gui.PolygonRoi;
 import ij.gui.OvalRoi;
+import ij.gui.PointRoi;
+import ij.gui.PolygonRoi;
+import ij.gui.Roi;
 import ij.gui.Toolbar;
 import ij.process.ByteProcessor;
 
@@ -128,6 +130,22 @@ public class LazyImagePlus extends ImagePlus {
     public double getCx()         { return cx; }
     public double getCy()         { return cy; }
     public double getZoomLevel()  { return zoom; }
+
+    /**
+     * Status-bar coordinate readout: transform display-pixel coords back to
+     * level-0 (global, full-resolution) coordinates so the user sees where
+     * they are on the underlying image — not on the rescaled viewport.
+     * Also surfaces the current pyramid level + zoom for diagnostic value.
+     */
+    @Override
+    public void mouseMoved(int x, int y) {
+        double l0x = cx + (x - viewW / 2.0) / zoom;
+        double l0y = cy + (y - viewH / 2.0) / zoom;
+        IJ.showStatus("x=" + (int) Math.round(l0x)
+                + ", y=" + (int) Math.round(l0y)
+                + "   [level " + currentLevel + "/" + (src.levelCount() - 1) + "]"
+                + "   zoom=" + String.format("%.3f", zoom));
+    }
     public int viewportWidth()    { return viewW; }
     public int viewportHeight()   { return viewH; }
     public int getCurrentLevel()  { return currentLevel; }
@@ -294,7 +312,9 @@ public class LazyImagePlus extends ImagePlus {
                 newRoi = new PolygonRoi(xs, ys, n, Roi.FREELINE);
                 break;
             case Roi.POINT:
-                newRoi = new PolygonRoi(xs, ys, n, Roi.POINT);
+                // ImageJ's PolygonRoi(Roi.POINT) renders points joined as a
+                // polyline, so single/multi-point ROIs must use PointRoi.
+                newRoi = new PointRoi(xs, ys, n);
                 break;
             case Roi.LINE:
                 if (n >= 2) newRoi = new ij.gui.Line(xs[0], ys[0], xs[1], ys[1]);
