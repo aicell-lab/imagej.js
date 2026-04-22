@@ -702,6 +702,30 @@ def patch_lazy_image_plus_hooks():
         content = content.replace(resize_old, resize_new, 1)
         print("✓ Patched ImageCanvas.resizeCanvas to honour size changes without painted flag")
 
+    # After setSize(width,height) inside resizeCanvas, stock writes
+    #   srcRect.width  = (int)(dstWidth/magnification);
+    #   srcRect.height = (int)(dstHeight/magnification);
+    # This clobbers the LazyImagePlus level-0 srcRect (which we keep at
+    # the full-resolution image extent) with viewport-pixel dimensions.
+    # Our canvas componentResized → setViewport() path rebuilds srcRect
+    # correctly from the true geometry; skip the stock writes so we have
+    # something sane to read when rebuilding.
+    stock_srcrect_block = (
+        "\t\t\tsetSize(width, height);\n"
+        "\t\t\tsrcRect.width = (int)(dstWidth/magnification);\n"
+        "\t\t\tsrcRect.height = (int)(dstHeight/magnification);\n"
+    )
+    patched_srcrect_block = (
+        "\t\t\tsetSize(width, height);\n"
+        "\t\t\tif (!(imp instanceof com.hack.viewer.LazyImagePlus)) {\n"
+        "\t\t\t\tsrcRect.width = (int)(dstWidth/magnification);\n"
+        "\t\t\t\tsrcRect.height = (int)(dstHeight/magnification);\n"
+        "\t\t\t}\n"
+    )
+    if stock_srcrect_block in content:
+        content = content.replace(stock_srcrect_block, patched_srcrect_block, 1)
+        print("✓ Patched ImageCanvas.resizeCanvas to preserve LazyImagePlus srcRect")
+
     # zoomOut() and unzoom() have their OWN setSize() + win.pack() paths that
     # bypass canEnlarge. For LazyImagePlus these would visibly shrink / reset
     # the window on wheel-out or Image>Zoom>Original. Short-circuit them.
