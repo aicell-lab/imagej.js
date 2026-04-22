@@ -183,17 +183,21 @@ public class LazyImagePlus extends ImagePlus {
         // srcRect / magnification to the viewport-processor dims. Re-lock
         // to level-0 AFTER all that runs.
         lazyCanvas.lockViewportToLevel0();
-        // Listen on the CANVAS, not the frame. ImageLayout positions +
-        // sizes the canvas to whatever area is left inside the window after
-        // insets, the info label ("… pixels; 8-bit"), and the slider — so
-        // canvas.getSize() is the authoritative viewport size. Reading the
-        // frame's raw size and subtracting insets manually would ignore the
-        // info-label gutter, producing an x/y offset relative to the window.
+        // Listen on the CANVAS (ImageLayout gives it the correct viewport
+        // area, minus insets + info-label + slider). Debounce: during a
+        // drag-resize AWT fires many componentResized events per second and
+        // each setViewport() allocates a new processor + touches canvas
+        // state — letting every one through (a) flooded the Java thread so
+        // CheerpJ's pointerup handler couldn't drain (leaving stuck
+        // cjResizerBorder overlays) and (b) re-entered the resize event via
+        // the setSize() inside setViewport. A 120 ms debounce + re-entry
+        // guard means exactly one setViewport runs after the gesture
+        // settles.
         lazyCanvas.addComponentListener(new ComponentAdapter() {
             @Override
             public void componentResized(ComponentEvent e) {
                 if (lazyCanvas == null) return;
-                setViewport(lazyCanvas.getWidth(), lazyCanvas.getHeight());
+                scheduleViewportFromCanvas();
             }
         });
         Toolbar tb = Toolbar.getInstance();
@@ -215,7 +219,29 @@ public class LazyImagePlus extends ImagePlus {
      * DOM element) — whichever fires first wins, the other becomes a no-op
      * because viewW / viewH already match.
      */
+    /** Debounce timer for canvas-triggered setViewport. */
+    private javax.swing.Timer resizeDebounce;
+    /** Re-entry guard: setViewport calls lazyCanvas.setSize which fires
+     *  another componentResized; we must not recurse. */
+    private boolean inSetViewport = false;
+
+    private void scheduleViewportFromCanvas() {
+        if (inSetViewport) return;
+        if (resizeDebounce != null) resizeDebounce.stop();
+        resizeDebounce = new javax.swing.Timer(120, new java.awt.event.ActionListener() {
+            @Override
+            public void actionPerformed(java.awt.event.ActionEvent e) {
+                resizeDebounce = null;
+                if (lazyCanvas != null) setViewport(lazyCanvas.getWidth(), lazyCanvas.getHeight());
+            }
+        });
+        resizeDebounce.setRepeats(false);
+        resizeDebounce.start();
+    }
+
     public void setViewport(int w, int h) {
+        if (inSetViewport) return;
+        inSetViewport = true;
         try {
             if (lazyCanvas == null) return;
             int cw = Math.max(64, w);
@@ -264,6 +290,8 @@ public class LazyImagePlus extends ImagePlus {
         } catch (Throwable t) {
             System.out.println("[LazyImagePlus] setViewport(" + w + "," + h + ") failed: " + t);
             t.printStackTrace();
+        } finally {
+            inSetViewport = false;
         }
     }
 
