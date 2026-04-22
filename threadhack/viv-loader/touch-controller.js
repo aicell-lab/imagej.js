@@ -34,15 +34,20 @@
     let nextApply = null;
     let rafPending = false;
 
-    function findCanvas() {
-      const candidates = display.querySelectorAll('canvas');
-      let best = null, area = 0;
-      for (const c of candidates) {
-        const r = c.getBoundingClientRect();
-        const a = r.width * r.height;
-        if (a > area && r.width > 200 && r.height > 200) { area = a; best = c; }
+    function findCanvasAt(clientX, clientY) {
+      // Walk up from the point under the finger to the nearest CANVAS inside
+      // cheerpjDisplay. This correctly picks the LazyImagePlus's image canvas
+      // regardless of how many other CheerpJ windows (toolbar, menu,
+      // plugin dialogs) are on the page.
+      let el = document.elementFromPoint(clientX, clientY);
+      while (el && el !== display) {
+        if (el.tagName === 'CANVAS') {
+          const r = el.getBoundingClientRect();
+          if (r.width > 100 && r.height > 100) return el;
+        }
+        el = el.parentElement;
       }
-      return best;
+      return null;
     }
 
     async function fetchIc() {
@@ -93,15 +98,19 @@
       // Only engage if a LazyImagePlus is open.
       icRef = await fetchIc();
       if (!icRef) return;
-      const cvs = findCanvas();
-      canvasRect = cvs ? cvs.getBoundingClientRect()
-                       : { left: 0, top: 0, width: 640, height: 640 };
+      // Find the canvas under the first finger — that's the image canvas the
+      // user is interacting with. getBoundingClientRect() on the *wrong*
+      // canvas (e.g. a toolbar canvas above/beside the image) would shift the
+      // pinch midpoint and make zoom appear off-center.
+      const t0 = e.touches[0];
+      const cvs = findCanvasAt(t0.clientX, t0.clientY);
+      if (!cvs) return;
+      canvasRect = cvs.getBoundingClientRect();
       startView = await fetchView(icRef);
       startTouches = [...e.touches].map(t => ({
         id: t.identifier, x: t.clientX, y: t.clientY
       }));
       movedEnough = false;
-      // 2-finger pinch is always our gesture — block browser pinch now.
       if (e.touches.length >= 2) e.preventDefault();
     }, { passive: false, capture: true });
 
