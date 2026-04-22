@@ -573,21 +573,24 @@ def patch_yes_no_cancel_dialog_java():
     return True
 
 def inject_viewer_sources():
-    """Copy threadhack viewer sources (com.hack.viewer.*) into ImageJ-build/
-    and update build.xml so ant compiles them alongside ij/**."""
+    """Copy threadhack helper sources (com.hack.viewer.* + com.hack.menu.*)
+    into ImageJ-build/ and update build.xml so ant compiles them alongside
+    ij/**."""
     import os, shutil, glob
 
-    src_dir = "threadhack/java/src/com/hack/viewer"
-    dst_dir = "ImageJ-build/com/hack/viewer"
+    packages = [
+        ("threadhack/java/src/com/hack/viewer", "ImageJ-build/com/hack/viewer"),
+        ("threadhack/java/src/com/hack/menu",   "ImageJ-build/com/hack/menu"),
+    ]
 
-    if not os.path.isdir(src_dir):
-        print(f"Warning: {src_dir} not found, skipping viewer injection")
-        return False
-
-    os.makedirs(dst_dir, exist_ok=True)
-    for f in glob.glob(os.path.join(src_dir, "*.java")):
-        shutil.copy2(f, dst_dir)
-        print(f"✓ Copied {os.path.basename(f)} → {dst_dir}")
+    for src_dir, dst_dir in packages:
+        if not os.path.isdir(src_dir):
+            print(f"Warning: {src_dir} not found, skipping")
+            continue
+        os.makedirs(dst_dir, exist_ok=True)
+        for f in glob.glob(os.path.join(src_dir, "*.java")):
+            shutil.copy2(f, dst_dir)
+            print(f"✓ Copied {os.path.basename(f)} → {dst_dir}")
 
     # Add ./com as a second source root in build.xml so javac picks it up.
     build_xml = "ImageJ-build/build.xml"
