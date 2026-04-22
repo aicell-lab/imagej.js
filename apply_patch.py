@@ -145,6 +145,13 @@ def apply_patches():
     print("\n--- Patching ImageWindow + ImageCanvas for LazyImagePlus ---")
     patch_lazy_image_plus_hooks()
 
+    # Default useJFileChooser=true in the source. Setting it from JS via
+    # `Prefs.useJFileChooser = true` in CheerpJ library mode silently fails
+    # to write the primitive static, so File > Open was falling back to the
+    # AWT FileDialog (which doesn't render in CheerpJ).
+    print("\n--- Defaulting Prefs.useJFileChooser = true in source ---")
+    patch_prefs_defaults()
+
     print("\n" + "=" * 60)
     print("✓ Successfully applied all patches!")
     print("  - Interpreter.java: Silent macro execution")
@@ -608,6 +615,53 @@ def inject_viewer_sources():
             print("✓ Updated build.xml javac srcdir → ./ij:./com")
         else:
             print("⊘ build.xml srcdir already updated (or unrecognised)")
+    return True
+
+def patch_prefs_defaults():
+    """Set useJFileChooser=true as the field default, since CheerpJ's
+    library-mode proxy silently no-ops JS writes to primitive Java statics.
+    Also: loadOptions() reads the bitmask from IJ_Prefs.txt — without an
+    existing prefs file this overwrites the default back to false. Replace
+    that line too so the bitmask is OR'd onto our default instead."""
+    import os
+    file_path = "ImageJ-build/ij/Prefs.java"
+    if not os.path.exists(file_path):
+        print(f"Warning: {file_path} not found, skipping")
+        return False
+    with open(file_path, 'r') as f:
+        content = f.read()
+
+    if "[threadhack] useJFileChooser default" in content:
+        print("⊘ Prefs already patched")
+        return True
+
+    # Field default: public static boolean useJFileChooser; → = true;
+    old_field = "public static boolean useJFileChooser;"
+    new_field = "public static boolean useJFileChooser = true; // [threadhack] useJFileChooser default"
+    if old_field in content:
+        content = content.replace(old_field, new_field, 1)
+        print("✓ Patched Prefs.useJFileChooser default → true")
+
+    # loadOptions() bitmask: useJFileChooser = (options&JFILE_CHOOSER)!=0;
+    # Only overwrite from saved prefs if a value was actually present.
+    old_load = "useJFileChooser = (options&JFILE_CHOOSER)!=0;"
+    new_load = "if ((options&JFILE_CHOOSER)!=0) useJFileChooser = true; // [threadhack] preserve default"
+    if old_load in content:
+        content = content.replace(old_load, new_load, 1)
+        print("✓ Patched Prefs.loadOptions to preserve useJFileChooser default")
+
+    # macOS force-override: `if (IJ.isMacOSX()) useJFileChooser = false;`
+    # We're in a browser — macOS-ness of the USER OS doesn't matter for the
+    # CheerpJ-emulated filesystem. Drop it so CheerpJ-on-Mac users also get
+    # the file chooser.
+    old_mac = "if (IJ.isMacOSX()) useJFileChooser = false;"
+    new_mac = "// [threadhack] skip macOS force-off; irrelevant in CheerpJ"
+    if old_mac in content:
+        content = content.replace(old_mac, new_mac, 1)
+        print("✓ Patched Prefs macOS force-off branch")
+
+    with open(file_path, 'w') as f:
+        f.write(content)
     return True
 
 def patch_lazy_image_plus_hooks():
