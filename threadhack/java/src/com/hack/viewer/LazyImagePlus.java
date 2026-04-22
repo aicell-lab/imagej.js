@@ -245,6 +245,16 @@ public class LazyImagePlus extends ImagePlus {
             int newSrcY = (int) Math.round(cy - newSrcH / 2.0);
             viewW = cw; viewH = ch;
             processor = new ByteProcessor(viewW, viewH);
+            // Pre-set ImagePlus.width/height (inherited protected fields) so
+            // ImagePlus.setProcessor2 sees dimensionsChanged=false and does
+            // NOT call win.updateImage(this) — which would reset canvas
+            // imageWidth/srcRect/magnification back to the processor's
+            // viewport dims instead of the level-0 dims we need. (Our
+            // own lockViewportToLevel0 below then re-asserts level-0 state
+            // on the canvas from scratch, avoiding the divide-by-zero that
+            // came from updateImage's interim reset.)
+            this.width  = cw;
+            this.height = ch;
             setProcessor(processor);
             lazyCanvas.setSize(cw, ch);
             lazyCanvas.lockViewportToLevel0();
@@ -252,6 +262,7 @@ public class LazyImagePlus extends ImagePlus {
             scheduleFetch();
         } catch (Throwable t) {
             System.out.println("[LazyImagePlus] setViewport(" + w + "," + h + ") failed: " + t);
+            t.printStackTrace();
         }
     }
 
