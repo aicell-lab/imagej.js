@@ -183,16 +183,17 @@ public class LazyImagePlus extends ImagePlus {
         // srcRect / magnification to the viewport-processor dims. Re-lock
         // to level-0 AFTER all that runs.
         lazyCanvas.lockViewportToLevel0();
-        win.addComponentListener(new ComponentAdapter() {
+        // Listen on the CANVAS, not the frame. ImageLayout positions +
+        // sizes the canvas to whatever area is left inside the window after
+        // insets, the info label ("… pixels; 8-bit"), and the slider — so
+        // canvas.getSize() is the authoritative viewport size. Reading the
+        // frame's raw size and subtracting insets manually would ignore the
+        // info-label gutter, producing an x/y offset relative to the window.
+        lazyCanvas.addComponentListener(new ComponentAdapter() {
             @Override
             public void componentResized(ComponentEvent e) {
-                ImageWindow w2 = getWindow();
-                if (w2 == null) return;
-                java.awt.Insets insets = w2.getInsets();
-                int availW = w2.getWidth()  - insets.left - insets.right;
-                int availH = w2.getHeight() - insets.top  - insets.bottom
-                                            - w2.getSliderHeight();
-                setViewport(availW, availH);
+                if (lazyCanvas == null) return;
+                setViewport(lazyCanvas.getWidth(), lazyCanvas.getHeight());
             }
         });
         Toolbar tb = Toolbar.getInstance();
