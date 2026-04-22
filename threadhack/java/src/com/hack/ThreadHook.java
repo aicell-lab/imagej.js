@@ -127,6 +127,26 @@ public final class ThreadHook {
                 + safeName(thread) + " runnable=" + runnableType(target)
                 + " serializable=" + serializable + " poolReady=" + pool);
 
+        // Special case: ij.Executer wraps every menu command (File>Open,
+        // Process>..., etc.) in `new Thread(this).start()`. Under CheerpJ's
+        // cooperative threading, when Executer.run() reaches
+        // EventQueue.invokeAndWait (used by OpenDialog.jOpen to show the
+        // JFileChooser), the calling thread blocks waiting for EDT — but
+        // the JVM is effectively single-threaded, so the EDT task never
+        // runs. Dialog never appears. Fix: run Executer synchronously on
+        // the caller (which IS already the EDT for a menu click) so
+        // OpenDialog sees isDispatchThread()=true and shows the JFileChooser
+        // inline. Menu commands feel the same to the user.
+        if (target != null
+                && "ij.Executer".equals(target.getClass().getName())) {
+            try {
+                target.run();
+            } catch (Throwable t) {
+                System.out.println("[ThreadHook] Executer.run threw: " + t);
+            }
+            return;
+        }
+
         // Special case: PlugInFilterRunner — extract + ship per-slice tasks instead
         // of trying to serialize the PFR itself.
         if (target != null && pool
