@@ -156,13 +156,20 @@ public class LazyImagePlus extends ImagePlus {
 
     @Override
     public void show() {
-        // Flip the getWidth/getHeight flag while constructing the ImageWindow
-        // so it sizes the frame to the viewport (e.g. 640×750) — not the
-        // full level-0 image (which would be near-fullscreen).
+        // Belt: Prefs.open100Percent makes ImageWindow's ctor zoom in until
+        // mag=1.0 then setSize(Math.min(width, screen), ...); with our wide
+        // overridden image width it's a full-screen-on-open trap.
+        ij.Prefs.open100Percent = false;
+        // Braces: flip the getWidth/getHeight flag while constructing the
+        // ImageWindow so the fit-to-screen loop sees viewport dims (640×~),
+        // not level-0.
         reportViewportForGetWidth = true;
         lazyCanvas = new LazyImageCanvas(this);
         ImageWindow win = new ImageWindow(this, lazyCanvas);
         reportViewportForGetWidth = false;
+        System.out.println("[LazyImagePlus] after ctor, frame size = "
+                + win.getWidth() + "x" + win.getHeight()
+                + " canvas = " + lazyCanvas.getWidth() + "x" + lazyCanvas.getHeight());
         // Canvas construction + ImageWindow layout both reset imageWidth /
         // srcRect / magnification to the viewport-processor dims. Re-lock
         // to level-0 AFTER all that runs.
