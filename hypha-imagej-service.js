@@ -1489,17 +1489,13 @@ function updateStatus(status, text, serviceUrl = null) {
         }
     }
 
-    // Toggle between connect and copy MCP URL button
-    if (copyBtn && connectBtn) {
+    // The connect action lives on the Extensions menu now; the Copy MCP URL
+    // button still appears / disappears based on connection state.
+    if (copyBtn) {
         if (status === 'connected' && serviceUrl) {
-            connectBtn.classList.add('hidden');
             copyBtn.classList.remove('hidden');
-
-            // Convert to MCP URL and store
             const mcpUrl = convertToMcpUrl(serviceUrl);
             copyBtn.dataset.serviceUrl = mcpUrl;
-
-            // Track MCP URL creation in Google Analytics
             if (typeof gtag !== 'undefined') {
                 gtag('event', 'mcp_url_created', {
                     'event_category': 'MCP',
@@ -1508,7 +1504,6 @@ function updateStatus(status, text, serviceUrl = null) {
                 });
             }
         } else {
-            connectBtn.classList.remove('hidden');
             copyBtn.classList.add('hidden');
         }
     }
@@ -3055,20 +3050,21 @@ async function disconnectFromHypha() {
     }
 }
 
-// Setup button click handlers
-document.addEventListener('DOMContentLoaded', () => {
-    const connectBtn = document.getElementById('connectBtn');
-    const copyMcpBtn = document.getElementById('copyMcpBtn');
-
-    if (connectBtn) {
-        connectBtn.addEventListener('click', async () => {
-            if (hyphaServer) {
-                await disconnectFromHypha();
-            } else {
-                await connectToHypha();
-            }
-        });
+// Register the "Connect to Hypha MCP" menu handler (invoked by
+// com.hack.menu.MenuRegistry via nativeInvokeJSHandler). This replaces the
+// previous connectBtn click listener.
+window.__menuHandlers = window.__menuHandlers || {};
+window.__menuHandlers.mcp = async () => {
+    if (hyphaServer) {
+        await disconnectFromHypha();
+    } else {
+        await connectToHypha();
     }
+};
+
+// Setup remaining button click handlers (copyMcpBtn only)
+document.addEventListener('DOMContentLoaded', () => {
+    const copyMcpBtn = document.getElementById('copyMcpBtn');
 
     if (copyMcpBtn) {
         copyMcpBtn.addEventListener('click', async () => {
