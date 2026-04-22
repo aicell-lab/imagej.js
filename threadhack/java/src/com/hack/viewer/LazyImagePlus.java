@@ -102,24 +102,23 @@ public class LazyImagePlus extends ImagePlus {
     public int level0Height() { return level0H; }
 
     /**
-     * Override ImagePlus.getWidth/getHeight to report level-0 dimensions.
+     * Override ImagePlus.getWidth/getHeight to report level-0 dimensions —
+     * BUT only after show() has finished constructing the ImageWindow.
      *
-     * These are consumed by ImageJ code that reasons about "the image size":
-     *   - Roi.setImage sets xMax / yMax from imp.getWidth() — the rectangle
-     *     tool's grow() clamps newly-drawn rectangles to [0, xMax], so if
-     *     xMax is the 640-pixel viewport, any drag past 640 collapses to
-     *     negative width (→ invisible rectangle). Every other tool works
-     *     without this clamp.
-     *   - ImageCanvas constructor uses them to seed imageWidth (already
-     *     overridden by LazyImageCanvas anyway).
-     *   - Analyze > Measure reports pixel counts in these units.
+     * ImageWindow's constructor uses imp.getWidth()/getHeight() to pick the
+     * initial frame size (it fits the image onto the screen). Reporting
+     * level-0 dims there (e.g. 1758×2048, or 921 600×380 928 for a whole-
+     * slide) makes the window open almost full-screen. During the ctor we
+     * therefore report the viewport processor size (e.g. 640×750), so the
+     * window opens at a sensible viewport.
      *
-     * ImagePlus.getImage() does NOT use these — it goes straight through
-     * ip.createImage() on the processor — so the earlier black-canvas
-     * regression was unrelated to this override and is fixed.
+     * Outside the ctor window, Roi / Measure / HAND-scroll all want level-0
+     * dims — xMax = imp.getWidth() in Roi.setImage is what makes the
+     * rectangle tool work past x=640.
      */
-    @Override public int getWidth()  { return level0W; }
-    @Override public int getHeight() { return level0H; }
+    private boolean reportViewportForGetWidth = false;
+    @Override public int getWidth()  { return reportViewportForGetWidth ? viewW : level0W; }
+    @Override public int getHeight() { return reportViewportForGetWidth ? viewH : level0H; }
 
     /** ImageJ status bar format — (x, y) here are already level-0 coords
      *  because LazyImageCanvas has srcRect/magnification in level-0 space. */
@@ -157,8 +156,13 @@ public class LazyImagePlus extends ImagePlus {
 
     @Override
     public void show() {
+        // Flip the getWidth/getHeight flag while constructing the ImageWindow
+        // so it sizes the frame to the viewport (e.g. 640×750) — not the
+        // full level-0 image (which would be near-fullscreen).
+        reportViewportForGetWidth = true;
         lazyCanvas = new LazyImageCanvas(this);
         ImageWindow win = new ImageWindow(this, lazyCanvas);
+        reportViewportForGetWidth = false;
         // Canvas construction + ImageWindow layout both reset imageWidth /
         // srcRect / magnification to the viewport-processor dims. Re-lock
         // to level-0 AFTER all that runs.
