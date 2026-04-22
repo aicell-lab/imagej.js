@@ -63,19 +63,18 @@ public class LazyImagePlus extends ImagePlus {
         setTitle(title);
     }
 
-    // -------- structural overrides: pretend to be level-0-sized ---------
+    // -------- structural getters ---------------------------------------
 
-    /** Level-0 width — this is what every ImageJ consumer of "image width"
-     *  (Roi bounds checks, srcRect defaults, Measure etc.) sees. */
-    @Override
-    public int getWidth()  { return level0W; }
+    /** Full-resolution (level-0) width. The ImagePlus itself reports the
+     *  viewport-processor width via getWidth() because ImagePlus.getImage()
+     *  internally depends on that matching the processor; the canvas, in
+     *  contrast, is initialised with level-0 dimensions so every coord
+     *  transform (srcRect, offScreenX/Y) speaks level-0 natively. */
+    public int level0Width()  { return level0W; }
+    public int level0Height() { return level0H; }
 
-    /** Level-0 height — see getWidth(). */
-    @Override
-    public int getHeight() { return level0H; }
-
-    /** Coordinate readout in the ImageJ status bar. We use level-0 coords;
-     *  the callers already pass level-0 x/y thanks to ic.offScreenX/Y. */
+    /** ImageJ status bar format — (x, y) here are already level-0 coords
+     *  because LazyImageCanvas has srcRect/magnification in level-0 space. */
     @Override
     public String getLocationAsString(int x, int y) {
         return "x=" + x + ", y=" + y;

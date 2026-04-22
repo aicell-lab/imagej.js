@@ -37,6 +37,17 @@ public class LazyImageCanvas extends ImageCanvas {
     public LazyImageCanvas(LazyImagePlus imp) {
         super(imp);
         this.lip = imp;
+        // Replace the imageWidth/imageHeight/srcRect the superclass computed
+        // from imp.getWidth() (which is only viewport size) with the real
+        // level-0 dimensions. This makes stock offScreenX/screenX speak
+        // level-0 coords, so Rois, cursor readouts, and HAND-scroll are
+        // automatically correct without any bespoke coordinate translation.
+        imageWidth  = imp.level0Width();
+        imageHeight = imp.level0Height();
+        srcRect = new Rectangle(0, 0, imageWidth, imageHeight);
+        // Initial magnification so canvas-side = viewport-side pixel count
+        // (viewportWidth = magnification * srcRect.width).
+        magnification = (double) imp.viewportWidth() / imageWidth;
         setSize(imp.viewportWidth(), imp.viewportHeight());
     }
 
