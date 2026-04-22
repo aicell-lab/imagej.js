@@ -58,6 +58,18 @@ public class LazyImagePlus extends ImagePlus {
         this.src = src;
         this.level0W = src.levelWidth(0);
         this.level0H = src.levelHeight(0);
+        // Size the initial viewport to match the level-0 aspect ratio
+        // capped at 640 on the long edge. This keeps the displayed image
+        // from being stretched into a square on non-square inputs.
+        int LONG_EDGE = 640;
+        double aspect = (double) level0W / level0H;
+        if (aspect >= 1.0) {
+            viewW = LONG_EDGE;
+            viewH = Math.max(64, (int) Math.round(LONG_EDGE / aspect));
+        } else {
+            viewH = LONG_EDGE;
+            viewW = Math.max(64, (int) Math.round(LONG_EDGE * aspect));
+        }
         this.processor = new ByteProcessor(viewW, viewH);
         setProcessor(title, processor);
         setTitle(title);
@@ -97,10 +109,22 @@ public class LazyImagePlus extends ImagePlus {
                 int cw = Math.max(64, lazyCanvas.getWidth());
                 int ch = Math.max(64, lazyCanvas.getHeight());
                 if (cw == viewW && ch == viewH) return;
+                // Keep the image centre + magnification fixed; adjust
+                // srcRect's aspect to match the new canvas, so the view
+                // grows/shrinks to fill without stretching.
+                Rectangle sr = lazyCanvas.currentSrcRect();
+                double mag = lazyCanvas.currentMagnification();
+                double cx = sr.x + sr.width / 2.0;
+                double cy = sr.y + sr.height / 2.0;
+                int newSrcW = Math.max(1, (int) Math.round(cw / mag));
+                int newSrcH = Math.max(1, (int) Math.round(ch / mag));
+                int newSrcX = (int) Math.round(cx - newSrcW / 2.0);
+                int newSrcY = (int) Math.round(cy - newSrcH / 2.0);
                 viewW = cw; viewH = ch;
                 processor = new ByteProcessor(viewW, viewH);
                 setProcessor(processor);
-                lazyCanvas.lockViewportToLevel0();   // re-lock after setProcessor
+                lazyCanvas.lockViewportToLevel0();
+                lazyCanvas.setSourceRect(new Rectangle(newSrcX, newSrcY, newSrcW, newSrcH));
                 scheduleFetch();
             }
         });
@@ -119,9 +143,42 @@ public class LazyImagePlus extends ImagePlus {
 
     /** Called by LazyImageCanvas.paint whenever srcRect / magnification
      *  changed (e.g. ImageJ's HAND-tool scroll, magnifier click, or zoomIn
-     *  called from our own patched mouse-wheel handler). */
+     *  called from our own patched mouse-wheel handler).
+     *
+     *  Paints an instant preview from the cached tile (NN-resampled to the
+     *  new viewport) so pan/zoom feels snappy, then schedules a real fetch
+     *  with a short debounce so rapid interactions collapse into one. */
     public void onCanvasViewChanged(Rectangle srcRect, double magnification) {
+        renderFromCache(srcRect);
         scheduleFetch();
+    }
+
+    /** NN-resample the last fetched tile into the viewport processor so the
+     *  user sees the new pan/zoom immediately, before the debounced fetch
+     *  completes. */
+    private void renderFromCache(Rectangle sr) {
+        if (cachedTile == null || cacheLevel < 0) return;
+        double sf = src.levelScaleFactor(cacheLevel);
+        byte[] dst = new byte[viewW * viewH];
+        // For each dst pixel (dx,dy) in the current viewport, compute its
+        // level-0 coord and then project back to the cached tile's level+offset.
+        double srcXpPx = sr.width  / (double) viewW;   // level-0 px per dst px
+        double srcYpPx = sr.height / (double) viewH;
+        for (int dy = 0; dy < viewH; dy++) {
+            double l0y = sr.y + dy * srcYpPx;
+            int ty = (int) Math.round(l0y / sf) - cacheY0;
+            if (ty < 0 || ty >= cacheRh) continue;
+            int dr = dy * viewW;
+            int tr = ty * cacheRw;
+            for (int dx = 0; dx < viewW; dx++) {
+                double l0x = sr.x + dx * srcXpPx;
+                int tx = (int) Math.round(l0x / sf) - cacheX0;
+                if (tx < 0 || tx >= cacheRw) continue;
+                dst[dr + dx] = cachedTile[tr + tx];
+            }
+        }
+        processor.setPixels(dst);
+        updateAndDraw();
     }
 
     private void scheduleFetch() {
