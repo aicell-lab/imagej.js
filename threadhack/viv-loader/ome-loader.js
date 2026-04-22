@@ -189,12 +189,20 @@ function installResizeObserver(imp) {
     if (!cvs) return false;
     if (cvs.__lip_resize_installed) return true;
     cvs.__lip_resize_installed = true;
+    // ResizeObserver always fires once on observe() with the current size.
+    // That first fire happens while the ImageJ window is still settling
+    // (magnification not yet final etc.), so we skip it and only act on
+    // subsequent user-driven resizes.
+    let firstFire = true;
     let pending = null;
     let timer = null;
     const obs = new ResizeObserver(entries => {
+      if (firstFire) { firstFire = false; return; }
       const e = entries[entries.length - 1];
       const r = e.contentRect || cvs.getBoundingClientRect();
-      pending = { w: Math.round(r.width), h: Math.round(r.height) };
+      const w = Math.round(r.width), h = Math.round(r.height);
+      if (w <= 0 || h <= 0) return;
+      pending = { w, h };
       if (timer) clearTimeout(timer);
       timer = setTimeout(async () => {
         timer = null;
