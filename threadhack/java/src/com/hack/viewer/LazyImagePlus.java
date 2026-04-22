@@ -84,22 +84,31 @@ public class LazyImagePlus extends ImagePlus {
 
     @Override
     public void show() {
-        // Build our custom canvas before super.show() creates the window.
         lazyCanvas = new LazyImageCanvas(this);
         ImageWindow win = new ImageWindow(this, lazyCanvas);
-        // Initial viewport = fit-to-canvas (ImageJ sets srcRect = full image,
-        // mag = canvas.w / image.w). Re-read after layout.
+        // Force the canvas into its level-0 coordinate space AFTER the
+        // window has done its initial layout (pack/validate can reset
+        // magnification to 1.0 and clip srcRect against the processor-
+        // sized imageWidth the super constructor saw).
+        lazyCanvas.setSourceRect(new Rectangle(0, 0, level0W, level0H));
+        lazyCanvas.setMagnification((double) viewW / level0W);
+        // When the user drags the frame border, grow the viewport processor.
         win.addComponentListener(new ComponentAdapter() {
             @Override
             public void componentResized(ComponentEvent e) {
                 if (lazyCanvas != null) {
-                    viewW = Math.max(64, lazyCanvas.getWidth());
-                    viewH = Math.max(64, lazyCanvas.getHeight());
-                    // Rebuild processor at new canvas size; pixel-blit only
-                    // this one time per user resize.
-                    processor = new ByteProcessor(viewW, viewH);
-                    setProcessor(processor);
-                    scheduleFetch();
+                    int cw = Math.max(64, lazyCanvas.getWidth());
+                    int ch = Math.max(64, lazyCanvas.getHeight());
+                    if (cw != viewW || ch != viewH) {
+                        viewW = cw; viewH = ch;
+                        processor = new ByteProcessor(viewW, viewH);
+                        setProcessor(processor);
+                        // Keep srcRect in level-0; re-derive magnification
+                        // so display-pixel density stays consistent.
+                        Rectangle sr = lazyCanvas.currentSrcRect();
+                        lazyCanvas.setMagnification((double) viewW / sr.width);
+                        scheduleFetch();
+                    }
                 }
             }
         });
@@ -107,7 +116,6 @@ public class LazyImagePlus extends ImagePlus {
         if (tb != null) tb.setTool(Toolbar.HAND);
         setActivated();
         IJ.showStatus("");
-        // Trigger an initial paint+fetch cycle.
         scheduleFetch();
     }
 
