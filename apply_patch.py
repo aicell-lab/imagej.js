@@ -687,6 +687,21 @@ def patch_lazy_image_plus_hooks():
         content = content.replace(can_enlarge_marker, can_enlarge_marker + can_enlarge_inject, 1)
         print("✓ Patched ImageCanvas.canEnlarge → always null")
 
+    # resizeCanvas guards the actual resize on `painted` being true, but that
+    # field is private — a custom ImageCanvas subclass can't maintain it in
+    # its own paint() override, so `painted` stays false and ImageLayout's
+    # resizeCanvas no-ops on every frame-border drag. Drop the guard: any
+    # time ImageLayout asks for a new canvas size, apply it. (Stock images
+    # already have painted=true immediately after first paint, so this is a
+    # no-op change for them — it only unblocks the custom-canvas case.)
+    resize_old = ("if (srcRect.width<imageWidth || srcRect.height<imageHeight "
+                  "|| (painted&&(width!=size.width||height!=size.height))) {")
+    resize_new = ("if (srcRect.width<imageWidth || srcRect.height<imageHeight "
+                  "|| (width!=size.width||height!=size.height)) { // [threadhack] drop `painted` guard")
+    if resize_old in content:
+        content = content.replace(resize_old, resize_new, 1)
+        print("✓ Patched ImageCanvas.resizeCanvas to honour size changes without painted flag")
+
     # zoomOut() and unzoom() have their OWN setSize() + win.pack() paths that
     # bypass canEnlarge. For LazyImagePlus these would visibly shrink / reset
     # the window on wheel-out or Image>Zoom>Original. Short-circuit them.
