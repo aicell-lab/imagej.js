@@ -60,9 +60,14 @@ public class LazyImageCanvas extends ImageCanvas {
     public void paint(Graphics g) {
         try {
             detectAndPropagateSrcRectChange();
+            // Stock ImageCanvas.paint does this — we must too, otherwise
+            // imp.getImage() returns a stale cached Image and the canvas
+            // stays black after setPixels().
+            if (imageUpdated) {
+                imageUpdated = false;
+                imp.updateImage();
+            }
             // Draw the current viewport ByteProcessor at 1:1 into the canvas.
-            // Its pixels are already the correct contents for the current
-            // srcRect / magnification, produced by lip.refresh().
             Image img = imp.getImage();
             if (img != null) {
                 g.drawImage(img, 0, 0, getWidth(), getHeight(), null);
