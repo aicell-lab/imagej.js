@@ -26,8 +26,12 @@
 
     let icRef = null;
     let canvasRect = null;
-    let startView = null;      // { x, y, w, h, mag } at gesture start
-    let startTouches = [];     // [{id, x, y}] at touchstart
+    // Frame-to-frame state: on every touchmove we transform the LAST state
+    // by a small pan + zoom step. A gesture is therefore just a sequence of
+    // independent "pan by midpoint delta, zoom by distance ratio at current
+    // midpoint" increments — pinch ≡ pan + wheel-zoom, composed per frame.
+    let lastTouches = [];      // [{id, x, y}] — positions at last frame
+    let lastView = null;       // { x, y, w, h, mag } — srcRect at last frame
     let movedEnough = false;
 
     // Coalesce rapid touchmoves into one CheerpJ call per frame.
@@ -95,19 +99,14 @@
     }
 
     display.addEventListener('touchstart', async (e) => {
-      // Only engage if a LazyImagePlus is open.
       icRef = await fetchIc();
       if (!icRef) return;
-      // Find the canvas under the first finger — that's the image canvas the
-      // user is interacting with. getBoundingClientRect() on the *wrong*
-      // canvas (e.g. a toolbar canvas above/beside the image) would shift the
-      // pinch midpoint and make zoom appear off-center.
       const t0 = e.touches[0];
       const cvs = findCanvasAt(t0.clientX, t0.clientY);
       if (!cvs) return;
       canvasRect = cvs.getBoundingClientRect();
-      startView = await fetchView(icRef);
-      startTouches = [...e.touches].map(t => ({
+      lastView = await fetchView(icRef);
+      lastTouches = [...e.touches].map(t => ({
         id: t.identifier, x: t.clientX, y: t.clientY
       }));
       movedEnough = false;
@@ -115,65 +114,76 @@
     }, { passive: false, capture: true });
 
     display.addEventListener('touchmove', (e) => {
-      if (!icRef || !startView || startTouches.length === 0) return;
+      if (!icRef || !lastView || lastTouches.length === 0) return;
       const touches = [...e.touches].filter(t =>
-        startTouches.some(s => s.id === t.identifier));
+        lastTouches.some(s => s.id === t.identifier));
       if (touches.length === 0) return;
 
-      if (startTouches.length >= 2 && touches.length >= 2) {
-        // --- pinch zoom ---
+      // Current + previous midpoint (canvas-local), and current + previous
+      // pair-distance (for pinch). For 1-finger pan, "distance" is 0 and we
+      // only apply the pan step.
+      const tCur = (n) => touches[n];
+      const tLast = (n) => lastTouches.find(t => t.id === touches[n].identifier);
+      let curMidX, curMidY, lastMidX, lastMidY;
+      let curDist = 0, lastDist = 0;
+
+      if (touches.length >= 2 && lastTouches.length >= 2) {
+        const c1 = tCur(0), c2 = tCur(1);
+        const l1 = tLast(0), l2 = tLast(1);
+        if (!l1 || !l2) return;
+        curMidX  = (c1.clientX + c2.clientX) / 2 - canvasRect.left;
+        curMidY  = (c1.clientY + c2.clientY) / 2 - canvasRect.top;
+        lastMidX = (l1.x + l2.x) / 2 - canvasRect.left;
+        lastMidY = (l1.y + l2.y) / 2 - canvasRect.top;
+        curDist  = Math.hypot(c1.clientX - c2.clientX, c1.clientY - c2.clientY);
+        lastDist = Math.hypot(l1.x - l2.x, l1.y - l2.y);
         e.preventDefault();
-        const s1 = startTouches[0], s2 = startTouches[1];
-        const c1 = touches.find(t => t.identifier === s1.id);
-        const c2 = touches.find(t => t.identifier === s2.id);
-        if (!c1 || !c2) return;
-        const startDist = Math.hypot(s2.x - s1.x, s2.y - s1.y);
-        if (startDist < 1) return;
-        const curDist = Math.hypot(c2.clientX - c1.clientX, c2.clientY - c1.clientY);
-        const newMag = Math.max(1e-5, Math.min(32, startView.mag * curDist / startDist));
-        // Start midpoint in canvas-local coords.
-        const sMidX = (s1.x + s2.x) / 2 - canvasRect.left;
-        const sMidY = (s1.y + s2.y) / 2 - canvasRect.top;
-        // Level-0 coord under start midpoint (fixed anchor for the gesture).
-        const lMidX = startView.x + sMidX / startView.mag;
-        const lMidY = startView.y + sMidY / startView.mag;
-        // Current midpoint in canvas-local coords.
-        const cMidX = (c1.clientX + c2.clientX) / 2 - canvasRect.left;
-        const cMidY = (c1.clientY + c2.clientY) / 2 - canvasRect.top;
-        // Solve: screen(lMidX) = (lMidX - newSrcX) * newMag = cMidX.
-        const newSrcX = lMidX - cMidX / newMag;
-        const newSrcY = lMidY - cMidY / newMag;
-        const newSrcW = canvasRect.width  / newMag;
-        const newSrcH = canvasRect.height / newMag;
-        scheduleApply(newSrcX, newSrcY, newSrcW, newSrcH);
       } else if (touches.length === 1) {
-        // --- 1-finger drag → pan ---
-        const s = startTouches[0];
-        const c = touches[0];
-        const dx = c.clientX - s.x;
-        const dy = c.clientY - s.y;
+        const c = tCur(0);
+        const l = tLast(0);
+        if (!l) return;
+        curMidX  = c.clientX - canvasRect.left;
+        curMidY  = c.clientY - canvasRect.top;
+        lastMidX = l.x - canvasRect.left;
+        lastMidY = l.y - canvasRect.top;
+        const dx = c.clientX - l.x;
+        const dy = c.clientY - l.y;
         if (!movedEnough && Math.hypot(dx, dy) < MOVE_THRESHOLD_PX) return;
         movedEnough = true;
         e.preventDefault();
-        // srcRect moves opposite to the finger (image follows the finger).
-        const newSrcX = startView.x - dx / startView.mag;
-        const newSrcY = startView.y - dy / startView.mag;
-        scheduleApply(newSrcX, newSrcY, startView.w, startView.h);
+      } else {
+        return;
       }
+
+      // Level-0 coord that was under the previous midpoint (in lastView).
+      const anchorX = lastView.x + lastMidX / lastView.mag;
+      const anchorY = lastView.y + lastMidY / lastView.mag;
+      // Scale step for this frame (1.0 for pure pan).
+      const scale = (lastDist > 1 && curDist > 1) ? (curDist / lastDist) : 1.0;
+      const newMag = Math.max(1e-5, Math.min(32, lastView.mag * scale));
+      // Place srcRect so anchor lands under the current midpoint at the new mag.
+      const newSrcX = anchorX - curMidX / newMag;
+      const newSrcY = anchorY - curMidY / newMag;
+      const newSrcW = canvasRect.width  / newMag;
+      const newSrcH = canvasRect.height / newMag;
+      scheduleApply(newSrcX, newSrcY, newSrcW, newSrcH);
+
+      // Advance the reference frame: next move composes against THIS state.
+      lastView = { x: newSrcX, y: newSrcY, w: newSrcW, h: newSrcH, mag: newMag };
+      lastTouches = touches.map(t => ({ id: t.identifier, x: t.clientX, y: t.clientY }));
     }, { passive: false, capture: true });
 
     function onEnd(e) {
       if (e.touches && e.touches.length === 0) {
-        icRef = null; startView = null; startTouches = []; canvasRect = null;
+        icRef = null; lastView = null; lastTouches = []; canvasRect = null;
         movedEnough = false;
       } else if (e.touches) {
-        // Some fingers lifted; reset the reference frame for remaining
-        // fingers so pinch→pan transitions don't jump.
-        startTouches = [...e.touches].map(t => ({
+        // Some fingers lifted — rebase so the pinch↔pan transition doesn't
+        // jump (level-0 anchor is computed from lastView × lastMidpoint).
+        lastTouches = [...e.touches].map(t => ({
           id: t.identifier, x: t.clientX, y: t.clientY
         }));
-        // Re-read current view as new baseline.
-        if (icRef) fetchView(icRef).then(v => { startView = v; });
+        if (icRef) fetchView(icRef).then(v => { lastView = v; });
       }
     }
     display.addEventListener('touchend',    onEnd, { passive: false, capture: true });
