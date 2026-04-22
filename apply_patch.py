@@ -672,9 +672,42 @@ def patch_lazy_image_plus_hooks():
     )
     if can_enlarge_marker in content:
         content = content.replace(can_enlarge_marker, can_enlarge_marker + can_enlarge_inject, 1)
-        with open(ic_path, 'w') as f:
-            f.write(content)
         print("✓ Patched ImageCanvas.canEnlarge → always null")
+
+    # zoomOut() and unzoom() have their OWN setSize() + win.pack() paths that
+    # bypass canEnlarge. For LazyImagePlus these would visibly shrink / reset
+    # the window on wheel-out or Image>Zoom>Original. Short-circuit them.
+    zoom_out_marker = "public void zoomOut(int sx, int sy) {"
+    zoom_out_inject = (
+        "\n\t\t// [threadhack] LazyImagePlus: shrink srcRect / adjust mag only; keep window stable\n"
+        "\t\tif (imp instanceof com.hack.viewer.LazyImagePlus) {\n"
+        "\t\t\tdouble newMag = getLowerZoomLevel(magnification);\n"
+        "\t\t\tif (newMag == magnification) return;\n"
+        "\t\t\tadjustSourceRect(newMag, offScreenX(sx), offScreenY(sy));\n"
+        "\t\t\trepaint();\n"
+        "\t\t\treturn;\n"
+        "\t\t}\n"
+    )
+    if zoom_out_marker in content:
+        content = content.replace(zoom_out_marker, zoom_out_marker + zoom_out_inject, 1)
+        print("✓ Patched ImageCanvas.zoomOut to avoid window resize on LazyImagePlus")
+
+    unzoom_marker = "public void unzoom() {"
+    unzoom_inject = (
+        "\n\t\t// [threadhack] LazyImagePlus: reset srcRect only, don't touch window size\n"
+        "\t\tif (imp instanceof com.hack.viewer.LazyImagePlus) {\n"
+        "\t\t\tsrcRect = new java.awt.Rectangle(0, 0, imageWidth, imageHeight);\n"
+        "\t\t\tsetMagnification((double) dstWidth / imageWidth);\n"
+        "\t\t\trepaint();\n"
+        "\t\t\treturn;\n"
+        "\t\t}\n"
+    )
+    if unzoom_marker in content:
+        content = content.replace(unzoom_marker, unzoom_marker + unzoom_inject, 1)
+        print("✓ Patched ImageCanvas.unzoom to avoid window resize on LazyImagePlus")
+
+    with open(ic_path, 'w') as f:
+        f.write(content)
     return True
 
 if __name__ == "__main__":

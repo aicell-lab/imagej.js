@@ -805,6 +805,14 @@ function patchCheerpjDisplay() {
       }
       // Let all other clicks through (ImageJ windows, buttons, menus, etc.)
     }, true); // Use capture phase to intercept before CheerpJ's handlers
+
+    // Prevent the browser from scrolling the page when the user wheels over
+    // an ImageJ image (the wheel event is consumed by the AWT bridge for
+    // zoom/pan). Without this, the page scrolls behind the zoom, making
+    // Google-Maps-style wheel interaction feel fight-y.
+    cheerpjDisplay.addEventListener('wheel', (e) => {
+      e.preventDefault();
+    }, { passive: false, capture: true });
     
     console.log('✓ Patched cheerpjDisplay - only blank area clicks will be blocked');
     return true;
