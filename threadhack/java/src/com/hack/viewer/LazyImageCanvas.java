@@ -56,14 +56,23 @@ public class LazyImageCanvas extends ImageCanvas {
             if (img != null) {
                 g.drawImage(img, 0, 0, getWidth(), getHeight(), null);
             }
-            // Standard overlay + ROI rendering; Roi.draw uses ic.screenX/Y
-            // which transforms level-0 → display via srcRect + magnification.
+            // Standard overlay + ROI rendering via public Roi.draw(Graphics)
+            // — internally Roi.draw calls ic.screenX/Y which transforms
+            // level-0 → display via srcRect + magnification.
             Overlay overlay = imp.getOverlay();
-            if (overlay != null) drawOverlay(overlay, g);
+            if (overlay != null) {
+                for (int i = 0; i < overlay.size(); i++) {
+                    Roi r = overlay.get(i);
+                    if (r != null) {
+                        r.setImage(imp);
+                        r.draw(g);
+                    }
+                }
+            }
             Roi roi = imp.getRoi();
-            if (roi != null) drawRoi(roi, g);
-            if (srcRect.width < imageWidth || srcRect.height < imageHeight) {
-                drawZoomIndicator(g);
+            if (roi != null) {
+                roi.setImage(imp);
+                roi.draw(g);
             }
         } catch (Throwable t) {
             IJ.log("[LazyImageCanvas.paint] " + t);
