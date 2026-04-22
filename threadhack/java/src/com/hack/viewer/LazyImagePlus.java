@@ -163,30 +163,14 @@ public class LazyImagePlus extends ImagePlus {
         // srcRect / magnification to the viewport-processor dims. Re-lock
         // to level-0 AFTER all that runs.
         lazyCanvas.lockViewportToLevel0();
+        // AWT-side resize hook (may or may not fire reliably under CheerpJ —
+        // we also install a JS-side ResizeObserver on the canvas DOM element,
+        // which is the authoritative trigger on the browser side).
         win.addComponentListener(new ComponentAdapter() {
             @Override
             public void componentResized(ComponentEvent e) {
                 if (lazyCanvas == null) return;
-                int cw = Math.max(64, lazyCanvas.getWidth());
-                int ch = Math.max(64, lazyCanvas.getHeight());
-                if (cw == viewW && ch == viewH) return;
-                // Keep the image centre + magnification fixed; adjust
-                // srcRect's aspect to match the new canvas, so the view
-                // grows/shrinks to fill without stretching.
-                Rectangle sr = lazyCanvas.currentSrcRect();
-                double mag = lazyCanvas.currentMagnification();
-                double cx = sr.x + sr.width / 2.0;
-                double cy = sr.y + sr.height / 2.0;
-                int newSrcW = Math.max(1, (int) Math.round(cw / mag));
-                int newSrcH = Math.max(1, (int) Math.round(ch / mag));
-                int newSrcX = (int) Math.round(cx - newSrcW / 2.0);
-                int newSrcY = (int) Math.round(cy - newSrcH / 2.0);
-                viewW = cw; viewH = ch;
-                processor = new ByteProcessor(viewW, viewH);
-                setProcessor(processor);
-                lazyCanvas.lockViewportToLevel0();
-                lazyCanvas.setSourceRect(new Rectangle(newSrcX, newSrcY, newSrcW, newSrcH));
-                scheduleFetch();
+                setViewport(lazyCanvas.getWidth(), lazyCanvas.getHeight());
             }
         });
         Toolbar tb = Toolbar.getInstance();
@@ -199,6 +183,36 @@ public class LazyImagePlus extends ImagePlus {
     public int viewportWidth()  { return viewW; }
     public int viewportHeight() { return viewH; }
     public int getCurrentLevel() { return currentLevel; }
+
+    /**
+     * Resize the viewport to (w, h) canvas pixels, keeping the image centre
+     * and magnification fixed; srcRect grows / shrinks so the new canvas
+     * fills with image content (no stretch). Callable from Java (the AWT
+     * ComponentListener above) and from JS (a ResizeObserver on the canvas
+     * DOM element) — whichever fires first wins, the other becomes a no-op
+     * because viewW / viewH already match.
+     */
+    public void setViewport(int w, int h) {
+        if (lazyCanvas == null) return;
+        int cw = Math.max(64, w);
+        int ch = Math.max(64, h);
+        if (cw == viewW && ch == viewH) return;
+        Rectangle sr = lazyCanvas.currentSrcRect();
+        double mag = lazyCanvas.currentMagnification();
+        double cx = sr.x + sr.width / 2.0;
+        double cy = sr.y + sr.height / 2.0;
+        int newSrcW = Math.max(1, (int) Math.round(cw / mag));
+        int newSrcH = Math.max(1, (int) Math.round(ch / mag));
+        int newSrcX = (int) Math.round(cx - newSrcW / 2.0);
+        int newSrcY = (int) Math.round(cy - newSrcH / 2.0);
+        viewW = cw; viewH = ch;
+        processor = new ByteProcessor(viewW, viewH);
+        setProcessor(processor);
+        lazyCanvas.setSize(cw, ch);
+        lazyCanvas.lockViewportToLevel0();
+        lazyCanvas.setSourceRect(new Rectangle(newSrcX, newSrcY, newSrcW, newSrcH));
+        scheduleFetch();
+    }
 
     // -------- viewport transforms --------------------------------------
 
