@@ -150,6 +150,31 @@
     return out;
   }
 
+  // ---- BrowserFilePicker natives (File > Open / Save As) ---------------
+  // Delegates to the HTML dialog exposed as window.hfs.* by file-browser.js.
+  var filePickerNatives = {
+    Java_com_hack_io_BrowserFilePicker_showOpenDialog: async function (lib, title, defaultDir) {
+      if (!window.hfs) return null;
+      try {
+        var p = await window.hfs.open({ title: title || 'Open', dir: defaultDir || null });
+        return p || null;
+      } catch (e) {
+        console.warn('[BrowserFilePicker] open:', e && (e.message || e));
+        return null;
+      }
+    },
+    Java_com_hack_io_BrowserFilePicker_showSaveDialog: async function (lib, title, defaultDir, defaultName) {
+      if (!window.hfs) return null;
+      try {
+        var p = await window.hfs.save({ title: title || 'Save As', dir: defaultDir || null, name: defaultName || '' });
+        return p || null;
+      } catch (e) {
+        console.warn('[BrowserFilePicker] save:', e && (e.message || e));
+        return null;
+      }
+    }
+  };
+
   // ---- MenuRegistry native ----------------------------------------------
   // Java calls this when a menu item is clicked; dispatches to the JS-side
   // handler registered under window.__menuHandlers[key].
@@ -230,7 +255,7 @@
     opts = Object.assign({}, opts || {});
     var poolSize = opts.threadhackPool !== undefined ? opts.threadhackPool : DEFAULT_POOL;
     delete opts.threadhackPool;
-    opts.natives = Object.assign({}, threadHookNatives, tileSourceNatives, menuRegistryNatives, opts.natives || {});
+    opts.natives = Object.assign({}, threadHookNatives, tileSourceNatives, menuRegistryNatives, filePickerNatives, opts.natives || {});
 
     // Install our classloader as the system classloader so plugin jars
     // loaded by ImageJ's internal PluginClassLoader (and any child

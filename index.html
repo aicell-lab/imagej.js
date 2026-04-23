@@ -372,6 +372,7 @@
 
 <!-- Load utilities -->
 <script src="utils.js"></script>
+<script src="file-browser.js"></script>
 
 <!-- Load Hypha service -->
 <script type="module" src="hypha-imagej-service.js"></script>
@@ -633,6 +634,14 @@ window.__menuHandlers.mount = async () => {
 };
 
 window.__menuHandlers['roi-test'] = () => runRoiGeoJsonTest();
+
+window.__menuHandlers['cellpose'] = () => {
+    if (window.cellposeIntegration) {
+        window.cellposeIntegration.show();
+    } else {
+        alert('Cellpose integration not loaded yet. Try again in a moment.');
+    }
+};
 
 async function runRoiGeoJsonTest() {
     try {
@@ -903,10 +912,13 @@ try {
     // via the com.hack.menu.MenuRegistry → nativeInvokeJSHandler bridge.
     try {
         const MenuRegistry = await lib.com.hack.menu.MenuRegistry;
+        // Mount Local Folder has been folded into the File > Open dialog
+        // (click "Mount folder…" in that dialog). The Extensions menu now
+        // carries only the features that don't belong under stock File.
         await MenuRegistry.addMenu(
             "Extensions",
-            ["Mount Local Folder...", "-", "Connect to Hypha MCP...", "-", "Test ROI ↔ GeoJSON"],
-            ["mount",                 "-", "mcp",                     "-", "roi-test"]
+            ["Connect to Hypha MCP...", "-", "Test ROI ↔ GeoJSON", "-", "Cellpose…"],
+            ["mcp",                     "-", "roi-test",          "-", "cellpose"]
         );
         console.log('Installed "Extensions" menu');
     } catch (e) {
@@ -923,6 +935,10 @@ try {
 
 <!-- Touch / pinch controller for LazyImagePlus (mobile + trackpad). -->
 <script src="threadhack/viv-loader/touch-controller.js"></script>
+
+<!-- Cellpose integration: adds Extensions → Cellpose… (uses cellpose-web/).
+     Cache-busting query so post-deploy iterations refresh cleanly. -->
+<script src="cellpose-integration.js?v=3"></script>
 
 <div id="container"></div>
 </body>

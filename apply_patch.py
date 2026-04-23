@@ -597,6 +597,7 @@ def inject_viewer_sources():
     packages = [
         ("threadhack/java/src/com/hack/viewer", "ImageJ-build/com/hack/viewer"),
         ("threadhack/java/src/com/hack/menu",   "ImageJ-build/com/hack/menu"),
+        ("threadhack/java/src/com/hack/io",     "ImageJ-build/com/hack/io"),
     ]
 
     for src_dir, dst_dir in packages:
@@ -627,53 +628,91 @@ def inject_viewer_sources():
     return True
 
 def patch_open_save_dialog_inline():
-    """In CheerpJ the JVM is single-JS-thread. EventQueue.invokeAndWait
-    can never succeed from that context (the check-vs-throw contract is
-    unmeetable), so every menu command that opens a JFileChooser died
-    with `Error: Cannot call invokeAndWait from the event dispatcher
-    thread`. The inline dispatch-thread branch works fine because we're
-    effectively always on the EDT. Force that branch for both OpenDialog
-    and SaveDialog.
+    """Route File > Open / Save As through the HTML file browser
+    (com.hack.io.BrowserFilePicker → window.hfs). Stock ImageJ goes via
+    JFileChooser.showOpenDialog which sits on Swing modal machinery that
+    calls EventQueue.invokeAndWait — unmeetable under CheerpJ's single-
+    JS-thread model.
+
+    Replaces the body of OpenDialog.jOpen(...) and SaveDialog.jSave(...)
+    with a call into BrowserFilePicker and a parse of the returned path
+    into the dir/name fields the rest of ImageJ reads.
     """
-    import os
-    targets = [
-        ("ImageJ-build/ij/io/OpenDialog.java", "jOpenDispatchThread", "jOpenInvokeAndWait"),
-        ("ImageJ-build/ij/io/SaveDialog.java", "jSaveDispatchThread", "jSaveInvokeAndWait"),
-    ]
-    any_applied = False
-    for path, dispatch_name, invoke_name in targets:
+    import os, re
+
+    def patch_jopen(path):
         if not os.path.exists(path):
             print(f"Warning: {path} not found, skipping")
-            continue
-        with open(path, 'r') as f:
-            content = f.read()
-        if "[threadhack] always inline dispatch" in content:
-            print(f"⊘ {os.path.basename(path)} already patched")
-            any_applied = True
-            continue
-        # Replace any `if (EventQueue.isDispatchThread()) X(…); else Y(…);`
-        # pattern with an unconditional X(…). Match both 1-line-each and
-        # brace-wrapped forms.
-        import re
+            return False
+        with open(path, 'r') as f: content = f.read()
+        if "[threadhack] BrowserFilePicker.open" in content:
+            print(f"⊘ {os.path.basename(path)} jOpen already patched")
+            return True
+        # Match the whole jOpen(String, String, String) method body up to and
+        # including its close brace. The method is distinctive: it sets
+        # LookAndFeel and calls jOpenDispatchThread / jOpenInvokeAndWait.
         pat = re.compile(
-            r"if\s*\(\s*EventQueue\.isDispatchThread\(\)\s*\)\s*"
-            r"(" + re.escape(dispatch_name) + r"\([^;]*\);)"
-            r"\s*else\s*"
-            + re.escape(invoke_name) + r"\([^;]*\);",
+            r"(void\s+jOpen\s*\(\s*String\s+title\s*,\s*String\s+path\s*,\s*String\s+fileName\s*\)\s*\{)"
+            r".*?"
+            r"(\n\s*\}\s*\n)",
             re.DOTALL,
         )
-        new_content, n = pat.subn(
-            r"/* [threadhack] always inline dispatch — CheerpJ invokeAndWait is unmeetable */ \1",
-            content,
+        replacement = (
+            r"\1\n"
+            "\t\t// [threadhack] BrowserFilePicker.open — HTML dialog bypasses\n"
+            "\t\t// Swing modal (unmeetable under CheerpJ)\n"
+            "\t\tString picked = com.hack.io.BrowserFilePicker.showOpenDialog(title, path);\n"
+            "\t\tif (picked == null || picked.length() == 0) { name = null; dir = null; return; }\n"
+            "\t\tjava.io.File pf = new java.io.File(picked);\n"
+            "\t\tname = pf.getName();\n"
+            "\t\tString parent = pf.getParent();\n"
+            "\t\tdir = (parent == null ? \"\" : parent) + java.io.File.separator;\n"
+            r"\2"
         )
+        new_content, n = pat.subn(replacement, content, count=1)
         if n > 0:
-            with open(path, 'w') as f:
-                f.write(new_content)
-            print(f"✓ Patched {os.path.basename(path)} ({n} site(s))")
-            any_applied = True
-        else:
-            print(f"⊘ {os.path.basename(path)}: dispatch/else pattern not found")
-    return any_applied
+            with open(path, 'w') as f: f.write(new_content)
+            print(f"✓ Patched OpenDialog.jOpen → BrowserFilePicker")
+            return True
+        print("⊘ OpenDialog.jOpen method not found")
+        return False
+
+    def patch_jsave(path):
+        if not os.path.exists(path):
+            print(f"Warning: {path} not found, skipping")
+            return False
+        with open(path, 'r') as f: content = f.read()
+        if "[threadhack] BrowserFilePicker.save" in content:
+            print(f"⊘ {os.path.basename(path)} jSave already patched")
+            return True
+        pat = re.compile(
+            r"(void\s+jSave\s*\(\s*String\s+title\s*,\s*String\s+defaultDir\s*,\s*String\s+defaultName\s*\)\s*\{)"
+            r".*?"
+            r"(\n\s*\}\s*\n)",
+            re.DOTALL,
+        )
+        replacement = (
+            r"\1\n"
+            "\t\t// [threadhack] BrowserFilePicker.save — HTML dialog bypasses Swing modal\n"
+            "\t\tString picked = com.hack.io.BrowserFilePicker.showSaveDialog(title, defaultDir, defaultName);\n"
+            "\t\tif (picked == null || picked.length() == 0) { name = null; dir = null; return; }\n"
+            "\t\tjava.io.File pf = new java.io.File(picked);\n"
+            "\t\tname = pf.getName();\n"
+            "\t\tString parent = pf.getParent();\n"
+            "\t\tdir = (parent == null ? \"\" : parent) + java.io.File.separator;\n"
+            r"\2"
+        )
+        new_content, n = pat.subn(replacement, content, count=1)
+        if n > 0:
+            with open(path, 'w') as f: f.write(new_content)
+            print(f"✓ Patched SaveDialog.jSave → BrowserFilePicker")
+            return True
+        print("⊘ SaveDialog.jSave method not found")
+        return False
+
+    ok1 = patch_jopen("ImageJ-build/ij/io/OpenDialog.java")
+    ok2 = patch_jsave("ImageJ-build/ij/io/SaveDialog.java")
+    return ok1 or ok2
 
 def patch_prefs_defaults():
     """Set useJFileChooser=true as the field default, since CheerpJ's
