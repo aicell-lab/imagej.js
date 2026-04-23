@@ -152,6 +152,15 @@ def apply_patches():
     print("\n--- Defaulting Prefs.useJFileChooser = true in source ---")
     patch_prefs_defaults()
 
+    # Force OpenDialog + SaveDialog to always use the inline dispatch-thread
+    # branch. CheerpJ has a single JS-event-loop "thread" — its
+    # EventQueue.isDispatchThread() reports inconsistently between the
+    # jOpen check and the invokeAndWait check inside, so the
+    # invokeAndWait path always throws "Cannot call invokeAndWait from
+    # the event dispatcher thread". The inline-dispatch branch works.
+    print("\n--- Patching OpenDialog/SaveDialog to always use inline dispatch ---")
+    patch_open_save_dialog_inline()
+
     print("\n" + "=" * 60)
     print("✓ Successfully applied all patches!")
     print("  - Interpreter.java: Silent macro execution")
@@ -616,6 +625,55 @@ def inject_viewer_sources():
         else:
             print("⊘ build.xml srcdir already updated (or unrecognised)")
     return True
+
+def patch_open_save_dialog_inline():
+    """In CheerpJ the JVM is single-JS-thread. EventQueue.invokeAndWait
+    can never succeed from that context (the check-vs-throw contract is
+    unmeetable), so every menu command that opens a JFileChooser died
+    with `Error: Cannot call invokeAndWait from the event dispatcher
+    thread`. The inline dispatch-thread branch works fine because we're
+    effectively always on the EDT. Force that branch for both OpenDialog
+    and SaveDialog.
+    """
+    import os
+    targets = [
+        ("ImageJ-build/ij/io/OpenDialog.java", "jOpenDispatchThread", "jOpenInvokeAndWait"),
+        ("ImageJ-build/ij/io/SaveDialog.java", "jSaveDispatchThread", "jSaveInvokeAndWait"),
+    ]
+    any_applied = False
+    for path, dispatch_name, invoke_name in targets:
+        if not os.path.exists(path):
+            print(f"Warning: {path} not found, skipping")
+            continue
+        with open(path, 'r') as f:
+            content = f.read()
+        if "[threadhack] always inline dispatch" in content:
+            print(f"⊘ {os.path.basename(path)} already patched")
+            any_applied = True
+            continue
+        # Replace any `if (EventQueue.isDispatchThread()) X(…); else Y(…);`
+        # pattern with an unconditional X(…). Match both 1-line-each and
+        # brace-wrapped forms.
+        import re
+        pat = re.compile(
+            r"if\s*\(\s*EventQueue\.isDispatchThread\(\)\s*\)\s*"
+            r"(" + re.escape(dispatch_name) + r"\([^;]*\);)"
+            r"\s*else\s*"
+            + re.escape(invoke_name) + r"\([^;]*\);",
+            re.DOTALL,
+        )
+        new_content, n = pat.subn(
+            r"/* [threadhack] always inline dispatch — CheerpJ invokeAndWait is unmeetable */ \1",
+            content,
+        )
+        if n > 0:
+            with open(path, 'w') as f:
+                f.write(new_content)
+            print(f"✓ Patched {os.path.basename(path)} ({n} site(s))")
+            any_applied = True
+        else:
+            print(f"⊘ {os.path.basename(path)}: dispatch/else pattern not found")
+    return any_applied
 
 def patch_prefs_defaults():
     """Set useJFileChooser=true as the field default, since CheerpJ's
